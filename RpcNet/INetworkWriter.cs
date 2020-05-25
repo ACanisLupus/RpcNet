@@ -2,9 +2,9 @@
 {
     using System;
 
-    public interface IBufferWriter
+    public interface INetworkWriter
     {
-        void BeginWriting();
+        void Reset();
         void EndWriting();
         Span<byte> Reserve(int length);
     }

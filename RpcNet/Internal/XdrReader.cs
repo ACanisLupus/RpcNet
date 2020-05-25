@@ -6,13 +6,13 @@
     public class XdrReader : IXdrReader
     {
         private readonly Encoding encoding = Encoding.UTF8;
-        private readonly IBufferReader bufferReader;
+        private readonly INetworkReader networkReader;
 
-        public XdrReader(IBufferReader bufferReader) => this.bufferReader = bufferReader;
+        public XdrReader(INetworkReader networkReader) => this.networkReader = networkReader;
 
-        public long ReadLong() => Utilities.ToInt64BigEndian(this.bufferReader.Read(sizeof(long)));
+        public long ReadLong() => (long)this.ReadInt() | (long)(this.ReadInt() & 0xffffffff);
         public ulong ReadULong() => (ulong)this.ReadLong();
-        public int ReadInt() => Utilities.ToInt32BigEndian(this.bufferReader.Read(sizeof(int)));
+        public int ReadInt() => Utilities.ToInt32BigEndian(this.networkReader.Read(sizeof(int)));
         public uint ReadUInt() => (uint)this.ReadInt();
         public short ReadShort() => (short)this.ReadInt();
         public ushort ReadUShort() => (ushort)this.ReadInt();
@@ -26,7 +26,7 @@
         {
             int padding = Utilities.CalculateXdrPadding(length);
             byte[] value = new byte[length];
-            Span<byte> span = this.bufferReader.Read(length + padding).Slice(0, length);
+            Span<byte> span = this.networkReader.Read(length + padding).Slice(0, length);
             span.CopyTo(value.AsSpan());
             return value;
         }
@@ -42,7 +42,7 @@
             }
 
             int padding = Utilities.CalculateXdrPadding(length);
-            Span<byte> span = this.bufferReader.Read(length + padding).Slice(0, length);
+            Span<byte> span = this.networkReader.Read(length + padding).Slice(0, length);
             return this.encoding.GetString(span);
         }
 

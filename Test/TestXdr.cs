@@ -1,4 +1,4 @@
-﻿namespace Rpc.Net.Test
+﻿namespace RpcNet.Test
 {
     using System.IO;
     using NUnit.Framework;
@@ -7,26 +7,19 @@
 
     class TestXdr
     {
-        private readonly MemoryStream memoryStream = new MemoryStream(new byte[65536]);
-        private readonly IBufferReader bufferReader;
-        private readonly IBufferWriter bufferWriter;
+        private readonly StubNetwork stubNetwork;
         private readonly IXdrReader reader;
         private readonly IXdrWriter writer;
 
         public TestXdr()
         {
-            this.bufferReader = new UdpBufferReader(this.memoryStream);
-            this.bufferWriter = new UdpBufferWriter(this.memoryStream);
-            this.reader = new XdrReader(this.bufferReader);
-            this.writer = new XdrWriter(this.bufferWriter);
+            this.stubNetwork = new StubNetwork();
+            this.reader = new XdrReader(this.stubNetwork);
+            this.writer = new XdrWriter(this.stubNetwork);
         }
 
         [SetUp]
-        public void SetUp()
-        {
-            this.memoryStream.Position = 0;
-            this.bufferWriter.BeginWriting();
-        }
+        public void SetUp() => this.stubNetwork.Reset();
 
         [Test]
         [TestCase(0)]
@@ -38,7 +31,7 @@
         {
             this.writer.Write(value);
 
-            this.Copy();
+            this.AssertWriteIndex(8);
 
             Assert.That(this.reader.ReadLong(), Is.EqualTo(value));
         }
@@ -51,7 +44,7 @@
         {
             this.writer.Write(value);
 
-            this.Copy();
+            this.AssertWriteIndex(8);
 
             Assert.That(this.reader.ReadULong(), Is.EqualTo(value));
         }
@@ -66,7 +59,7 @@
         {
             this.writer.Write(value);
 
-            this.Copy();
+            this.AssertWriteIndex(4);
 
             Assert.That(this.reader.ReadInt(), Is.EqualTo(value));
         }
@@ -79,7 +72,7 @@
         {
             this.writer.Write(value);
 
-            this.Copy();
+            this.AssertWriteIndex(4);
 
             Assert.That(this.reader.ReadUInt(), Is.EqualTo(value));
         }
@@ -94,7 +87,7 @@
         {
             this.writer.Write(value);
 
-            this.Copy();
+            this.AssertWriteIndex(4);
 
             Assert.That(this.reader.ReadShort(), Is.EqualTo(value));
         }
@@ -107,7 +100,7 @@
         {
             this.writer.Write(value);
 
-            this.Copy();
+            this.AssertWriteIndex(4);
 
             Assert.That(this.reader.ReadUShort(), Is.EqualTo(value));
         }
@@ -122,7 +115,7 @@
         {
             this.writer.Write(value);
 
-            this.Copy();
+            this.AssertWriteIndex(4);
 
             Assert.That(this.reader.ReadSByte(), Is.EqualTo(value));
         }
@@ -135,7 +128,7 @@
         {
             this.writer.Write(value);
 
-            this.Copy();
+            this.AssertWriteIndex(4);
 
             Assert.That(this.reader.ReadByte(), Is.EqualTo(value));
         }
@@ -147,7 +140,7 @@
         {
             this.writer.Write(value);
 
-            this.Copy();
+            this.AssertWriteIndex(4);
 
             Assert.That(this.reader.ReadBool(), Is.EqualTo(value));
         }
@@ -166,7 +159,7 @@
         {
             this.writer.Write(value);
 
-            this.Copy();
+            this.AssertWriteIndex(4);
 
             Assert.That(this.reader.ReadFloat(), Is.EqualTo(value));
         }
@@ -185,18 +178,18 @@
         {
             this.writer.Write(value);
 
-            this.Copy();
+            this.AssertWriteIndex(8);
 
             Assert.That(this.reader.ReadDouble(), Is.EqualTo(value));
         }
 
         [Test]
-        [TestCase(0)]
-        [TestCase(1)]
-        [TestCase(2)]
-        [TestCase(3)]
-        [TestCase(4)]
-        public void ReadAndWriteFixedLengthOpaque(int length)
+        [TestCase(0, 0)]
+        [TestCase(1, 4)]
+        [TestCase(2, 4)]
+        [TestCase(3, 4)]
+        [TestCase(4, 4)]
+        public void ReadAndWriteFixedLengthOpaque(int length, int expectedWriteIndex)
         {
             byte[] value = new byte[length];
             for (int i = 0; i < length; i++)
@@ -206,18 +199,18 @@
 
             this.writer.WriteFixedLengthOpaque(value);
 
-            this.Copy();
+            this.AssertWriteIndex(expectedWriteIndex);
 
             Assert.That(this.reader.ReadOpaque(length), Is.EqualTo(value));
         }
 
         [Test]
-        [TestCase(0)]
-        [TestCase(1)]
-        [TestCase(2)]
-        [TestCase(3)]
-        [TestCase(4)]
-        public void ReadAndWriteVariableLengthOpaque(int length)
+        [TestCase(0, 4)]
+        [TestCase(1, 8)]
+        [TestCase(2, 8)]
+        [TestCase(3, 8)]
+        [TestCase(4, 8)]
+        public void ReadAndWriteVariableLengthOpaque(int length, int expectedWriteIndex)
         {
             byte[] value = new byte[length];
             for (int i = 0; i < length; i++)
@@ -227,32 +220,26 @@
 
             this.writer.WriteVariableLengthOpaque(value);
 
-            this.Copy();
+            this.AssertWriteIndex(expectedWriteIndex);
 
             Assert.That(this.reader.ReadOpaque(), Is.EqualTo(value));
         }
 
         [Test]
-        [TestCase("")]
-        [TestCase("a")]
-        [TestCase("ab")]
-        [TestCase("abc")]
-        [TestCase("abcd")]
-        public void ReadAndWriteString(string value)
+        [TestCase("", 4)]
+        [TestCase("a", 8)]
+        [TestCase("ab", 8)]
+        [TestCase("abc", 8)]
+        [TestCase("abcd", 8)]
+        public void ReadAndWriteString(string value, int expectedWriteIndex)
         {
             this.writer.Write(value);
 
-            this.Copy();
+            this.AssertWriteIndex(expectedWriteIndex);
 
             Assert.That(this.reader.ReadString(), Is.EqualTo(value));
         }
 
-        private void Copy()
-        {
-            this.bufferWriter.EndWriting();
-            Assert.That(this.memoryStream.Position % 4, Is.EqualTo(0), "Position must be a multiply of 4.");
-            this.memoryStream.Position = 0;
-            this.bufferReader.BeginReading();
-        }
+        private void AssertWriteIndex(int expectedWriteIndex) => Assert.That(this.stubNetwork.WriteIndex, Is.EqualTo(expectedWriteIndex));
     }
 }

@@ -3,7 +3,7 @@
     using System;
     using System.IO;
 
-    public class UdpBufferWriter : IBufferWriter
+    public class UdpBufferWriter : INetworkWriter
     {
         private readonly Stream stream;
         private readonly byte[] buffer = new byte[65536];
@@ -11,7 +11,7 @@
 
         public UdpBufferWriter(Stream stream) => this.stream = stream;
 
-        public void BeginWriting() => this.index = 0;
+        public void Reset() => this.index = 0;
 
         // TODO: EndWriting must throw an RpcException
         public void EndWriting() => this.stream.Write(this.buffer, 0, this.index);

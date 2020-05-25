@@ -6,13 +6,18 @@
     public class XdrWriter : IXdrWriter
     {
         private readonly Encoding encoding = Encoding.UTF8;
-        private readonly IBufferWriter bufferWriter;
+        private readonly INetworkWriter networkWriter;
 
-        public XdrWriter(IBufferWriter bufferWriter) => this.bufferWriter = bufferWriter;
+        public XdrWriter(INetworkWriter networkWriter) => this.networkWriter = networkWriter;
 
-        public void Write(long value) => Utilities.WriteBytesBigEndian(this.bufferWriter.Reserve(sizeof(long)), value);
+        public void Write(long value)
+        {
+            this.Write(value >> 32);
+            this.Write(value & 0xffffffff);
+        }
+
         public void Write(ulong value) => this.Write((long)value);
-        public void Write(int value) => Utilities.WriteBytesBigEndian(this.bufferWriter.Reserve(sizeof(int)), value);
+        public void Write(int value) => Utilities.WriteBytesBigEndian(this.networkWriter.Reserve(sizeof(int)), value);
         public void Write(uint value) => this.Write((int)value);
         public void Write(short value) => this.Write((int)value);
         public void Write(ushort value) => this.Write((int)value);
@@ -26,7 +31,7 @@
         {
             int length = value.Length;
             int padding = Utilities.CalculateXdrPadding(length);
-            Span<byte> span = this.bufferWriter.Reserve(length + padding);
+            Span<byte> span = this.networkWriter.Reserve(length + padding);
             value.CopyTo(span);
             this.FillWithZeros(span.Slice(length));
         }
@@ -52,7 +57,7 @@
             }
 
             int padding = Utilities.CalculateXdrPadding(length);
-            Span<byte> span = this.bufferWriter.Reserve(length + padding);
+            Span<byte> span = this.networkWriter.Reserve(length + padding);
             this.encoding.GetBytes(value, span);
             this.FillWithZeros(span.Slice(length));
         }

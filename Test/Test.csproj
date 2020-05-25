@@ -1,8 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
+    <OutputType>Library</OutputType>
     <TargetFramework>net4.8</TargetFramework>
+    <RootNamespace>RpcNet.Test</RootNamespace>
+    <AssemblyName>RpcNet.Test</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

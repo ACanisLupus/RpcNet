@@ -5,11 +5,16 @@ using System.Text;
 namespace RpcNet.Internal
 {
     // TODO: Implement
-    public class TcpBufferReader : IBufferReader
+    public class TcpBufferReader : INetworkReader
     {
         private byte[] buffer = new byte[65536];
 
         public void BeginReading()
+        {
+
+        }
+
+        public void EndReading()
         {
 
         }

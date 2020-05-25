@@ -2,9 +2,10 @@
 {
     using System;
 
-    public interface IBufferReader
+    public interface INetworkReader
     {
         void BeginReading();
+        void EndReading();
         Span<byte> Read(int length);
     }
 }

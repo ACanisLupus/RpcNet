@@ -7,7 +7,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Test
+namespace RpcNet.Test
 {
     using System;
     using System.Net;

@@ -4,7 +4,7 @@
     using System.IO;
 
     // TODO: Must read from socket, otherwise the remote ip end point is unknown
-    public class UdpBufferReader : IBufferReader
+    public class UdpBufferReader : INetworkReader
     {
         private readonly Stream stream;
         private readonly byte[] buffer = new byte[65536];
@@ -17,6 +17,11 @@
         {
             this.totalLength = this.stream.Read(this.buffer, 0, this.buffer.Length);
             this.index = 0;
+        }
+
+        public void EndReading()
+        {
+
         }
 
         public Span<byte> Read(int length)

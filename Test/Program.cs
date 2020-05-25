@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Rpc.Net.Test
+namespace RpcNet.Test
 {
     class Program
     {
