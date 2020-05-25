@@ -1,0 +1,222 @@
+﻿namespace RpcNet.Internal
+{
+    using System;
+    using System.Text;
+
+    public class XdrWriter : IXdrWriter
+    {
+        private readonly Encoding encoding = Encoding.UTF8;
+        private readonly IBufferWriter bufferWriter;
+
+        public XdrWriter(IBufferWriter bufferWriter) => this.bufferWriter = bufferWriter;
+
+        public void Write(long value) => Utilities.WriteBytesBigEndian(this.bufferWriter.Reserve(sizeof(long)), value);
+        public void Write(ulong value) => this.Write((long)value);
+        public void Write(int value) => Utilities.WriteBytesBigEndian(this.bufferWriter.Reserve(sizeof(int)), value);
+        public void Write(uint value) => this.Write((int)value);
+        public void Write(short value) => this.Write((int)value);
+        public void Write(ushort value) => this.Write((int)value);
+        public void Write(sbyte value) => this.Write((int)value);
+        public void Write(byte value) => this.Write((int)value);
+        public void Write(bool value) => this.Write(value ? 1 : 0);
+        public void Write(float value) => this.Write(Utilities.SingleToInt32Bits(value));
+        public void Write(double value) => this.Write(BitConverter.DoubleToInt64Bits(value));
+
+        public void WriteFixedLengthOpaque(ReadOnlySpan<byte> value)
+        {
+            int length = value.Length;
+            int padding = Utilities.CalculateXdrPadding(length);
+            Span<byte> span = this.bufferWriter.Reserve(length + padding);
+            value.CopyTo(span);
+            this.FillWithZeros(span.Slice(length));
+        }
+
+        public void WriteVariableLengthOpaque(ReadOnlySpan<byte> value)
+        {
+            this.Write(value.Length);
+            this.WriteFixedLengthOpaque(value);
+        }
+
+        public void Write(string value)
+        {
+            if (value is null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
+
+            int length = value.Length;
+            this.Write(length);
+            if (length == 0)
+            {
+                return;
+            }
+
+            int padding = Utilities.CalculateXdrPadding(length);
+            Span<byte> span = this.bufferWriter.Reserve(length + padding);
+            this.encoding.GetBytes(value, span);
+            this.FillWithZeros(span.Slice(length));
+        }
+
+        public void WriteFixedLengthArray(ReadOnlySpan<long> array)
+        {
+            for (int i = 0; i < array.Length; i++)
+            {
+                this.Write(array[i]);
+            }
+        }
+
+        public void WriteFixedLengthArray(ReadOnlySpan<ulong> array)
+        {
+            for (int i = 0; i < array.Length; i++)
+            {
+                this.Write(array[i]);
+            }
+        }
+
+        public void WriteFixedLengthArray(ReadOnlySpan<int> array)
+        {
+            for (int i = 0; i < array.Length; i++)
+            {
+                this.Write(array[i]);
+            }
+        }
+
+        public void WriteFixedLengthArray(ReadOnlySpan<uint> array)
+        {
+            for (int i = 0; i < array.Length; i++)
+            {
+                this.Write(array[i]);
+            }
+        }
+
+        public void WriteFixedLengthArray(ReadOnlySpan<short> array)
+        {
+            for (int i = 0; i < array.Length; i++)
+            {
+                this.Write(array[i]);
+            }
+        }
+
+        public void WriteFixedLengthArray(ReadOnlySpan<ushort> array)
+        {
+            for (int i = 0; i < array.Length; i++)
+            {
+                this.Write(array[i]);
+            }
+        }
+
+        public void WriteFixedLengthArray(ReadOnlySpan<sbyte> array)
+        {
+            for (int i = 0; i < array.Length; i++)
+            {
+                this.Write(array[i]);
+            }
+        }
+
+        public void WriteFixedLengthArray(ReadOnlySpan<byte> array)
+        {
+            for (int i = 0; i < array.Length; i++)
+            {
+                this.Write(array[i]);
+            }
+        }
+
+        public void WriteFixedLengthArray(ReadOnlySpan<bool> array)
+        {
+            for (int i = 0; i < array.Length; i++)
+            {
+                this.Write(array[i]);
+            }
+        }
+
+        public void WriteFixedLengthArray(ReadOnlySpan<float> array)
+        {
+            for (int i = 0; i < array.Length; i++)
+            {
+                this.Write(array[i]);
+            }
+        }
+
+        public void WriteFixedLengthArray(ReadOnlySpan<double> array)
+        {
+            for (int i = 0; i < array.Length; i++)
+            {
+                this.Write(array[i]);
+            }
+        }
+
+        public void WriteVariableLengthArray(ReadOnlySpan<long> array)
+        {
+            this.Write(array.Length);
+            this.WriteFixedLengthArray(array);
+        }
+
+        public void WriteVariableLengthArray(ReadOnlySpan<ulong> array)
+        {
+            this.Write(array.Length);
+            this.WriteFixedLengthArray(array);
+        }
+
+        public void WriteVariableLengthArray(ReadOnlySpan<int> array)
+        {
+            this.Write(array.Length);
+            this.WriteFixedLengthArray(array);
+        }
+
+        public void WriteVariableLengthArray(ReadOnlySpan<uint> array)
+        {
+            this.Write(array.Length);
+            this.WriteFixedLengthArray(array);
+        }
+
+        public void WriteVariableLengthArray(ReadOnlySpan<short> array)
+        {
+            this.Write(array.Length);
+            this.WriteFixedLengthArray(array);
+        }
+
+        public void WriteVariableLengthArray(ReadOnlySpan<ushort> array)
+        {
+            this.Write(array.Length);
+            this.WriteFixedLengthArray(array);
+        }
+
+        public void WriteVariableLengthArray(ReadOnlySpan<sbyte> array)
+        {
+            this.Write(array.Length);
+            this.WriteFixedLengthArray(array);
+        }
+
+        public void WriteVariableLengthArray(ReadOnlySpan<byte> array)
+        {
+            this.Write(array.Length);
+            this.WriteFixedLengthArray(array);
+        }
+
+        public void WriteVariableLengthArray(ReadOnlySpan<bool> array)
+        {
+            this.Write(array.Length);
+            this.WriteFixedLengthArray(array);
+        }
+
+        public void WriteVariableLengthArray(ReadOnlySpan<float> array)
+        {
+            this.Write(array.Length);
+            this.WriteFixedLengthArray(array);
+        }
+
+        public void WriteVariableLengthArray(ReadOnlySpan<double> array)
+        {
+            this.Write(array.Length);
+            this.WriteFixedLengthArray(array);
+        }
+
+        private void FillWithZeros(Span<byte> buffer)
+        {
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                buffer[i] = 0;
+            }
+        }
+    }
+}
