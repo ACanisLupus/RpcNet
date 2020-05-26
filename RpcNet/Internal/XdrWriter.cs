@@ -31,9 +31,17 @@
         {
             int length = value.Length;
             int padding = Utilities.CalculateXdrPadding(length);
-            Span<byte> span = this.networkWriter.Reserve(length + padding);
-            value.CopyTo(span);
-            this.FillWithZeros(span.Slice(length));
+            int readIndex = 0;
+
+            while (length > 0)
+            {
+                Span<byte> span = this.networkWriter.Reserve(length);
+                value.Slice(readIndex, span.Length).CopyTo(span);
+                readIndex += span.Length;
+                length -= span.Length;
+            }
+
+            this.FillWithZeros(this.networkWriter.Reserve(padding));
         }
 
         public void WriteVariableLengthOpaque(ReadOnlySpan<byte> value)
@@ -44,12 +52,7 @@
 
         public void Write(string value)
         {
-            if (value is null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
-
-            int length = value.Length;
+            int length = value?.Length ?? 0;
             this.Write(length);
             if (length == 0)
             {

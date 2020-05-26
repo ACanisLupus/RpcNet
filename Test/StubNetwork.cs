@@ -6,6 +6,14 @@
     internal class StubNetwork : INetworkReader, INetworkWriter
     {
         private readonly byte[] buffer = new byte[65536];
+        private readonly int maxReadLength;
+        private readonly int maxReserveLength;
+
+        public StubNetwork(int maxReadLength, int maxReserveLength)
+        {
+            this.maxReadLength = maxReadLength;
+            this.maxReserveLength = maxReserveLength;
+        }
 
         public int ReadIndex { get; private set; }
         public int WriteIndex { get; private set; }
@@ -23,6 +31,7 @@
 
         public Span<byte> Read(int length)
         {
+            length = Math.Min(length, this.maxReadLength);
             Span<byte> span = this.buffer.AsSpan(this.ReadIndex, length);
             this.ReadIndex += length;
             return span;
@@ -30,6 +39,7 @@
 
         public Span<byte> Reserve(int length)
         {
+            length = Math.Min(length, this.maxReserveLength);
             Span<byte> span = this.buffer.AsSpan(this.WriteIndex, length);
             this.WriteIndex += length;
             return span;
