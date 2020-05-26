@@ -12,8 +12,8 @@
 
         public void Write(long value)
         {
-            this.Write(value >> 32);
-            this.Write(value & 0xffffffff);
+            this.Write((int)(value >> 32));
+            this.Write((int)(value & 0xffffffff));
         }
 
         public void Write(ulong value) => this.Write((long)value);

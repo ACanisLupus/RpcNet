@@ -2,18 +2,20 @@
 
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <TargetFramework>net4.8</TargetFramework>
+    <TargetFramework>net48</TargetFramework>
     <RootNamespace>RpcNet.Test</RootNamespace>
     <AssemblyName>RpcNet.Test</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="NUnit" Version="3.12.0" />
+    <PackageReference Include="NUnit.Engine" Version="3.11.1" />
     <PackageReference Include="NUnit3TestAdapter" Version="3.16.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-  </ItemGroup>
+    <PackageReference Include="System.Memory" Version="4.5.4" />
+    </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\RpcNet\RpcNet.csproj" />

@@ -22,6 +22,16 @@
         public void SetUp() => this.stubNetwork.Reset();
 
         [Test]
+        public void ReadAndWriteInt()
+        {
+            this.writer.Write(42);
+
+            this.AssertWriteIndex(4);
+
+            Assert.That(this.reader.ReadInt(), Is.EqualTo(42));
+        }
+
+        [Test]
         [TestCase(0)]
         [TestCase(42)]
         [TestCase(-12)]

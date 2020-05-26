@@ -14,10 +14,6 @@
         {
             this.ReadIndex = 0;
             this.WriteIndex = 0;
-            for (int i = 0; i < this.buffer.Length; i++)
-            {
-                this.buffer[i] = (byte)i;
-            }
         }
 
         public void BeginReading() => throw new NotImplementedException();
