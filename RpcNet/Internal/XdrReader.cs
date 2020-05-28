@@ -26,25 +26,22 @@
         {
             int padding = Utilities.CalculateXdrPadding(length);
             byte[] value = new byte[length];
-            Span<byte> span = this.networkReader.Read(length + padding).Slice(0, length);
-            span.CopyTo(value.AsSpan());
+            int writeIndex = 0;
+
+            while (length > 0)
+            {
+                Span<byte> span = this.networkReader.Read(length);
+                span.CopyTo(value.AsSpan(writeIndex, span.Length));
+                writeIndex += span.Length;
+                length -= span.Length;
+            }
+
+            this.networkReader.Read(padding);
             return value;
         }
 
         public byte[] ReadOpaque() => this.ReadOpaque(this.ReadInt());
-
-        public string ReadString()
-        {
-            int length = this.ReadInt();
-            if (length == 0)
-            {
-                return string.Empty;
-            }
-
-            int padding = Utilities.CalculateXdrPadding(length);
-            Span<byte> span = this.networkReader.Read(length + padding).Slice(0, length);
-            return this.encoding.GetString(span);
-        }
+        public string ReadString() => this.encoding.GetString(this.ReadOpaque());
 
         public bool[] ReadBoolArray(int length)
         {

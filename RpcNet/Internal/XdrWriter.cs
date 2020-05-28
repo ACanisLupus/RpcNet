@@ -53,16 +53,13 @@
         public void Write(string value)
         {
             int length = value?.Length ?? 0;
-            this.Write(length);
             if (length == 0)
             {
+                this.Write(length);
                 return;
             }
 
-            int padding = Utilities.CalculateXdrPadding(length);
-            Span<byte> span = this.networkWriter.Reserve(length + padding);
-            this.encoding.GetBytes(value, span);
-            this.FillWithZeros(span.Slice(length));
+            this.WriteVariableLengthOpaque(this.encoding.GetBytes(value));
         }
 
         public void WriteFixedLengthArray(ReadOnlySpan<long> array)

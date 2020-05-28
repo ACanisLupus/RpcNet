@@ -2,7 +2,6 @@
 {
     using System;
     using System.Runtime.CompilerServices;
-    using System.Text;
 
     public static class Utilities
     {
@@ -25,31 +24,6 @@
         // Not available in .NET Standard 2.0
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe float Int32BitsToSingle(int value) => *(float*)&value;
-
-        // Not available in .NET Standard 2.0
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static unsafe int GetBytes(this Encoding encoding, string value, Span<byte> destination)
-        {
-            int length = value.Length;
-            fixed (char* chars = &value.AsSpan().GetPinnableReference())
-            {
-                fixed (byte* bytes = &destination.GetPinnableReference())
-                {
-                    return encoding.GetBytes(chars, length, bytes, length);
-                }
-            }
-        }
-
-        // Not available in .NET Standard 2.0
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static unsafe string GetString(this Encoding encoding, ReadOnlySpan<byte> source)
-        {
-            int length = source.Length;
-            fixed (byte* bytes = &source.GetPinnableReference())
-            {
-                return encoding.GetString(bytes, length);
-            }
-        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int CalculateXdrPadding(int length) => (4 - (length & 3)) & 3;

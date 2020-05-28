@@ -22,9 +22,15 @@
         public void SetUp() => this.stubNetwork.Reset();
 
         [Test]
-        public void ReserveMultipleFragmentsOpaque()
+        [TestCase(65536, 65536)]
+        [TestCase(65536, 8)]
+        [TestCase(8, 65536)]
+        [TestCase(8, 8)]
+        [TestCase(16, 8)]
+        [TestCase(8, 16)]
+        public void ReserveMultipleFragmentsOpaque(int maxReadLength, int maxReserveLength)
         {
-            var stubNetwork = new StubNetwork(65536, 8);
+            var stubNetwork = new StubNetwork(maxReadLength, maxReserveLength);
             var reader = new XdrReader(stubNetwork);
             var writer = new XdrWriter(stubNetwork);
 
@@ -34,21 +40,6 @@
 
             Assert.That(stubNetwork.WriteIndex, Is.EqualTo(28));
             Assert.That(reader.ReadOpaque(), Is.EqualTo(value));
-        }
-
-        [Test]
-        public void ReserveMultipleFragmentsString()
-        {
-            var stubNetwork = new StubNetwork(65536, 8);
-            var reader = new XdrReader(stubNetwork);
-            var writer = new XdrWriter(stubNetwork);
-
-            string value = "abcdefghijklmnopqrstuvwxyz";
-
-            writer.Write(value);
-
-            Assert.That(stubNetwork.WriteIndex, Is.EqualTo(32));
-            Assert.That(reader.ReadString(), Is.EqualTo(value));
         }
 
         [Test]
