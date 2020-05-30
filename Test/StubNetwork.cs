@@ -24,11 +24,6 @@
             this.WriteIndex = 0;
         }
 
-        public void BeginReading() => throw new NotImplementedException();
-        public void BeginWriting() => throw new NotImplementedException();
-        public void EndReading() => throw new NotImplementedException();
-        public void EndWriting() => throw new NotImplementedException();
-
         public Span<byte> Read(int length)
         {
             length = Math.Min(length, this.maxReadLength);

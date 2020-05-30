@@ -10,7 +10,6 @@ namespace RpcNet
 
         public void Call(int procedure, int version, IXdrWritable argument, IXdrReadable result)
         {
-
         }
     }
 }

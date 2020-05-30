@@ -12,7 +12,7 @@
 
         public TcpBufferWriter(Stream stream) => this.stream = stream;
 
-        public void Reset() => this.index = TcpHeader;
+        public void BeginWriting() => this.index = TcpHeader;
         public void EndWriting() => this.FlushPacket(true);
 
         public Span<byte> Reserve(int length)
@@ -40,7 +40,7 @@
             int length = lastPacket ? (int)((this.index - TcpHeader) & 0x80000000) : (this.index - TcpHeader);
             Utilities.WriteBytesBigEndian(this.buffer.AsSpan(), length);
             this.stream.Write(this.buffer, 0, length + TcpHeader);
-            this.Reset();
+            this.BeginWriting();
         }
     }
 }

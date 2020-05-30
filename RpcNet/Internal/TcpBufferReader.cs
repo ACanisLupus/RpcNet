@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net.Sockets;
 using System.Text;
 
 namespace RpcNet.Internal
@@ -9,14 +10,13 @@ namespace RpcNet.Internal
     {
         private byte[] buffer = new byte[65536];
 
-        public void BeginReading()
+        public SocketError BeginReading()
         {
-
+            return SocketError.Success;
         }
 
         public void EndReading()
         {
-
         }
 
         public Span<byte> Read(int length)

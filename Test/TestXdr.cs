@@ -1,6 +1,5 @@
 ﻿namespace RpcNet.Test
 {
-    using System.IO;
     using NUnit.Framework;
     using RpcNet;
     using RpcNet.Internal;

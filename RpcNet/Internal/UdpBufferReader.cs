@@ -1,38 +1,43 @@
 ﻿namespace RpcNet.Internal
 {
     using System;
-    using System.IO;
+    using System.Net;
+    using System.Net.Sockets;
+    using System.Threading;
 
-    // TODO: Must read from socket, otherwise the remote ip end point is unknown
     public class UdpBufferReader : INetworkReader
     {
-        private readonly Stream stream;
-        private readonly byte[] buffer = new byte[65536];
+        private readonly Socket socket;
+        private readonly byte[] buffer;
         private int totalLength;
-        private int index;
+        private int readIndex;
 
-        public UdpBufferReader(Stream stream) => this.stream = stream;
-
-        public void BeginReading()
+        public UdpBufferReader(Socket socket) : this(socket, 65536)
         {
-            this.totalLength = this.stream.Read(this.buffer, 0, this.buffer.Length);
-            this.index = 0;
         }
 
-        public void EndReading()
+        public UdpBufferReader(Socket socket, int bufferSize)
         {
+            this.socket = socket;
+            this.buffer = new byte[bufferSize];
+        }
 
+        public void BeginReading(out IPEndPoint remoteEndPoint)
+        {
+            EndPoint endPoint = new IPEndPoint(IPAddress.Loopback, 0);
+            this.totalLength = this.socket.ReceiveFrom(this.buffer, ref endPoint);
+            remoteEndPoint = (IPEndPoint)endPoint;
         }
 
         public Span<byte> Read(int length)
         {
-            if (this.index + length > this.totalLength)
+            if (this.readIndex + length > this.totalLength)
             {
                 throw new RpcException("Buffer underflow.");
             }
 
-            Span<byte> span = this.buffer.AsSpan(this.index, length);
-            this.index += length;
+            Span<byte> span = this.buffer.AsSpan(this.readIndex, length);
+            this.readIndex += length;
             return span;
         }
     }

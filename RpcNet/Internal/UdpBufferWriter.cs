@@ -1,30 +1,41 @@
 ﻿namespace RpcNet.Internal
 {
     using System;
-    using System.IO;
+    using System.Net;
+    using System.Net.Sockets;
 
     public class UdpBufferWriter : INetworkWriter
     {
-        private readonly Stream stream;
+        private readonly Socket socket;
         private readonly byte[] buffer = new byte[65536];
-        private int index;
+        private int writeIndex;
 
-        public UdpBufferWriter(Stream stream) => this.stream = stream;
+        public UdpBufferWriter(Socket socket) : this(socket, 65536)
+        {
+        }
 
-        public void Reset() => this.index = 0;
+        public UdpBufferWriter(Socket socket, int bufferSize)
+        {
+            this.socket = socket;
+            this.buffer = new byte[bufferSize];
+        }
 
-        // TODO: EndWriting must throw an RpcException
-        public void EndWriting() => this.stream.Write(this.buffer, 0, this.index);
+        public void BeginWriting() => this.writeIndex = 0;
+
+        public void EndWriting(IPEndPoint remoteEndPoint)
+        {
+            this.socket.SendTo(this.buffer, this.writeIndex, SocketFlags.None, remoteEndPoint);
+        }
 
         public Span<byte> Reserve(int length)
         {
-            if (this.index + length > this.buffer.Length)
+            if (this.writeIndex + length > this.buffer.Length)
             {
                 throw new RpcException("Buffer overflow.");
             }
 
-            Span<byte> span = this.buffer.AsSpan(this.index, length);
-            this.index += length;
+            Span<byte> span = this.buffer.AsSpan(this.writeIndex, length);
+            this.writeIndex += length;
             return span;
         }
     }

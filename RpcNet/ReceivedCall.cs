@@ -10,22 +10,18 @@ namespace RpcNet
 
         public void RetrieveCall(IXdrReadable argument)
         {
-
         }
 
         public void Reply(IXdrWritable result)
         {
-
         }
 
         public void ProcedureUnavailable()
         {
-
         }
 
         public void ProgramMismatch()
         {
-
         }
     }
 }

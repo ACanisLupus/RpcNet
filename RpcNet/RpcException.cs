@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace RpcNet
+﻿namespace RpcNet
 {
+    using System;
+
     public class RpcException : Exception
     {
         public RpcException(string message) : base(message)

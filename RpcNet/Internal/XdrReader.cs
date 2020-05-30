@@ -10,7 +10,7 @@
 
         public XdrReader(INetworkReader networkReader) => this.networkReader = networkReader;
 
-        public long ReadLong() => ((long)this.ReadInt() << 32) | ((long)this.ReadInt() & 0xffffffff);
+        public long ReadLong() => ((long)this.ReadInt() << 32) | (this.ReadInt() & 0xffffffff);
         public ulong ReadULong() => (ulong)this.ReadLong();
         public int ReadInt() => Utilities.ToInt32BigEndian(this.networkReader.Read(sizeof(int)));
         public uint ReadUInt() => (uint)this.ReadInt();
@@ -36,7 +36,12 @@
                 length -= span.Length;
             }
 
-            this.networkReader.Read(padding);
+            while (padding > 0)
+            {
+                int paddingLength = this.networkReader.Read(padding).Length;
+                padding -= paddingLength;
+            }
+
             return value;
         }
 
