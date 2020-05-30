@@ -1,7 +1,10 @@
 ﻿namespace RpcNet.Internal
 {
     using System;
+    using System.Net;
+    using System.Net.Sockets;
     using System.Runtime.CompilerServices;
+    using System.Runtime.InteropServices;
 
     public static class Utilities
     {
@@ -27,5 +30,38 @@
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int CalculateXdrPadding(int length) => (4 - (length & 3)) & 3;
+
+        // Simple and SocketException-free implementation of Socket.SendTo
+        public static unsafe SocketError SendTo(this Socket socket, Span<byte> span, IPEndPoint ipEndPoint, out int bytesSent)
+        {
+            SocketAddress socketAddress = ipEndPoint.Serialize();
+            byte[] toBuffer = new byte[socketAddress.Size];
+            for (int i = 0; i < socketAddress.Size; i++)
+            {
+                toBuffer[i] = socketAddress[i];
+            }
+
+            fixed (byte* pinnedSpan = &MemoryMarshal.GetReference(span))
+            {
+                fixed (byte* to = &toBuffer[0])
+                {
+                    bytesSent = Interop.SendTo(
+                        socket.Handle,
+                        pinnedSpan,
+                        span.Length,
+                        0,
+                        to,
+                        socketAddress.Size);
+                }
+            }
+
+            if (bytesSent == (int)SocketError.SocketError)
+            {
+                bytesSent = 0;
+                return (SocketError)Interop.WSAGetLastError();
+            }
+
+            return SocketError.Success;
+        }
     }
 }

@@ -37,7 +37,7 @@
         }
 
         [Test]
-        [TestCase(1)]
+        [TestCase(0)]
         [TestCase(10)]
         [TestCase(100)]
         public void SendAndReceiveData(int length)
@@ -50,7 +50,9 @@
                 writeSpan[i] = (byte)i;
             }
 
-            this.writer.EndWriting(this.remoteIpEndPoint);
+            SocketError socketError = this.writer.EndWriting(this.remoteIpEndPoint, out int bytesSent);
+            Assert.That(socketError, Is.EqualTo(SocketError.Success));
+            Assert.That(bytesSent, Is.EqualTo(length));
 
             this.reader.BeginReading(out IPEndPoint writerIpEndPoint);
             Assert.That(writerIpEndPoint.Address, Is.EqualTo(this.remoteIpEndPoint.Address));
@@ -77,7 +79,9 @@
                 writeSpan[i] = (byte)i;
             }
 
-            this.writer.EndWriting(this.remoteIpEndPoint);
+            SocketError socketError = this.writer.EndWriting(this.remoteIpEndPoint, out int bytesSent);
+            Assert.That(socketError, Is.EqualTo(SocketError.Success));
+            Assert.That(bytesSent, Is.EqualTo(100));
 
             this.reader.BeginReading(out _);
             byte[] buffer = new byte[100];
@@ -114,7 +118,10 @@
         {
             this.writer.BeginWriting();
             this.writer.Reserve(10);
-            this.writer.EndWriting(this.remoteIpEndPoint);
+
+            SocketError socketError = this.writer.EndWriting(this.remoteIpEndPoint, out int bytesSent);
+            Assert.That(socketError, Is.EqualTo(SocketError.Success));
+            Assert.That(bytesSent, Is.EqualTo(10));
 
             this.reader.BeginReading(out _);
             for (int i = 0; i < arguments.Length - 1; i++)
