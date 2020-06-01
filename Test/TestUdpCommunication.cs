@@ -52,13 +52,16 @@
                 writeSpan[i] = (byte)i;
             }
 
-            int bytesSent = this.writer.EndWriting(this.remoteIpEndPoint);
-            Assert.That(bytesSent, Is.EqualTo(length));
+            UdpResult udpResult = this.writer.EndWriting(this.remoteIpEndPoint);
+            Assert.That(udpResult.SocketError, Is.EqualTo(SocketError.Success));
+            Assert.That(udpResult.BytesLength, Is.EqualTo(length));
 
-            this.reader.BeginReading(out IPEndPoint writerIpEndPoint);
-            Assert.That(writerIpEndPoint.Address, Is.EqualTo(this.remoteIpEndPoint.Address));
-            Assert.That(writerIpEndPoint.Port, Is.Not.EqualTo(this.remoteIpEndPoint.Port));
-            Assert.That(writerIpEndPoint.Port, Is.GreaterThanOrEqualTo(49152));
+            udpResult = this.reader.BeginReading();
+            Assert.That(udpResult.SocketError, Is.EqualTo(SocketError.Success));
+            Assert.That(udpResult.BytesLength, Is.EqualTo(length));
+            Assert.That(udpResult.IpEndPoint.Address, Is.EqualTo(this.remoteIpEndPoint.Address));
+            Assert.That(udpResult.IpEndPoint.Port, Is.Not.EqualTo(this.remoteIpEndPoint.Port));
+            Assert.That(udpResult.IpEndPoint.Port, Is.GreaterThanOrEqualTo(49152));
 
             ReadOnlySpan<byte> readSpan = this.reader.Read(length);
             Assert.That(readSpan.Length, Is.EqualTo(length));
@@ -80,10 +83,11 @@
                 writeSpan[i] = (byte)i;
             }
 
-            int bytesSent = this.writer.EndWriting(this.remoteIpEndPoint);
-            Assert.That(bytesSent, Is.EqualTo(100));
+            UdpResult udpResult = this.writer.EndWriting(this.remoteIpEndPoint);
+            Assert.That(udpResult.SocketError, Is.EqualTo(SocketError.Success));
+            Assert.That(udpResult.BytesLength, Is.EqualTo(100));
 
-            this.reader.BeginReading(out _);
+            this.reader.BeginReading();
             byte[] buffer = new byte[100];
             int index = 0;
             for (int i = 0; i < 100 / length; i++)
@@ -119,10 +123,11 @@
             this.writer.BeginWriting();
             this.writer.Reserve(10);
 
-            int bytesSent = this.writer.EndWriting(this.remoteIpEndPoint);
-            Assert.That(bytesSent, Is.EqualTo(10));
+            UdpResult udpResult = this.writer.EndWriting(this.remoteIpEndPoint);
+            Assert.That(udpResult.SocketError, Is.EqualTo(SocketError.Success));
+            Assert.That(udpResult.BytesLength, Is.EqualTo(10));
 
-            this.reader.BeginReading(out _);
+            this.reader.BeginReading();
             for (int i = 0; i < arguments.Length - 1; i++)
             {
                 this.reader.Read(arguments[i]);
@@ -138,18 +143,22 @@
         public void TimeoutReader(int timeout)
         {
             this.server.Client.ReceiveTimeout = timeout;
-            Assert.Throws<SocketException>(() => this.reader.BeginReading(out _));
+            UdpResult udpResult = this.reader.BeginReading(timeout);
+            Assert.That(udpResult.SocketError, Is.EqualTo(SocketError.TimedOut));
         }
 
         [Test]
         public void AbortReading()
         {
-            Task.Run(() =>
+            var task = Task.Run(() =>
             {
-                Assert.Throws<SocketException>(() => this.reader.BeginReading(out _));
+                UdpResult udpResult = this.reader.BeginReading();
+                Assert.That(udpResult.SocketError, Is.EqualTo(SocketError.OperationAborted));
             });
             Thread.Sleep(100);
             this.server.Dispose();
+            this.reader.Dispose();
+            task.Wait();
         }
 
         private static void AssertEquals(ReadOnlySpan<byte> one, ReadOnlySpan<byte> two)
