@@ -32,7 +32,7 @@
         public static int CalculateXdrPadding(int length) => (4 - (length & 3)) & 3;
 
         // Simple and SocketException-free implementation of Socket.SendTo
-        public static unsafe SocketError SendTo(this Socket socket, Span<byte> span, IPEndPoint ipEndPoint, out int bytesSent)
+        public static unsafe SocketResult SendTo(this Socket socket, ReadOnlySpan<byte> span, IPEndPoint ipEndPoint)
         {
             SocketAddress socketAddress = ipEndPoint.Serialize();
             byte[] toBuffer = new byte[socketAddress.Size];
@@ -40,6 +40,8 @@
             {
                 toBuffer[i] = socketAddress[i];
             }
+
+            int bytesSent;
 
             fixed (byte* pinnedSpan = &MemoryMarshal.GetReference(span))
             {
@@ -57,11 +59,18 @@
 
             if (bytesSent == (int)SocketError.SocketError)
             {
-                bytesSent = 0;
-                return (SocketError)Interop.WSAGetLastError();
+                return new SocketResult
+                {
+                    BytesLength = 0,
+                    SocketError = (SocketError)Interop.WSAGetLastError()
+                };
             }
 
-            return SocketError.Success;
+            return new SocketResult
+            {
+                BytesLength = bytesSent,
+                SocketError = SocketError.Success
+            };
         }
     }
 }

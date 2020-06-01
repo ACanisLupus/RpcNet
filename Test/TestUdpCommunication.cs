@@ -50,16 +50,16 @@
                 writeSpan[i] = (byte)i;
             }
 
-            SocketError socketError = this.writer.EndWriting(this.remoteIpEndPoint, out int bytesSent);
-            Assert.That(socketError, Is.EqualTo(SocketError.Success));
-            Assert.That(bytesSent, Is.EqualTo(length));
+            SocketResult socketResult = this.writer.EndWriting(this.remoteIpEndPoint);
+            Assert.That(socketResult.SocketError, Is.EqualTo(SocketError.Success));
+            Assert.That(socketResult.BytesLength, Is.EqualTo(length));
 
             this.reader.BeginReading(out IPEndPoint writerIpEndPoint);
             Assert.That(writerIpEndPoint.Address, Is.EqualTo(this.remoteIpEndPoint.Address));
             Assert.That(writerIpEndPoint.Port, Is.Not.EqualTo(this.remoteIpEndPoint.Port));
             Assert.That(writerIpEndPoint.Port, Is.GreaterThanOrEqualTo(49152));
 
-            Span<byte> readSpan = this.reader.Read(length);
+            ReadOnlySpan<byte> readSpan = this.reader.Read(length);
             Assert.That(readSpan.Length, Is.EqualTo(length));
 
             AssertEquals(readSpan, writeSpan);
@@ -79,9 +79,9 @@
                 writeSpan[i] = (byte)i;
             }
 
-            SocketError socketError = this.writer.EndWriting(this.remoteIpEndPoint, out int bytesSent);
-            Assert.That(socketError, Is.EqualTo(SocketError.Success));
-            Assert.That(bytesSent, Is.EqualTo(100));
+            SocketResult socketResult = this.writer.EndWriting(this.remoteIpEndPoint);
+            Assert.That(socketResult.SocketError, Is.EqualTo(SocketError.Success));
+            Assert.That(socketResult.BytesLength, Is.EqualTo(100));
 
             this.reader.BeginReading(out _);
             byte[] buffer = new byte[100];
@@ -119,9 +119,9 @@
             this.writer.BeginWriting();
             this.writer.Reserve(10);
 
-            SocketError socketError = this.writer.EndWriting(this.remoteIpEndPoint, out int bytesSent);
-            Assert.That(socketError, Is.EqualTo(SocketError.Success));
-            Assert.That(bytesSent, Is.EqualTo(10));
+            SocketResult socketResult = this.writer.EndWriting(this.remoteIpEndPoint);
+            Assert.That(socketResult.SocketError, Is.EqualTo(SocketError.Success));
+            Assert.That(socketResult.BytesLength, Is.EqualTo(10));
 
             this.reader.BeginReading(out _);
             for (int i = 0; i < arguments.Length - 1; i++)
@@ -142,7 +142,7 @@
             Assert.Throws<SocketException>(() => this.reader.BeginReading(out _));
         }
 
-        private static void AssertEquals(Span<byte> one, Span<byte> two)
+        private static void AssertEquals(ReadOnlySpan<byte> one, ReadOnlySpan<byte> two)
         {
             Assert.That(one.Length, Is.EqualTo(two.Length));
             for (int i = 0; i < one.Length; i++)

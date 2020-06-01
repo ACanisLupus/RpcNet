@@ -22,8 +22,8 @@
 
         public void BeginWriting() => this.writeIndex = 0;
 
-        public SocketError EndWriting(IPEndPoint remoteEndPoint, out int bytesSent) =>
-            this.socket.SendTo(this.buffer.AsSpan(0, this.writeIndex), remoteEndPoint, out bytesSent);
+        public SocketResult EndWriting(IPEndPoint remoteEndPoint) =>
+            this.socket.SendTo(this.buffer.AsSpan(0, this.writeIndex), remoteEndPoint);
 
         public Span<byte> Reserve(int length)
         {

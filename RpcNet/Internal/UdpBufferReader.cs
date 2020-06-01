@@ -28,7 +28,7 @@
             remoteEndPoint = (IPEndPoint)endPoint;
         }
 
-        public Span<byte> Read(int length)
+        public ReadOnlySpan<byte> Read(int length)
         {
             if (this.readIndex + length > this.totalLength)
             {

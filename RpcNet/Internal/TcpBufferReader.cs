@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.Sockets;
-using System.Text;
-
-namespace RpcNet.Internal
+﻿namespace RpcNet.Internal
 {
+    using System;
+    using System.Net.Sockets;
+
     // TODO: Implement
     public class TcpBufferReader : INetworkReader
     {
@@ -19,7 +17,7 @@ namespace RpcNet.Internal
         {
         }
 
-        public Span<byte> Read(int length)
+        public ReadOnlySpan<byte> Read(int length)
         {
             return this.buffer.AsSpan();
         }

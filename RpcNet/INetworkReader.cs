@@ -4,6 +4,6 @@
 
     public interface INetworkReader
     {
-        Span<byte> Read(int length);
+        ReadOnlySpan<byte> Read(int length);
     }
 }

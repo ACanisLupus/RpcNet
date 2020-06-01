@@ -24,7 +24,7 @@
             this.WriteIndex = 0;
         }
 
-        public Span<byte> Read(int length)
+        public ReadOnlySpan<byte> Read(int length)
         {
             length = Math.Min(length, this.maxReadLength);
             Span<byte> span = this.buffer.AsSpan(this.ReadIndex, length);

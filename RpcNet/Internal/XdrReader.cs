@@ -30,7 +30,7 @@
 
             while (length > 0)
             {
-                Span<byte> span = this.networkReader.Read(length);
+                ReadOnlySpan<byte> span = this.networkReader.Read(length);
                 span.CopyTo(value.AsSpan(writeIndex, span.Length));
                 writeIndex += span.Length;
                 length -= span.Length;
