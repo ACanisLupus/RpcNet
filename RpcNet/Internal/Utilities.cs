@@ -30,47 +30,5 @@
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int CalculateXdrPadding(int length) => (4 - (length & 3)) & 3;
-
-        // Simple and SocketException-free implementation of Socket.SendTo
-        public static unsafe SocketResult SendTo(this Socket socket, ReadOnlySpan<byte> span, IPEndPoint ipEndPoint)
-        {
-            SocketAddress socketAddress = ipEndPoint.Serialize();
-            byte[] toBuffer = new byte[socketAddress.Size];
-            for (int i = 0; i < socketAddress.Size; i++)
-            {
-                toBuffer[i] = socketAddress[i];
-            }
-
-            int bytesSent;
-
-            fixed (byte* pinnedSpan = &MemoryMarshal.GetReference(span))
-            {
-                fixed (byte* to = &toBuffer[0])
-                {
-                    bytesSent = Interop.SendTo(
-                        socket.Handle,
-                        pinnedSpan,
-                        span.Length,
-                        0,
-                        to,
-                        socketAddress.Size);
-                }
-            }
-
-            if (bytesSent == (int)SocketError.SocketError)
-            {
-                return new SocketResult
-                {
-                    BytesLength = 0,
-                    SocketError = (SocketError)Interop.WSAGetLastError()
-                };
-            }
-
-            return new SocketResult
-            {
-                BytesLength = bytesSent,
-                SocketError = SocketError.Success
-            };
-        }
     }
 }
