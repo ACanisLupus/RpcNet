@@ -1,45 +1,57 @@
 ﻿namespace RpcNet.Internal
 {
     using System;
-    using System.IO;
+    using System.Net.Sockets;
 
     public class TcpBufferWriter : INetworkWriter
     {
         private const int TcpHeader = 4;
-        private readonly Stream stream;
-        private readonly byte[] buffer = new byte[65536];
-        private int index;
+        private readonly Socket socket;
+        private readonly byte[] buffer;
+        private int writeIndex;
 
-        public TcpBufferWriter(Stream stream) => this.stream = stream;
+        public TcpBufferWriter(Socket socket) : this(socket, 65536)
+        {
+        }
 
-        public void BeginWriting() => this.index = TcpHeader;
+        public TcpBufferWriter(Socket socket, int bufferSize)
+        {
+            this.socket = socket;
+            this.buffer = new byte[bufferSize];
+        }
+
+        public void BeginWriting() => this.writeIndex = TcpHeader;
         public void EndWriting() => this.FlushPacket(true);
 
         public Span<byte> Reserve(int length)
         {
-            // For now there is no way to split extremely large opaque datas or strings into multiple packets
-            if (length + TcpHeader > this.buffer.Length)
-            {
-                throw new RpcException($"Buffer overflow. Could not reserve more than {this.buffer.Length - TcpHeader} bytes.");
-            }
+            int maxLength = this.buffer.Length - this.writeIndex;
 
-            if (this.index + length > this.buffer.Length)
+            // Integers (4 bytes) and padding bytes (> 1 and < 4 bytes) must not be sent fragmented
+            if (maxLength < length && maxLength < sizeof(int))
             {
                 this.FlushPacket(false);
+                maxLength = this.buffer.Length - this.writeIndex;
             }
 
-            Span<byte> span = this.buffer.AsSpan(this.index, length);
-            this.index += length;
+            int reservedLength = Math.Min(length, maxLength);
+
+            Span<byte> span = this.buffer.AsSpan(this.writeIndex, reservedLength);
+            this.writeIndex += reservedLength;
             return span;
         }
 
-        // TODO: Flush must throw an RpcException
         private void FlushPacket(bool lastPacket)
         {
             // Last packet sets first bit to 1
-            int length = lastPacket ? (int)((this.index - TcpHeader) & 0x80000000) : (this.index - TcpHeader);
+            int length = lastPacket ? (int)((this.writeIndex - TcpHeader) & 0x80000000) : (this.writeIndex - TcpHeader);
             Utilities.WriteBytesBigEndian(this.buffer.AsSpan(), length);
-            this.stream.Write(this.buffer, 0, length + TcpHeader);
+            this.socket.Send(this.buffer, 0, length + TcpHeader, SocketFlags.None, out SocketError socketError);
+            if (socketError != SocketError.Success)
+            {
+                throw new RpcException($"Could not send packet. Socket error code: {socketError}.");
+            }
+
             this.BeginWriting();
         }
     }

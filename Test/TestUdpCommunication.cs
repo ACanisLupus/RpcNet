@@ -1,8 +1,6 @@
 ﻿namespace RpcNet.Test
 {
     using System;
-    using System.ComponentModel.Design;
-    using System.Diagnostics;
     using System.Net;
     using System.Net.Sockets;
     using System.Threading;

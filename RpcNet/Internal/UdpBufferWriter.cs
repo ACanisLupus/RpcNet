@@ -28,7 +28,7 @@
 
         public void BeginWriting() => this.writeIndex = 0;
 
-        // Not the best SendTo-implementation, but the only one, that is SocketException-free
+        // Not the best SendTo-implementation, but a simple one, that is SocketException-free
         public UdpResult EndWriting(IPEndPoint remoteEndPoint)
         {
             this.manualResetEvent.Reset();

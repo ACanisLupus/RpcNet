@@ -29,7 +29,7 @@
 
         private void OnCompleted(object sender, SocketAsyncEventArgs e) => this.manualResetEvent.Set();
 
-        // Not the best ReceiveFrom-implementation, but the only one, that is SocketException-free
+        // Not the best ReceiveFrom-implementation, but a simple one, that is SocketException-free
         public UdpResult BeginReading(int timeout = -1)
         {
             this.manualResetEvent.Reset();

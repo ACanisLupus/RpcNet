@@ -21,12 +21,12 @@
         public void SetUp() => this.stubNetwork.Reset();
 
         [Test]
-        [TestCase(65536, 65536)]
-        [TestCase(65536, 8)]
-        [TestCase(8, 65536)]
-        [TestCase(8, 8)]
-        [TestCase(16, 8)]
-        [TestCase(8, 16)]
+        [TestCase(28, 28)]
+        [TestCase(28, 4)]
+        [TestCase(4, 28)]
+        [TestCase(4, 4)]
+        [TestCase(8, 4)]
+        [TestCase(4, 8)]
         public void ReserveMultipleFragmentsOpaque(int maxReadLength, int maxReserveLength)
         {
             var stubNetwork = new StubNetwork(maxReadLength, maxReserveLength);
@@ -34,20 +34,12 @@
             var writer = new XdrWriter(stubNetwork);
 
             byte[] value = GenerateByteTestData(21);
-
             writer.WriteVariableLengthOpaque(value);
+            writer.Write(42);
 
-            Assert.That(stubNetwork.WriteIndex, Is.EqualTo(28));
+            Assert.That(stubNetwork.WriteIndex, Is.EqualTo(32));
             Assert.That(reader.ReadOpaque(), Is.EqualTo(value));
-        }
-
-        [Test]
-        public void ReadAndWriteInt()
-        {
-            this.writer.Write(42);
-
-            Assert.That(this.stubNetwork.WriteIndex, Is.EqualTo(4));
-            Assert.That(this.reader.ReadInt(), Is.EqualTo(42));
+            Assert.That(reader.ReadInt(), Is.EqualTo(42));
         }
 
         [Test]
@@ -567,7 +559,7 @@
             return value;
         }
 
-        private static byte[] GenerateByteTestData(int length)
+        public static byte[] GenerateByteTestData(int length)
         {
             byte[] value = new byte[length];
             for (int i = 0; i < length; i++)

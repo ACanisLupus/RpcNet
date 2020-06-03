@@ -36,12 +36,7 @@
                 length -= span.Length;
             }
 
-            while (padding > 0)
-            {
-                int paddingLength = this.networkReader.Read(padding).Length;
-                padding -= paddingLength;
-            }
-
+            _ = this.networkReader.Read(padding);
             return value;
         }
 
