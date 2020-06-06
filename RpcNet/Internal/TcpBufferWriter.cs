@@ -2,6 +2,7 @@
 {
     using System;
     using System.Net.Sockets;
+    using System.Threading;
 
     public class TcpBufferWriter : INetworkWriter
     {
@@ -59,6 +60,17 @@
             {
                 throw new RpcException($"Could not send packet. Socket error code: {socketError}.");
             }
+
+            //for (int i = 0; i < length + TcpHeader; i++)
+            //{
+            //    byte[] tmpBuffer = new byte[1] { this.buffer[i] };
+            //    this.socket.Send(tmpBuffer, 0, 1, SocketFlags.None, out SocketError socketError);
+            //    if (socketError != SocketError.Success)
+            //    {
+            //        throw new RpcException($"Could not send packet. Socket error code: {socketError}.");
+            //    }
+            //    Thread.Sleep(1);
+            //}
 
             this.BeginWriting();
         }

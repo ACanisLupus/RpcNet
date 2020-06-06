@@ -43,7 +43,7 @@ namespace RpcNet.Test
         [TestCase(8, 8)]
         [TestCase(12, 8)]
         [TestCase(8, 12)]
-        public void ReserveMultipleFragmentsOpaque(int maxReadLength, int maxReserveLength)
+        public void ReadAndWriteMultipleFragments(int maxReadLength, int maxReserveLength)
         {
             this.reader = new TcpBufferReader(this.readerTcpClient.Client, maxReadLength);
             this.writer = new TcpBufferWriter(this.writerTcpClient.Client, maxReserveLength);
@@ -63,6 +63,42 @@ namespace RpcNet.Test
             Assert.That(xdrReader.ReadOpaque(), Is.EqualTo(value));
             Assert.That(xdrReader.ReadInt(), Is.EqualTo(42));
             reader.EndReading();
+        }
+
+        [Test]
+        [TestCase(32, 32)]
+        [TestCase(32, 8)]
+        [TestCase(8, 32)]
+        [TestCase(8, 8)]
+        [TestCase(12, 8)]
+        [TestCase(8, 12)]
+        public void ReadAndWriteMultipleFragmentsThreaded(int maxReadLength, int maxReserveLength)
+        {
+            this.reader = new TcpBufferReader(this.readerTcpClient.Client, maxReadLength);
+            this.writer = new TcpBufferWriter(this.writerTcpClient.Client, maxReserveLength);
+
+            this.writerTcpClient.Client.SendBufferSize = 1;
+
+            var xdrReader = new XdrReader(this.reader);
+            var xdrWriter = new XdrWriter(this.writer);
+
+            byte[] value = TestXdr.GenerateByteTestData(17);
+
+            var task = Task.Run(() =>
+            {
+                Assert.That(reader.BeginReading(out SocketError socketError), Is.True);
+                Assert.That(socketError, Is.EqualTo(SocketError.Success));
+                Assert.That(xdrReader.ReadOpaque(), Is.EqualTo(value));
+                Assert.That(xdrReader.ReadInt(), Is.EqualTo(42));
+                reader.EndReading();
+            });
+
+            writer.BeginWriting();
+            xdrWriter.WriteVariableLengthOpaque(value);
+            xdrWriter.Write(42);
+            writer.EndWriting();
+
+            task.Wait();
         }
     }
 }

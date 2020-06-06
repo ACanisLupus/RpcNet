@@ -40,6 +40,7 @@
             this.writeIndex = 0;
             this.lastFragment = false;
             this.endIndexOfCurrentFragment = 0;
+            this.unreceivedBytesForCurrentFragment = 0;
         }
 
         public ReadOnlySpan<byte> Read(int length)
@@ -50,6 +51,7 @@
             }
 
             int endIndex = Math.Min(this.endIndexOfCurrentFragment, this.buffer.Length);
+            endIndex = Math.Min(endIndex, this.writeIndex);
             int availableBytes = endIndex - this.readIndex;
             int bytesToRead = Math.Min(availableBytes, length);
 
@@ -61,56 +63,54 @@
         // Maybe there are 1000 implementations better than this one. But its working...
         private bool FillBuffer(out SocketError socketError)
         {
-            if (this.endIndexOfCurrentFragment == this.readIndex && this.writeIndex > this.readIndex)
+            while (true)
             {
-                this.ReadFragmentLength();
-            }
-
-            if (this.lastFragment && this.unreceivedBytesForCurrentFragment == 0)
-            {
-                // This message is complete
-                socketError = SocketError.Success;
-                return true;
-            }
-
-            if (this.writeIndex == this.buffer.Length || this.unreceivedBytesForCurrentFragment < 0)
-            {
-                if (this.readIndex < this.writeIndex)
+                if (this.endIndexOfCurrentFragment == this.readIndex && this.writeIndex > this.readIndex)
                 {
-                    // No place to write. Wait for more reads
+                    this.ReadFragmentLength();
+                }
+
+                if (this.lastFragment && this.unreceivedBytesForCurrentFragment == 0)
+                {
+                    // This message is complete
                     socketError = SocketError.Success;
                     return true;
                 }
 
-                // Buffer is empty. Prepare for receive
-                this.endIndexOfCurrentFragment -= this.writeIndex;
-                this.readIndex = 0;
-                this.writeIndex = 0;
-            }
+                if (this.readIndex < this.writeIndex && this.unreceivedBytesForCurrentFragment <= 0)
+                {
+                    socketError = SocketError.Success;
+                    return true;
+                }
 
-            if (this.unreceivedBytesForCurrentFragment > 0)
-            {
-                // Still data missing from current fragment
-                int bytesToReceive = Math.Min(this.unreceivedBytesForCurrentFragment, this.buffer.Length - this.writeIndex);
-                if (!this.ReceiveAtLeast(bytesToReceive, out socketError))
+                if (this.writeIndex == this.buffer.Length && this.readIndex == this.writeIndex)
+                {
+                    // Buffer is empty. Prepare for receive
+                    this.endIndexOfCurrentFragment -= this.writeIndex;
+                    this.readIndex = 0;
+                    this.writeIndex = 0;
+                }
+
+                if (this.unreceivedBytesForCurrentFragment > 0)
+                {
+                    // Still data missing from current fragment
+                    int bytesToReceive = Math.Min(this.unreceivedBytesForCurrentFragment, this.buffer.Length - this.writeIndex);
+                    if (!this.ReceiveAtLeast(bytesToReceive, out socketError))
+                    {
+                        return false;
+                    }
+
+                    this.unreceivedBytesForCurrentFragment -= bytesToReceive;
+                    socketError = SocketError.Success;
+                    return true;
+                }
+
+                // Begin new fragment
+                if (!this.ReceiveAtLeast(TcpHeaderLength, out socketError))
                 {
                     return false;
                 }
-
-                this.unreceivedBytesForCurrentFragment -= bytesToReceive;
-                socketError = SocketError.Success;
-                return true;
             }
-
-            // Begin new fragment
-            if (!this.ReceiveAtLeast(TcpHeaderLength, out socketError))
-            {
-                return false;
-            }
-
-            this.ReadFragmentLength();
-            socketError = SocketError.Success;
-            return true;
         }
 
         private void ReadFragmentLength()
