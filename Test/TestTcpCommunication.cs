@@ -51,14 +51,14 @@ namespace RpcNet.Test
             var xdrReader = new XdrReader(this.reader);
             var xdrWriter = new XdrWriter(this.writer);
 
-            byte[] value = TestXdr.GenerateByteTestData(21);
+            byte[] value = TestXdr.GenerateByteTestData(17);
 
             writer.BeginWriting();
             xdrWriter.WriteVariableLengthOpaque(value);
             xdrWriter.Write(42);
             writer.EndWriting();
 
-            SocketError socketError = reader.BeginReading();
+            Assert.That(reader.BeginReading(out SocketError socketError), Is.True);
             Assert.That(socketError, Is.EqualTo(SocketError.Success));
             Assert.That(xdrReader.ReadOpaque(), Is.EqualTo(value));
             Assert.That(xdrReader.ReadInt(), Is.EqualTo(42));
