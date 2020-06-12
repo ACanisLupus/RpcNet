@@ -3,6 +3,7 @@
     using System;
     using System.Text;
 
+    // Public for tests
     public class XdrWriter : IXdrWriter
     {
         private readonly Encoding encoding = Encoding.UTF8;

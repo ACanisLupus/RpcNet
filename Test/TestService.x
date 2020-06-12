@@ -35,5 +35,5 @@ struct MyStruct
 program TestServiceProg {
     version TestServiceVers {
         MyStruct TestMyStruct(MyStruct) = 1;
-   } = 1;
+    } = 1;
 } = 0x02004009;

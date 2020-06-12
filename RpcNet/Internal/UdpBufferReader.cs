@@ -5,6 +5,7 @@
     using System.Net.Sockets;
     using System.Threading;
 
+    // Public for tests
     public class UdpBufferReader : INetworkReader, IDisposable
     {
         private readonly Socket socket;
@@ -20,6 +21,11 @@
 
         public UdpBufferReader(Socket socket, int bufferSize)
         {
+            if (bufferSize < sizeof(int) || bufferSize % 4 != 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(bufferSize));
+            }
+
             this.socket = socket;
             this.buffer = new byte[bufferSize];
             this.socketAsyncEventArgs.Completed += this.OnCompleted;
@@ -33,7 +39,9 @@
         public UdpResult BeginReading(int timeout = -1)
         {
             this.manualResetEvent.Reset();
-            if (this.socket.ReceiveFromAsync(this.socketAsyncEventArgs))
+
+            bool willRaiseEvent = this.socket.ReceiveFromAsync(this.socketAsyncEventArgs);
+            if (willRaiseEvent)
             {
                 if (!this.manualResetEvent.WaitOne(timeout))
                 {
@@ -57,6 +65,7 @@
         public void Dispose()
         {
             this.socketAsyncEventArgs.Dispose();
+            this.manualResetEvent.Dispose();
         }
 
         public ReadOnlySpan<byte> Read(int length)

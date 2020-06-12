@@ -3,18 +3,20 @@
     using System;
     using System.Net.Sockets;
 
+    // Public for tests
     public class TcpBufferReader : INetworkReader
     {
         private const int TcpHeaderLength = 4;
+
         private readonly Socket socket;
         private readonly byte[] buffer;
+
         private int readIndex;
         private int writeIndex;
         private bool lastPacket;
-
         private int headerIndex = 0;
         private int bodyIndex = 0;
-        private PacketState packetWriteState = PacketState.Header;
+        private PacketState packetState = PacketState.Header;
 
         public TcpBufferReader(Socket socket) : this(socket, 65536)
         {
@@ -37,7 +39,7 @@
             this.writeIndex = 0;
             this.lastPacket = false;
 
-            this.packetWriteState = PacketState.Header;
+            this.packetState = PacketState.Header;
             this.headerIndex = 0;
             this.bodyIndex = 0;
 
@@ -70,18 +72,18 @@
             bool readFromNetwork = false;
             while (true)
             {
-                if (this.packetWriteState == PacketState.Complete)
+                if (this.packetState == PacketState.Complete)
                 {
                     socketError = SocketError.Success;
                     return true;
                 }
 
-                if (this.packetWriteState == PacketState.Header)
+                if (this.packetState == PacketState.Header)
                 {
                     this.ReadHeader(ref readFromNetwork);
                 }
 
-                if (this.packetWriteState == PacketState.Body)
+                if (this.packetState == PacketState.Body)
                 {
                     if (this.ReadBody(ref readFromNetwork))
                     {
@@ -117,7 +119,7 @@
         {
             if (this.writeIndex == this.headerIndex && this.lastPacket)
             {
-                this.packetWriteState = PacketState.Complete;
+                this.packetState = PacketState.Complete;
                 return true;
             }
 
@@ -134,7 +136,7 @@
             }
             else
             {
-                this.packetWriteState = PacketState.Header;
+                this.packetState = PacketState.Header;
             }
 
             return false;
@@ -175,7 +177,7 @@
                     throw new RpcException("This ain't an XDR stream.");
                 }
 
-                this.packetWriteState = PacketState.Body;
+                this.packetState = PacketState.Body;
                 this.bodyIndex = this.headerIndex + TcpHeaderLength;
                 this.headerIndex = this.bodyIndex + packetLength;
                 this.readIndex = this.bodyIndex;

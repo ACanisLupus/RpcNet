@@ -2,11 +2,11 @@
 {
     using System;
     using System.Net.Sockets;
-    using System.Threading;
 
+    // Public for tests
     public class TcpBufferWriter : INetworkWriter
     {
-        private const int TcpHeader = 4;
+        private const int TcpHeaderLength = 4;
         private readonly Socket socket;
         private readonly byte[] buffer;
         private int writeIndex;
@@ -17,7 +17,7 @@
 
         public TcpBufferWriter(Socket socket, int bufferSize)
         {
-            if (bufferSize < 2 * sizeof(int) || bufferSize % 4 != 0)
+            if (bufferSize < TcpHeaderLength + sizeof(int) || bufferSize % 4 != 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(bufferSize));
             }
@@ -26,7 +26,7 @@
             this.buffer = new byte[bufferSize];
         }
 
-        public void BeginWriting() => this.writeIndex = TcpHeader;
+        public void BeginWriting() => this.writeIndex = TcpHeaderLength;
         public void EndWriting() => this.FlushPacket(true);
 
         public Span<byte> Reserve(int length)
@@ -49,13 +49,13 @@
 
         private void FlushPacket(bool lastPacket)
         {
-            int length = this.writeIndex - TcpHeader;
+            int length = this.writeIndex - TcpHeaderLength;
 
             // Last fragment sets first bit to 1
             int lengthToDecode = lastPacket ? length | unchecked((int)0x80000000) : length;
 
             Utilities.WriteBytesBigEndian(this.buffer.AsSpan(), lengthToDecode);
-            this.socket.Send(this.buffer, 0, length + TcpHeader, SocketFlags.None, out SocketError socketError);
+            this.socket.Send(this.buffer, 0, length + TcpHeaderLength, SocketFlags.None, out SocketError socketError);
             if (socketError != SocketError.Success)
             {
                 throw new RpcException($"Could not send packet. Socket error code: {socketError}.");
@@ -70,7 +70,7 @@
             //    {
             //        throw new RpcException($"Could not send packet. Socket error code: {socketError}.");
             //    }
-            //    Thread.Sleep(1);
+            //    System.Threading.Thread.Sleep(1);
             //}
 
             this.BeginWriting();

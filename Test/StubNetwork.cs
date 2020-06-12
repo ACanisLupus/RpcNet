@@ -1,7 +1,7 @@
 ﻿namespace RpcNet.Test
 {
     using System;
-    using RpcNet;
+    using RpcNet.Internal;
 
     internal class StubNetwork : INetworkReader, INetworkWriter
     {

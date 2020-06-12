@@ -5,10 +5,11 @@
     using System.Net.Sockets;
     using System.Threading;
 
-    public class UdpBufferWriter : INetworkWriter
+    // Public for tests
+    public class UdpBufferWriter : INetworkWriter, IDisposable
     {
         private readonly Socket socket;
-        private readonly byte[] buffer = new byte[65536];
+        private readonly byte[] buffer;
         private readonly SocketAsyncEventArgs socketAsyncEventArgs = new SocketAsyncEventArgs();
         private readonly ManualResetEvent manualResetEvent = new ManualResetEvent(false);
         private int writeIndex;
@@ -19,6 +20,11 @@
 
         public UdpBufferWriter(Socket socket, int bufferSize)
         {
+            if (bufferSize < sizeof(int) || bufferSize % 4 != 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(bufferSize));
+            }
+
             this.socket = socket;
             this.buffer = new byte[bufferSize];
             this.socketAsyncEventArgs.Completed += this.OnCompleted;
@@ -34,7 +40,9 @@
             this.manualResetEvent.Reset();
             this.socketAsyncEventArgs.RemoteEndPoint = remoteEndPoint;
             this.socketAsyncEventArgs.SetBuffer(this.buffer, 0, this.writeIndex);
-            if (this.socket.SendToAsync(this.socketAsyncEventArgs))
+
+            bool willRaiseEvent = this.socket.SendToAsync(this.socketAsyncEventArgs);
+            if (willRaiseEvent)
             {
                 if (!this.manualResetEvent.WaitOne())
                 {
@@ -64,6 +72,12 @@
             Span<byte> span = this.buffer.AsSpan(this.writeIndex, length);
             this.writeIndex += length;
             return span;
+        }
+
+        public void Dispose()
+        {
+            this.socketAsyncEventArgs.Dispose();
+            this.manualResetEvent.Dispose();
         }
     }
 }

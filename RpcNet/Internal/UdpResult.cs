@@ -2,6 +2,8 @@
 {
     using System.Net;
     using System.Net.Sockets;
+
+    // Public for tests
     public struct UdpResult
     {
         public SocketError SocketError;
