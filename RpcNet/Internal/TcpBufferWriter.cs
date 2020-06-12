@@ -61,6 +61,7 @@
                 throw new RpcException($"Could not send packet. Socket error code: {socketError}.");
             }
 
+            // For test purposes. This simulates a slow network
             //for (int i = 0; i < length + TcpHeader; i++)
             //{
             //    byte[] tmpBuffer = new byte[1] { this.buffer[i] };

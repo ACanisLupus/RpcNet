@@ -10,9 +10,11 @@
         private readonly byte[] buffer;
         private int readIndex;
         private int writeIndex;
-        private bool lastFragment;
-        private int unreceivedBytesForCurrentFragment;
-        private int endIndexOfCurrentFragment;
+        private bool lastPacket;
+
+        private int headerIndex = 0;
+        private int bodyIndex = 0;
+        private PacketState packetWriteState = PacketState.Header;
 
         public TcpBufferReader(Socket socket) : this(socket, 65536)
         {
@@ -20,7 +22,7 @@
 
         public TcpBufferReader(Socket socket, int bufferSize)
         {
-            if (bufferSize < 2 * sizeof(int) || bufferSize % 4 != 0)
+            if (bufferSize < TcpHeaderLength + sizeof(int) || bufferSize % 4 != 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(bufferSize));
             }
@@ -31,16 +33,19 @@
 
         public bool BeginReading(out SocketError socketError)
         {
+            this.readIndex = 0;
+            this.writeIndex = 0;
+            this.lastPacket = false;
+
+            this.packetWriteState = PacketState.Header;
+            this.headerIndex = 0;
+            this.bodyIndex = 0;
+
             return this.FillBuffer(out socketError);
         }
 
         public void EndReading()
         {
-            this.readIndex = 0;
-            this.writeIndex = 0;
-            this.lastFragment = false;
-            this.endIndexOfCurrentFragment = 0;
-            this.unreceivedBytesForCurrentFragment = 0;
         }
 
         public ReadOnlySpan<byte> Read(int length)
@@ -50,7 +55,7 @@
                 throw new RpcException($"Could not receive from TCP stream. Socket error code: {socketError}.");
             }
 
-            int endIndex = Math.Min(this.endIndexOfCurrentFragment, this.buffer.Length);
+            int endIndex = Math.Min(this.headerIndex, this.buffer.Length);
             endIndex = Math.Min(endIndex, this.writeIndex);
             int availableBytes = endIndex - this.readIndex;
             int bytesToRead = Math.Min(availableBytes, length);
@@ -60,100 +65,132 @@
             return span;
         }
 
-        // Maybe there are 1000 implementations better than this one. But its working...
         private bool FillBuffer(out SocketError socketError)
         {
+            bool readFromNetwork = false;
             while (true)
             {
-                if (this.endIndexOfCurrentFragment == this.readIndex && this.writeIndex > this.readIndex)
-                {
-                    this.ReadFragmentLength();
-                }
-
-                if (this.lastFragment && this.unreceivedBytesForCurrentFragment == 0)
-                {
-                    // This message is complete
-                    socketError = SocketError.Success;
-                    return true;
-                }
-
-                if (this.readIndex < this.writeIndex && this.unreceivedBytesForCurrentFragment <= 0)
+                if (this.packetWriteState == PacketState.Complete)
                 {
                     socketError = SocketError.Success;
                     return true;
                 }
 
-                if (this.writeIndex == this.buffer.Length && this.readIndex == this.writeIndex)
+                if (this.packetWriteState == PacketState.Header)
                 {
-                    // Buffer is empty. Prepare for receive
-                    this.endIndexOfCurrentFragment -= this.writeIndex;
-                    this.readIndex = 0;
-                    this.writeIndex = 0;
+                    this.ReadHeader(ref readFromNetwork);
                 }
 
-                if (this.unreceivedBytesForCurrentFragment > 0)
+                if (this.packetWriteState == PacketState.Body)
                 {
-                    // Still data missing from current fragment
-                    int bytesToReceive = Math.Min(this.unreceivedBytesForCurrentFragment, this.buffer.Length - this.writeIndex);
-                    if (!this.ReceiveAtLeast(bytesToReceive, out socketError))
+                    if (this.ReadBody(ref readFromNetwork))
+                    {
+                        socketError = SocketError.Success;
+                        return true;
+                    }
+                }
+
+                if (readFromNetwork)
+                {
+                    if (!this.ReadFromNetwork(out socketError, ref readFromNetwork))
                     {
                         return false;
                     }
+                }
 
-                    this.unreceivedBytesForCurrentFragment -= bytesToReceive;
-                    socketError = SocketError.Success;
+                this.ShiftData();
+            }
+        }
+
+        private void ShiftData()
+        {
+            if (this.readIndex == this.writeIndex && this.writeIndex > 0)
+            {
+                this.bodyIndex -= this.writeIndex;
+                this.headerIndex -= this.writeIndex;
+                this.writeIndex = 0;
+                this.readIndex = 0;
+            }
+        }
+
+        private bool ReadBody(ref bool readFromNetwork)
+        {
+            if (this.writeIndex == this.headerIndex && this.lastPacket)
+            {
+                this.packetWriteState = PacketState.Complete;
+                return true;
+            }
+
+            if (this.readIndex < this.headerIndex)
+            {
+                if (this.writeIndex < this.headerIndex && this.writeIndex < this.buffer.Length)
+                {
+                    readFromNetwork = true;
+                }
+                else if (this.readIndex < this.buffer.Length)
+                {
                     return true;
                 }
-
-                // Begin new fragment
-                if (!this.ReceiveAtLeast(TcpHeaderLength, out socketError))
-                {
-                    return false;
-                }
             }
+            else
+            {
+                this.packetWriteState = PacketState.Header;
+            }
+
+            return false;
         }
 
-        private void ReadFragmentLength()
+        private bool ReadFromNetwork(out SocketError socketError, ref bool readFromNetwork)
         {
-            int fragmentLength = Utilities.ToInt32BigEndian(this.buffer.AsSpan(this.readIndex, TcpHeaderLength));
-            if (fragmentLength < 0)
+            int receivedLength = this.socket.Receive(this.buffer, this.writeIndex, this.buffer.Length - this.writeIndex, SocketFlags.None, out socketError);
+            if (socketError != SocketError.Success)
             {
-                this.lastFragment = true;
-                fragmentLength &= 0x0fffffff;
+                return false;
             }
 
-            if (fragmentLength % 4 != 0)
+            if (receivedLength == 0)
             {
-                throw new RpcException("This ain't an XDR stream.");
+                socketError = SocketError.NotConnected;
+                return false;
             }
 
-            this.readIndex += TcpHeaderLength;
-            this.unreceivedBytesForCurrentFragment = (this.readIndex + fragmentLength) - this.writeIndex;
-            this.endIndexOfCurrentFragment = this.writeIndex + this.unreceivedBytesForCurrentFragment;
-        }
-
-        private bool ReceiveAtLeast(int length, out SocketError socketError)
-        {
-            int writeIndexGoal = this.writeIndex + length;
-            while (this.writeIndex < writeIndexGoal)
-            {
-                int receivedLength = this.socket.Receive(this.buffer, this.writeIndex, this.buffer.Length - this.writeIndex, SocketFlags.None, out socketError);
-                if (socketError != SocketError.Success)
-                {
-                    return false;
-                }
-
-                if (receivedLength == 0)
-                {
-                    socketError = SocketError.NotConnected;
-                    return false;
-                }
-
-                this.writeIndex += receivedLength;
-            }
-
-            socketError = SocketError.Success;
+            this.writeIndex += receivedLength;
+            readFromNetwork = false;
             return true;
+        }
+
+        private void ReadHeader(ref bool readFromNetwork)
+        {
+            if (this.writeIndex >= this.headerIndex + TcpHeaderLength)
+            {
+                int packetLength = Utilities.ToInt32BigEndian(this.buffer.AsSpan(this.headerIndex, TcpHeaderLength));
+                if (packetLength < 0)
+                {
+                    this.lastPacket = true;
+                    packetLength &= 0x0fffffff;
+                }
+
+                if (packetLength % 4 != 0 || packetLength == 0)
+                {
+                    throw new RpcException("This ain't an XDR stream.");
+                }
+
+                this.packetWriteState = PacketState.Body;
+                this.bodyIndex = this.headerIndex + TcpHeaderLength;
+                this.headerIndex = this.bodyIndex + packetLength;
+                this.readIndex = this.bodyIndex;
+            }
+            else
+            {
+                readFromNetwork = true;
+            }
+        }
+
+        private enum PacketState
+        {
+            Header,
+            Body,
+            Complete
         }
     }
 }
