@@ -15,122 +15,122 @@ namespace RpcNet.Internal
 
     internal static class PortMapperConstants
     {
-        public const int PMAP_PORT = 111;
-        public const int IPPROTO_TCP = 6;
-        public const int IPPROTO_UDP = 17;
-        public const int PMAP_VERS = 2;
-        public const int PMAPPROC_NULL_2 = 0;
-        public const int PMAPPROC_SET_2 = 1;
-        public const int PMAPPROC_UNSET_2 = 2;
-        public const int PMAPPROC_GETPORT_2 = 3;
-        public const int PMAPPROC_DUMP_2 = 4;
-        public const int PMAPPROC_CALLIT_2 = 5;
-        public const int PMAP_PROG = 100000;
+        public const int PortMapperPort = 111;
+        public const int ProtocolTcp = 6;
+        public const int ProtocolUdp = 17;
+        public const int PortMapperVersion = 2;
+        public const int Ping_2 = 0;
+        public const int Set_2 = 1;
+        public const int Unset_2 = 2;
+        public const int GetPort_2 = 3;
+        public const int Dump_2 = 4;
+        public const int Call_2 = 5;
+        public const int PortMapperProgram = 100000;
     }
 
-    internal partial class call_args : IXdrReadable, IXdrWritable
+    internal partial class CallArguments : IXdrReadable, IXdrWritable
     {
-        public uint prog { get; set; }
-        public uint vers { get; set; }
-        public uint proc { get; set; }
-        public byte[] args { get; set; }
+        public uint Program { get; set; }
+        public uint Version { get; set; }
+        public uint Procedure { get; set; }
+        public byte[] Arguments { get; set; }
 
-        public call_args()
+        public CallArguments()
         {
         }
 
-        public call_args(IXdrReader reader)
+        public CallArguments(IXdrReader reader)
         {
             ReadFrom(reader);
         }
 
         public void WriteTo(IXdrWriter writer)
         {
-            writer.Write(prog);
-            writer.Write(vers);
-            writer.Write(proc);
-            writer.WriteVariableLengthOpaque(args);
+            writer.Write(Program);
+            writer.Write(Version);
+            writer.Write(Procedure);
+            writer.WriteVariableLengthOpaque(Arguments);
         }
 
         public void ReadFrom(IXdrReader reader)
         {
-            prog = reader.ReadUInt();
-            vers = reader.ReadUInt();
-            proc = reader.ReadUInt();
-            args = reader.ReadOpaque();
+            Program = reader.ReadUInt();
+            Version = reader.ReadUInt();
+            Procedure = reader.ReadUInt();
+            Arguments = reader.ReadOpaque();
         }
     }
 
-    internal partial class call_result : IXdrReadable, IXdrWritable
+    internal partial class CallResult : IXdrReadable, IXdrWritable
     {
-        public uint port { get; set; }
-        public byte[] res { get; set; }
+        public uint Port { get; set; }
+        public byte[] Result { get; set; }
 
-        public call_result()
+        public CallResult()
         {
         }
 
-        public call_result(IXdrReader reader)
+        public CallResult(IXdrReader reader)
         {
             ReadFrom(reader);
         }
 
         public void WriteTo(IXdrWriter writer)
         {
-            writer.Write(port);
-            writer.WriteVariableLengthOpaque(res);
+            writer.Write(Port);
+            writer.WriteVariableLengthOpaque(Result);
         }
 
         public void ReadFrom(IXdrReader reader)
         {
-            port = reader.ReadUInt();
-            res = reader.ReadOpaque();
+            Port = reader.ReadUInt();
+            Result = reader.ReadOpaque();
         }
     }
 
-    internal partial class mapping : IXdrReadable, IXdrWritable
+    internal partial class Mapping : IXdrReadable, IXdrWritable
     {
-        public uint prog { get; set; }
-        public uint vers { get; set; }
-        public uint prot { get; set; }
-        public uint port { get; set; }
+        public uint Program { get; set; }
+        public uint Version { get; set; }
+        public uint Protocol { get; set; }
+        public uint Port { get; set; }
 
-        public mapping()
+        public Mapping()
         {
         }
 
-        public mapping(IXdrReader reader)
+        public Mapping(IXdrReader reader)
         {
             ReadFrom(reader);
         }
 
         public void WriteTo(IXdrWriter writer)
         {
-            writer.Write(prog);
-            writer.Write(vers);
-            writer.Write(prot);
-            writer.Write(port);
+            writer.Write(Program);
+            writer.Write(Version);
+            writer.Write(Protocol);
+            writer.Write(Port);
         }
 
         public void ReadFrom(IXdrReader reader)
         {
-            prog = reader.ReadUInt();
-            vers = reader.ReadUInt();
-            prot = reader.ReadUInt();
-            port = reader.ReadUInt();
+            Program = reader.ReadUInt();
+            Version = reader.ReadUInt();
+            Protocol = reader.ReadUInt();
+            Port = reader.ReadUInt();
         }
     }
 
-    internal partial class pmaplist : IXdrReadable, IXdrWritable
+    internal partial class PortMapperList : IXdrReadable, IXdrWritable
     {
-        public mapping map { get; set; }
-        public pmaplist next { get; set; }
+        public Mapping Mapping { get; set; }
+        public PortMapperList Next { get; set; }
 
-        public pmaplist()
+        public PortMapperList()
         {
         }
 
-        public pmaplist(IXdrReader reader)
+        public PortMapperList(IXdrReader reader)
         {
             ReadFrom(reader);
         }
@@ -140,8 +140,8 @@ namespace RpcNet.Internal
             var current = this;
             do
             {
-                current.map?.WriteTo(writer);
-                current = current.next;
+                current.Mapping?.WriteTo(writer);
+                current = current.Next;
                 writer.Write(current != null);
             } while (current != null);
         }
@@ -149,12 +149,12 @@ namespace RpcNet.Internal
         public void ReadFrom(IXdrReader reader)
         {
             var current = this;
-            pmaplist next;
+            PortMapperList next;
             do
             {
-                current.map = new mapping(reader);
-                next = reader.ReadBool() ? new pmaplist() : null;
-                current.next = next;
+                current.Mapping = new Mapping(reader);
+                next = reader.ReadBool() ? new PortMapperList() : null;
+                current.Next = next;
                 current = next;
             } while (current != null);
         }
@@ -162,23 +162,8 @@ namespace RpcNet.Internal
 
     internal class PortMapperClient : ClientStub
     {
-        public PortMapperClient(IPAddress ipAddress) :
-            base(ipAddress, 0, PortMapperConstants.PMAP_PROG, PortMapperConstants.PMAP_VERS)
-        {
-        }
-
-        public PortMapperClient(IPAddress ipAddress, int port) :
-            base(ipAddress, port, PortMapperConstants.PMAP_PROG, PortMapperConstants.PMAP_VERS)
-        {
-        }
-
-        public PortMapperClient(IPAddress ipAddress, int program, int version) :
-            base(ipAddress, 0, program, version)
-        {
-        }
-
-        public PortMapperClient(IPAddress ipAddress, int port, int program, int version) :
-            base(ipAddress, port, program, version)
+        public PortMapperClient(Protocol protocol, IPAddress ipAddress, int port = 0, int program = PortMapperConstants.PortMapperProgram, int version = PortMapperConstants.PortMapperVersion) :
+            base(protocol, ipAddress, port, program, version)
         {
         }
 
@@ -196,11 +181,11 @@ namespace RpcNet.Internal
             }
         }
 
-        public void PMAPPROC_NULL_2()
+        public void Ping_2()
         {
             var args = new Arguments_0();
             var result = new Result_0();
-            Call(PortMapperConstants.PMAPPROC_NULL_2, PortMapperConstants.PMAP_VERS, args, result);
+            Call(PortMapperConstants.Ping_2, PortMapperConstants.PortMapperVersion, args, result);
         }
 
         private class Result_1 : IXdrReadable
@@ -213,10 +198,10 @@ namespace RpcNet.Internal
             }
         }
 
-        public bool PMAPPROC_SET_2(mapping arg1)
+        public bool Set_2(Mapping arg1)
         {
             var result = new Result_1();
-            Call(PortMapperConstants.PMAPPROC_SET_2, PortMapperConstants.PMAP_VERS, arg1, result);
+            Call(PortMapperConstants.Set_2, PortMapperConstants.PortMapperVersion, arg1, result);
             return result.Value;
         }
 
@@ -230,10 +215,10 @@ namespace RpcNet.Internal
             }
         }
 
-        public bool PMAPPROC_UNSET_2(mapping arg1)
+        public bool Unset_2(Mapping arg1)
         {
             var result = new Result_2();
-            Call(PortMapperConstants.PMAPPROC_UNSET_2, PortMapperConstants.PMAP_VERS, arg1, result);
+            Call(PortMapperConstants.Unset_2, PortMapperConstants.PortMapperVersion, arg1, result);
             return result.Value;
         }
 
@@ -247,10 +232,10 @@ namespace RpcNet.Internal
             }
         }
 
-        public uint PMAPPROC_GETPORT_2(mapping arg1)
+        public uint GetPort_2(Mapping arg1)
         {
             var result = new Result_3();
-            Call(PortMapperConstants.PMAPPROC_GETPORT_2, PortMapperConstants.PMAP_VERS, arg1, result);
+            Call(PortMapperConstants.GetPort_2, PortMapperConstants.PortMapperVersion, arg1, result);
             return result.Value;
         }
 
@@ -261,34 +246,26 @@ namespace RpcNet.Internal
             }
         }
 
-        public pmaplist PMAPPROC_DUMP_2()
+        public PortMapperList Dump_2()
         {
             var args = new Arguments_4();
-            var result = new pmaplist();
-            Call(PortMapperConstants.PMAPPROC_DUMP_2, PortMapperConstants.PMAP_VERS, args, result);
+            var result = new PortMapperList();
+            Call(PortMapperConstants.Dump_2, PortMapperConstants.PortMapperVersion, args, result);
             return result;
         }
 
-        public call_result PMAPPROC_CALLIT_2(call_args arg1)
+        public CallResult Call_2(CallArguments arg1)
         {
-            var result = new call_result();
-            Call(PortMapperConstants.PMAPPROC_CALLIT_2, PortMapperConstants.PMAP_VERS, arg1, result);
+            var result = new CallResult();
+            Call(PortMapperConstants.Call_2, PortMapperConstants.PortMapperVersion, arg1, result);
             return result;
         }
     }
 
     internal abstract class PortMapperServerStub : ServerStub
     {
-        public PortMapperServerStub() : this(0)
-        {
-        }
-
-        public PortMapperServerStub(int port) : this(IPAddress.Any, port)
-        {
-        }
-
-        public PortMapperServerStub(IPAddress ipAddress, int port) :
-            base(ipAddress, port, PortMapperConstants.PMAP_PROG, new[] { PortMapperConstants.PMAP_VERS })
+        public PortMapperServerStub(IPAddress ipAddress, int port = 0) :
+            base(ipAddress, port, PortMapperConstants.PortMapperProgram, new[] { PortMapperConstants.PortMapperVersion })
         {
         }
 
@@ -345,58 +322,58 @@ namespace RpcNet.Internal
 
         protected override void DispatchReceivedCall(ReceivedCall call)
         {
-            if (call.Version == PortMapperConstants.PMAP_VERS)
+            if (call.Version == PortMapperConstants.PortMapperVersion)
             {
                 switch (call.Procedure)
                 {
-                    case PortMapperConstants.PMAPPROC_NULL_2:
+                    case PortMapperConstants.Ping_2:
                     {
                         var args = new Arguments_0();
                         call.RetrieveCall(args);
-                        PMAPPROC_NULL_2(call.RemoteIpEndPoint);
+                        Ping_2(call.RemoteIpEndPoint);
                         call.Reply(new Result_0());
                         break;
                     }
-                    case PortMapperConstants.PMAPPROC_SET_2:
+                    case PortMapperConstants.Set_2:
                     {
-                        var args = new mapping();
+                        var args = new Mapping();
                         call.RetrieveCall(args);
                         var result = new Result_1();
-                        result.Value = PMAPPROC_SET_2(call.RemoteIpEndPoint, args);
+                        result.Value = Set_2(call.RemoteIpEndPoint, args);
                         call.Reply(result);
                         break;
                     }
-                    case PortMapperConstants.PMAPPROC_UNSET_2:
+                    case PortMapperConstants.Unset_2:
                     {
-                        var args = new mapping();
+                        var args = new Mapping();
                         call.RetrieveCall(args);
                         var result = new Result_2();
-                        result.Value = PMAPPROC_UNSET_2(call.RemoteIpEndPoint, args);
+                        result.Value = Unset_2(call.RemoteIpEndPoint, args);
                         call.Reply(result);
                         break;
                     }
-                    case PortMapperConstants.PMAPPROC_GETPORT_2:
+                    case PortMapperConstants.GetPort_2:
                     {
-                        var args = new mapping();
+                        var args = new Mapping();
                         call.RetrieveCall(args);
                         var result = new Result_3();
-                        result.Value = PMAPPROC_GETPORT_2(call.RemoteIpEndPoint, args);
+                        result.Value = GetPort_2(call.RemoteIpEndPoint, args);
                         call.Reply(result);
                         break;
                     }
-                    case PortMapperConstants.PMAPPROC_DUMP_2:
+                    case PortMapperConstants.Dump_2:
                     {
                         var args = new Arguments_4();
                         call.RetrieveCall(args);
-                        var result = PMAPPROC_DUMP_2(call.RemoteIpEndPoint);
+                        var result = Dump_2(call.RemoteIpEndPoint);
                         call.Reply(result);
                         break;
                     }
-                    case PortMapperConstants.PMAPPROC_CALLIT_2:
+                    case PortMapperConstants.Call_2:
                     {
-                        var args = new call_args();
+                        var args = new CallArguments();
                         call.RetrieveCall(args);
-                        var result = PMAPPROC_CALLIT_2(call.RemoteIpEndPoint, args);
+                        var result = Call_2(call.RemoteIpEndPoint, args);
                         call.Reply(result);
                         break;
                     }
@@ -411,11 +388,11 @@ namespace RpcNet.Internal
             }
         }
 
-        public abstract void PMAPPROC_NULL_2(IPEndPoint remoteIpEndPoint);
-        public abstract bool PMAPPROC_SET_2(IPEndPoint remoteIpEndPoint, mapping arg1);
-        public abstract bool PMAPPROC_UNSET_2(IPEndPoint remoteIpEndPoint, mapping arg1);
-        public abstract uint PMAPPROC_GETPORT_2(IPEndPoint remoteIpEndPoint, mapping arg1);
-        public abstract pmaplist PMAPPROC_DUMP_2(IPEndPoint remoteIpEndPoint);
-        public abstract call_result PMAPPROC_CALLIT_2(IPEndPoint remoteIpEndPoint, call_args arg1);
+        public abstract void Ping_2(IPEndPoint remoteIpEndPoint);
+        public abstract bool Set_2(IPEndPoint remoteIpEndPoint, Mapping arg1);
+        public abstract bool Unset_2(IPEndPoint remoteIpEndPoint, Mapping arg1);
+        public abstract uint GetPort_2(IPEndPoint remoteIpEndPoint, Mapping arg1);
+        public abstract PortMapperList Dump_2(IPEndPoint remoteIpEndPoint);
+        public abstract CallResult Call_2(IPEndPoint remoteIpEndPoint, CallArguments arg1);
     }
 }

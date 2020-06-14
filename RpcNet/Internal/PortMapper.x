@@ -1,39 +1,38 @@
-﻿const PMAP_PORT = 111;
+﻿const PortMapperPort = 111;
+const ProtocolTcp = 6;
+const ProtocolUdp = 17;
 
-struct mapping {
-    unsigned int prog;
-    unsigned int vers;
-    unsigned int prot;
-    unsigned int port;
+struct Mapping {
+  unsigned int Program;
+  unsigned int Version;
+  unsigned int Protocol;
+  unsigned int Port;
 };
 
-const IPPROTO_TCP = 6;      /* protocol number for TCP/IP */
-const IPPROTO_UDP = 17;     /* protocol number for UDP/IP */
-
-struct pmaplist {
-    mapping map;
-    pmaplist* next;
+struct PortMapperList {
+  Mapping Mapping;
+  PortMapperList* Next;
 };
 
-struct call_args {
-    unsigned int prog;
-    unsigned int vers;
-    unsigned int proc;
-    opaque args<>;
+struct CallArguments {
+  unsigned int Program;
+  unsigned int Version;
+  unsigned int Procedure;
+  opaque Arguments<>;
 };
 
-struct call_result {
-    unsigned int port;
-    opaque res<>;
+struct CallResult {
+  unsigned int Port;
+  opaque Result<>;
 };
 
-program PMAP_PROG {
-    version PMAP_VERS {
-        void PMAPPROC_NULL(void) = 0;
-        bool PMAPPROC_SET(mapping) = 1;
-        bool PMAPPROC_UNSET(mapping) = 2;
-        unsigned int PMAPPROC_GETPORT(mapping) = 3;
-        pmaplist PMAPPROC_DUMP(void) = 4;
-        call_result PMAPPROC_CALLIT(call_args) = 5;
-    } = 2;
+program PortMapperProgram {
+  version PortMapperVersion {
+    void Ping(void) = 0;
+    bool Set(Mapping) = 1;
+    bool Unset(Mapping) = 2;
+    unsigned int GetPort(Mapping) = 3;
+    PortMapperList Dump(void) = 4;
+    CallResult Call(CallArguments) = 5;
+  } = 2;
 } = 100000;

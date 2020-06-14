@@ -46,10 +46,6 @@
             return this.FillBuffer(out socketError);
         }
 
-        public void EndReading()
-        {
-        }
-
         public ReadOnlySpan<byte> Read(int length)
         {
             if (!this.FillBuffer(out SocketError socketError))

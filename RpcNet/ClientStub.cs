@@ -1,10 +1,10 @@
-﻿using System.Net;
-
-namespace RpcNet
+﻿namespace RpcNet
 {
+    using System.Net;
+
     public abstract class ClientStub
     {
-        protected ClientStub(IPAddress ipAddress, int port, int program, int version)
+        protected ClientStub(Protocol protocol, IPAddress ipAddress, int port, int program, int version)
         {
         }
 

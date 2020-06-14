@@ -7,7 +7,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace RpcNet.Test
+namespace Test
 {
     using System;
     using System.Net;
@@ -15,9 +15,9 @@ namespace RpcNet.Test
 
     internal static class TestServiceConstants
     {
-        public const int TestServiceVers = 1;
+        public const int TestServiceVersion = 1;
         public const int TestMyStruct_1 = 1;
-        public const int TestServiceProg = 0x02004009;
+        public const int TestServiceProgram = 0x02004009;
     }
 
     internal partial class MyStruct : IXdrReadable, IXdrWritable
@@ -133,52 +133,29 @@ namespace RpcNet.Test
 
     internal class TestServiceClient : ClientStub
     {
-        public TestServiceClient(IPAddress ipAddress) :
-            base(ipAddress, 0, TestServiceConstants.TestServiceProg, TestServiceConstants.TestServiceVers)
-        {
-        }
-
-        public TestServiceClient(IPAddress ipAddress, int port) :
-            base(ipAddress, port, TestServiceConstants.TestServiceProg, TestServiceConstants.TestServiceVers)
-        {
-        }
-
-        public TestServiceClient(IPAddress ipAddress, int program, int version) :
-            base(ipAddress, 0, program, version)
-        {
-        }
-
-        public TestServiceClient(IPAddress ipAddress, int port, int program, int version) :
-            base(ipAddress, port, program, version)
+        public TestServiceClient(Protocol protocol, IPAddress ipAddress, int port = 0, int program = TestServiceConstants.TestServiceProgram, int version = TestServiceConstants.TestServiceVersion) :
+            base(protocol, ipAddress, port, program, version)
         {
         }
 
         public MyStruct TestMyStruct_1(MyStruct arg1)
         {
             var result = new MyStruct();
-            Call(TestServiceConstants.TestMyStruct_1, TestServiceConstants.TestServiceVers, arg1, result);
+            Call(TestServiceConstants.TestMyStruct_1, TestServiceConstants.TestServiceVersion, arg1, result);
             return result;
         }
     }
 
     internal abstract class TestServiceServerStub : ServerStub
     {
-        public TestServiceServerStub() : this(0)
-        {
-        }
-
-        public TestServiceServerStub(int port) : this(IPAddress.Any, port)
-        {
-        }
-
-        public TestServiceServerStub(IPAddress ipAddress, int port) :
-            base(ipAddress, port, TestServiceConstants.TestServiceProg, new[] { TestServiceConstants.TestServiceVers })
+        public TestServiceServerStub(IPAddress ipAddress, int port = 0) :
+            base(ipAddress, port, TestServiceConstants.TestServiceProgram, new[] { TestServiceConstants.TestServiceVersion })
         {
         }
 
         protected override void DispatchReceivedCall(ReceivedCall call)
         {
-            if (call.Version == TestServiceConstants.TestServiceVers)
+            if (call.Version == TestServiceConstants.TestServiceVersion)
             {
                 switch (call.Procedure)
                 {

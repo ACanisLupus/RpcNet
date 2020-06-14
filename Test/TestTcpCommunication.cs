@@ -62,7 +62,6 @@ namespace RpcNet.Test
             Assert.That(socketError, Is.EqualTo(SocketError.Success));
             Assert.That(xdrReader.ReadOpaque(), Is.EqualTo(value));
             Assert.That(xdrReader.ReadInt(), Is.EqualTo(42));
-            reader.EndReading();
         }
 
         [Test]
@@ -90,7 +89,6 @@ namespace RpcNet.Test
                 Assert.That(socketError, Is.EqualTo(SocketError.Success));
                 Assert.That(xdrReader.ReadOpaque(), Is.EqualTo(value));
                 Assert.That(xdrReader.ReadInt(), Is.EqualTo(42));
-                reader.EndReading();
             });
 
             writer.BeginWriting();

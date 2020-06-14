@@ -56,30 +56,30 @@ namespace RpcNet.Internal
 
     internal enum AuthenticationFlavor
     {
-        AUTH_NONE = 0,
-        AUTH_SYS = 1,
-        AUTH_SHORT = 2,
-        AUTH_DH = 3,
-        RPCSEC_GSS = 6,
+        None = 0,
+        Unix = 1,
+        Short = 2,
+        Des = 3,
+        Gss = 6,
     }
 
     internal enum AuthenticationStatus
     {
-        AUTH_OK = 0,
-        AUTH_BADCRED = 1,
-        AUTH_REJECTEDCRED = 2,
-        AUTH_BADVERF = 3,
-        AUTH_REJECTEDVERF = 4,
-        AUTH_TOOWEAK = 5,
-        AUTH_INVALIDRESP = 6,
-        AUTH_FAILED = 7,
-        AUTH_KERB_GENERIC = 8,
-        AUTH_TIMEEXPIRE = 9,
-        AUTH_TKT_FILE = 10,
-        AUTH_DECODE = 11,
-        AUTH_NET_ADDR = 12,
-        RPCSEC_GSS_CREDPROBLEM = 13,
-        RPCSEC_GSS_CTXPROBLEM = 14,
+        Ok = 0,
+        BadCredential = 1,
+        RejectedCredential = 2,
+        BadVerifier = 3,
+        RejectedVerifier = 4,
+        TooWeak = 5,
+        InvalidResponseVerifier = 6,
+        FailedUnknownReason = 7,
+        KerberosGenericError = 8,
+        TimeOfCredentialExpired = 9,
+        ProblemWithTicketFile = 10,
+        FailedToDecodeAuthenticator = 11,
+        InvalidNetAddress = 12,
+        GssMissingCredential = 13,
+        GssContextProblem = 14,
     }
 
     internal partial class Body : IXdrReadable, IXdrWritable
