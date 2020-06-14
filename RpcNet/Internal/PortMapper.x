@@ -9,9 +9,9 @@ struct Mapping {
   unsigned int Port;
 };
 
-struct PortMapperList {
+struct MappingList {
   Mapping Mapping;
-  PortMapperList* Next;
+  MappingList* Next;
 };
 
 struct CallArguments {
@@ -32,7 +32,7 @@ program PortMapperProgram {
     bool Set(Mapping) = 1;
     bool Unset(Mapping) = 2;
     unsigned int GetPort(Mapping) = 3;
-    PortMapperList Dump(void) = 4;
+    MappingList Dump(void) = 4;
     CallResult Call(CallArguments) = 5;
   } = 2;
 } = 100000;

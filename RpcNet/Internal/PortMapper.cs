@@ -121,16 +121,16 @@ namespace RpcNet.Internal
         }
     }
 
-    internal partial class PortMapperList : IXdrReadable, IXdrWritable
+    internal partial class MappingList : IXdrReadable, IXdrWritable
     {
         public Mapping Mapping { get; set; }
-        public PortMapperList Next { get; set; }
+        public MappingList Next { get; set; }
 
-        public PortMapperList()
+        public MappingList()
         {
         }
 
-        public PortMapperList(IXdrReader reader)
+        public MappingList(IXdrReader reader)
         {
             ReadFrom(reader);
         }
@@ -149,11 +149,11 @@ namespace RpcNet.Internal
         public void ReadFrom(IXdrReader reader)
         {
             var current = this;
-            PortMapperList next;
+            MappingList next;
             do
             {
                 current.Mapping = new Mapping(reader);
-                next = reader.ReadBool() ? new PortMapperList() : null;
+                next = reader.ReadBool() ? new MappingList() : null;
                 current.Next = next;
                 current = next;
             } while (current != null);
@@ -162,8 +162,8 @@ namespace RpcNet.Internal
 
     internal class PortMapperClient : ClientStub
     {
-        public PortMapperClient(Protocol protocol, IPAddress ipAddress, int port = 0, int program = PortMapperConstants.PortMapperProgram, int version = PortMapperConstants.PortMapperVersion) :
-            base(protocol, ipAddress, port, program, version)
+        public PortMapperClient(Protocol protocol, IPAddress ipAddress, int port = 0) :
+            base(protocol, ipAddress, port, PortMapperConstants.PortMapperProgram, PortMapperConstants.PortMapperVersion)
         {
         }
 
@@ -246,10 +246,10 @@ namespace RpcNet.Internal
             }
         }
 
-        public PortMapperList Dump_2()
+        public MappingList Dump_2()
         {
             var args = new Arguments_4();
-            var result = new PortMapperList();
+            var result = new MappingList();
             Call(PortMapperConstants.Dump_2, PortMapperConstants.PortMapperVersion, args, result);
             return result;
         }
@@ -392,7 +392,7 @@ namespace RpcNet.Internal
         public abstract bool Set_2(IPEndPoint remoteIpEndPoint, Mapping arg1);
         public abstract bool Unset_2(IPEndPoint remoteIpEndPoint, Mapping arg1);
         public abstract uint GetPort_2(IPEndPoint remoteIpEndPoint, Mapping arg1);
-        public abstract PortMapperList Dump_2(IPEndPoint remoteIpEndPoint);
+        public abstract MappingList Dump_2(IPEndPoint remoteIpEndPoint);
         public abstract CallResult Call_2(IPEndPoint remoteIpEndPoint, CallArguments arg1);
     }
 }

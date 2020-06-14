@@ -133,8 +133,8 @@ namespace Test
 
     internal class TestServiceClient : ClientStub
     {
-        public TestServiceClient(Protocol protocol, IPAddress ipAddress, int port = 0, int program = TestServiceConstants.TestServiceProgram, int version = TestServiceConstants.TestServiceVersion) :
-            base(protocol, ipAddress, port, program, version)
+        public TestServiceClient(Protocol protocol, IPAddress ipAddress, int port = 0) :
+            base(protocol, ipAddress, port, TestServiceConstants.TestServiceProgram, TestServiceConstants.TestServiceVersion)
         {
         }
 
