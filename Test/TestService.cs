@@ -134,7 +134,7 @@ namespace Test
     internal class TestServiceClient : ClientStub
     {
         public TestServiceClient(Protocol protocol, IPAddress ipAddress, int port = 0) :
-            base(protocol, ipAddress, port, TestServiceConstants.TestServiceProgram, TestServiceConstants.TestServiceVersion)
+            base(protocol, ipAddress, port, TestServiceConstants.TestServiceProgram)
         {
         }
 
