@@ -3,15 +3,13 @@
     using System;
     using System.Net;
     using System.Net.Sockets;
-    using System.Threading;
 
     // Public for tests
     public class RpcUdpServer : IDisposable
     {
         private readonly UdpClient server;
-        private readonly Thread receiverThread;
-        private readonly UdpBufferReader udpBufferReader;
-        private readonly UdpBufferWriter udpBufferWriter;
+        private readonly UdpServiceReader udpBufferReader;
+        private readonly UdpServiceWriter udpBufferWriter;
         private readonly ReceivedCall receivedCall;
 
         private volatile bool stopReceiving;
@@ -19,10 +17,11 @@
         public RpcUdpServer(IPAddress ipAddress, int port, int program, int[] versions, Action<ReceivedCall> receivedCallDispatcher)
         {
             this.server = new UdpClient(new IPEndPoint(ipAddress, port));
-            this.receiverThread = new Thread(this.DoReceiving);
 
-            this.udpBufferReader = new UdpBufferReader(this.server.Client);
-            this.udpBufferWriter = new UdpBufferWriter(this.server.Client);
+            this.udpBufferReader = new UdpServiceReader(this.server.Client);
+            this.udpBufferReader.Completed += this.ReadingCompleted;
+            this.udpBufferWriter = new UdpServiceWriter(this.server.Client);
+            this.udpBufferWriter.Completed += this.WritingCompleted;
 
             this.receivedCall = new ReceivedCall(
                 program,
@@ -33,7 +32,7 @@
         }
 
         public void Dispose() => this.Stop();
-        public void Start() => this.receiverThread.Start();
+        public void Start() => this.udpBufferReader.BeginReading();
 
         public void Stop()
         {
@@ -42,37 +41,33 @@
             this.udpBufferWriter.Dispose();
         }
 
-        private void DoReceiving()
+        private void ReadingCompleted(UdpResult udpResult)
         {
+            if (this.stopReceiving)
+            {
+                return;
+            }
+
             try
             {
-                while (!this.stopReceiving)
-                {
-                    EndPoint remoteIpEndPoint = new IPEndPoint(IPAddress.Loopback, 0);
-                    UdpResult result = this.udpBufferReader.BeginReading();
-                    if (result.SocketError != SocketError.Success || result.BytesLength == 0)
-                    {
-                        continue;
-                    }
-
-                    this.udpBufferWriter.BeginWriting();
-                    try
-                    {
-                        this.receivedCall.HandleCall(result.IpEndPoint);
-                    }
-                    catch (RpcException rpcException)
-                    {
-                        Console.WriteLine($"Could not handle call. {rpcException}");
-                        continue;
-                    }
-
-                    _ = this.udpBufferWriter.EndWriting(result.IpEndPoint);
-                }
+                this.udpBufferWriter.BeginWriting();
+                this.receivedCall.HandleCall(udpResult.IpEndPoint);
+                this.udpBufferWriter.EndWriting(udpResult.IpEndPoint);
             }
-            catch (Exception exception)
+            catch (RpcException rpcException)
             {
-                Console.WriteLine($"Unexpected exception in UDP receiver thread: {exception}");
+                Console.WriteLine($"Could not handle call. {rpcException}");
             }
+        }
+
+        private void WritingCompleted(UdpResult udpResult)
+        {
+            if (this.stopReceiving)
+            {
+                return;
+            }
+
+            this.Start();
         }
     }
 }

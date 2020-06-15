@@ -10,11 +10,13 @@
 
     class TestUdpCommunication
     {
-        private UdpBufferReader reader;
-        private UdpBufferWriter writer;
+        private UdpServiceReader serviceReader;
+        private UdpServiceWriter serviceWriter;
         private UdpClient server;
         private UdpClient client;
         private IPEndPoint remoteIpEndPoint;
+        private Channel<UdpResult> readChannel;
+        private Channel<UdpResult> writeChannel;
 
         [SetUp]
         public void SetUp()
@@ -25,8 +27,13 @@
 
             this.client = new UdpClient();
 
-            this.reader = new UdpBufferReader(this.server.Client, 100);
-            this.writer = new UdpBufferWriter(this.client.Client, 100);
+            this.serviceReader = new UdpServiceReader(this.server.Client, 100);
+            this.serviceReader.Completed += udpResult => this.readChannel.Send(udpResult);
+            this.serviceWriter = new UdpServiceWriter(this.client.Client, 100);
+            this.serviceWriter.Completed += udpResult => this.writeChannel.Send(udpResult);
+
+            this.readChannel = new Channel<UdpResult>();
+            this.writeChannel = new Channel<UdpResult>();
         }
 
         [TearDown]
@@ -34,6 +41,8 @@
         {
             this.server.Dispose();
             this.client.Dispose();
+            this.readChannel.Close();
+            this.writeChannel.Close();
         }
 
         [Test]
@@ -42,26 +51,29 @@
         [TestCase(100)]
         public void SendAndReceiveData(int length)
         {
-            this.writer.BeginWriting();
-            Span<byte> writeSpan = this.writer.Reserve(length);
+            this.serviceWriter.BeginWriting();
+            Span<byte> writeSpan = this.serviceWriter.Reserve(length);
             Assert.That(writeSpan.Length, Is.EqualTo(length));
             for (int i = 0; i < length; i++)
             {
                 writeSpan[i] = (byte)i;
             }
 
-            UdpResult udpResult = this.writer.EndWriting(this.remoteIpEndPoint);
+            this.serviceWriter.EndWriting(this.remoteIpEndPoint);
+            Assert.That(this.writeChannel.Receive(out UdpResult udpResult));
             Assert.That(udpResult.SocketError, Is.EqualTo(SocketError.Success));
             Assert.That(udpResult.BytesLength, Is.EqualTo(length));
 
-            udpResult = this.reader.BeginReading();
+            this.serviceReader.BeginReading();
+            this.serviceReader.EndReading();
+            Assert.That(this.readChannel.Receive(out udpResult));
             Assert.That(udpResult.SocketError, Is.EqualTo(SocketError.Success));
             Assert.That(udpResult.BytesLength, Is.EqualTo(length));
             Assert.That(udpResult.IpEndPoint.Address, Is.EqualTo(this.remoteIpEndPoint.Address));
             Assert.That(udpResult.IpEndPoint.Port, Is.Not.EqualTo(this.remoteIpEndPoint.Port));
             Assert.That(udpResult.IpEndPoint.Port, Is.GreaterThanOrEqualTo(49152));
 
-            ReadOnlySpan<byte> readSpan = this.reader.Read(length);
+            ReadOnlySpan<byte> readSpan = this.serviceReader.Read(length);
             Assert.That(readSpan.Length, Is.EqualTo(length));
 
             AssertEquals(readSpan, writeSpan);
@@ -73,24 +85,27 @@
         [TestCase(100)]
         public void SendCompleteAndReceiveFragmentedData(int length)
         {
-            this.writer.BeginWriting();
-            Span<byte> writeSpan = this.writer.Reserve(100);
+            this.serviceWriter.BeginWriting();
+            Span<byte> writeSpan = this.serviceWriter.Reserve(100);
             Assert.That(writeSpan.Length, Is.EqualTo(100));
             for (int i = 0; i < length; i++)
             {
                 writeSpan[i] = (byte)i;
             }
 
-            UdpResult udpResult = this.writer.EndWriting(this.remoteIpEndPoint);
+            this.serviceWriter.EndWriting(this.remoteIpEndPoint);
+            Assert.That(this.writeChannel.Receive(out UdpResult udpResult));
             Assert.That(udpResult.SocketError, Is.EqualTo(SocketError.Success));
             Assert.That(udpResult.BytesLength, Is.EqualTo(100));
 
-            this.reader.BeginReading();
+            this.serviceReader.BeginReading();
+            this.serviceReader.EndReading();
+            Assert.That(this.readChannel.Receive(out udpResult));
             byte[] buffer = new byte[100];
             int index = 0;
             for (int i = 0; i < 100 / length; i++)
             {
-                this.reader.Read(length).CopyTo(buffer.AsSpan(index, length));
+                this.serviceReader.Read(length).CopyTo(buffer.AsSpan(index, length));
                 index += length;
             }
 
@@ -103,13 +118,13 @@
         [TestCase(33, 33, 35)]
         public void Overflow(params int[] arguments)
         {
-            this.writer.BeginWriting();
+            this.serviceWriter.BeginWriting();
             for (int i = 0; i < arguments.Length - 1; i++)
             {
-                this.writer.Reserve(arguments[i]);
+                this.serviceWriter.Reserve(arguments[i]);
             }
 
-            Assert.Throws<RpcException>(() => this.writer.Reserve(arguments[arguments.Length - 1]));
+            Assert.Throws<RpcException>(() => this.serviceWriter.Reserve(arguments[arguments.Length - 1]));
         }
 
         [Test]
@@ -118,31 +133,23 @@
         [TestCase(3, 3, 5)]
         public void Underflow(params int[] arguments)
         {
-            this.writer.BeginWriting();
-            this.writer.Reserve(10);
+            this.serviceWriter.BeginWriting();
+            this.serviceWriter.Reserve(10);
 
-            UdpResult udpResult = this.writer.EndWriting(this.remoteIpEndPoint);
+            this.serviceWriter.EndWriting(this.remoteIpEndPoint);
+            Assert.That(this.writeChannel.Receive(out UdpResult udpResult));
             Assert.That(udpResult.SocketError, Is.EqualTo(SocketError.Success));
             Assert.That(udpResult.BytesLength, Is.EqualTo(10));
 
-            this.reader.BeginReading();
+            this.serviceReader.BeginReading();
+            this.serviceReader.EndReading();
+            Assert.That(this.readChannel.Receive(out udpResult));
             for (int i = 0; i < arguments.Length - 1; i++)
             {
-                this.reader.Read(arguments[i]);
+                this.serviceReader.Read(arguments[i]);
             }
 
-            Assert.Throws<RpcException>(() => this.reader.Read(arguments[arguments.Length - 1]));
-        }
-
-        [Test]
-        [TestCase(100)]
-        [TestCase(200)]
-        [TestCase(500)]
-        public void TimeoutReader(int timeout)
-        {
-            this.server.Client.ReceiveTimeout = timeout;
-            UdpResult udpResult = this.reader.BeginReading(timeout);
-            Assert.That(udpResult.SocketError, Is.EqualTo(SocketError.TimedOut));
+            Assert.Throws<RpcException>(() => this.serviceReader.Read(arguments[arguments.Length - 1]));
         }
 
         [Test]
@@ -150,12 +157,14 @@
         {
             var task = Task.Run(() =>
             {
-                UdpResult udpResult = this.reader.BeginReading();
+                this.serviceReader.BeginReading();
+                this.serviceReader.EndReading();
+                Assert.That(this.readChannel.Receive(out UdpResult udpResult));
                 Assert.That(udpResult.SocketError, Is.EqualTo(SocketError.OperationAborted));
             });
             Thread.Sleep(100);
             this.server.Dispose();
-            this.reader.Dispose();
+            this.serviceReader.Dispose();
             task.Wait();
         }
 

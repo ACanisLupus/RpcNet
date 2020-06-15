@@ -3,22 +3,25 @@
     using System;
     using System.Net;
     using System.Net.Sockets;
-    using System.Threading;
 
     // Public for tests
-    public class UdpBufferWriter : INetworkWriter, IDisposable
+    // This service writer for UDP is asynchronous, because there is
+    // no synchronous method to call SendTo without a SocketException.
+    // SocketExceptions on server side are ugly!
+    // Making SendToAsync synchronous using a reset event would block two threads instead of one,
+    // therefore the implementation is fully asynchronous (not async/await).
+    public class UdpServiceWriter : INetworkWriter, IDisposable
     {
         private readonly Socket socket;
         private readonly byte[] buffer;
         private readonly SocketAsyncEventArgs socketAsyncEventArgs = new SocketAsyncEventArgs();
-        private readonly ManualResetEvent manualResetEvent = new ManualResetEvent(false);
         private int writeIndex;
 
-        public UdpBufferWriter(Socket socket) : this(socket, 65536)
+        public UdpServiceWriter(Socket socket) : this(socket, 65536)
         {
         }
 
-        public UdpBufferWriter(Socket socket, int bufferSize)
+        public UdpServiceWriter(Socket socket, int bufferSize)
         {
             if (bufferSize < sizeof(int) || bufferSize % 4 != 0)
             {
@@ -30,36 +33,34 @@
             this.socketAsyncEventArgs.Completed += this.OnCompleted;
         }
 
-        private void OnCompleted(object sender, SocketAsyncEventArgs e) => this.manualResetEvent.Set();
+        public Action<UdpResult> Completed { get; set; }
+
+        private void OnCompleted(object sender, SocketAsyncEventArgs e)
+        {
+            if (this.socketAsyncEventArgs.SocketError != SocketError.Success)
+            {
+                this.Completed?.Invoke(new UdpResult { SocketError = this.socketAsyncEventArgs.SocketError });
+            }
+
+            this.Completed?.Invoke(new UdpResult
+            {
+                BytesLength = this.socketAsyncEventArgs.BytesTransferred,
+                IpEndPoint = (IPEndPoint)this.socketAsyncEventArgs.RemoteEndPoint
+            });
+        }
 
         public void BeginWriting() => this.writeIndex = 0;
 
-        // Not the best SendTo-implementation, but a simple one, that is SocketException-free
-        public UdpResult EndWriting(IPEndPoint remoteEndPoint)
+        public void EndWriting(IPEndPoint remoteEndPoint)
         {
-            this.manualResetEvent.Reset();
             this.socketAsyncEventArgs.RemoteEndPoint = remoteEndPoint;
             this.socketAsyncEventArgs.SetBuffer(this.buffer, 0, this.writeIndex);
 
             bool willRaiseEvent = this.socket.SendToAsync(this.socketAsyncEventArgs);
-            if (willRaiseEvent)
+            if (!willRaiseEvent)
             {
-                if (!this.manualResetEvent.WaitOne())
-                {
-                    return new UdpResult { SocketError = SocketError.TimedOut };
-                }
+                this.OnCompleted(this, this.socketAsyncEventArgs);
             }
-
-            if (this.socketAsyncEventArgs.SocketError != SocketError.Success)
-            {
-                return new UdpResult { SocketError = this.socketAsyncEventArgs.SocketError };
-            }
-
-            return new UdpResult
-            {
-                BytesLength = this.socketAsyncEventArgs.BytesTransferred,
-                IpEndPoint = (IPEndPoint)this.socketAsyncEventArgs.RemoteEndPoint
-            };
         }
 
         public Span<byte> Reserve(int length)
@@ -74,10 +75,6 @@
             return span;
         }
 
-        public void Dispose()
-        {
-            this.socketAsyncEventArgs.Dispose();
-            this.manualResetEvent.Dispose();
-        }
+        public void Dispose() => this.socketAsyncEventArgs.Dispose();
     }
 }

@@ -65,10 +65,7 @@
             this.receivedCallDispatcher(this);
         }
 
-        public void RetrieveCall(IXdrReadable argument)
-        {
-            argument.ReadFrom(this.xdrReader);
-        }
+        public void RetrieveCall(IXdrReadable argument) => argument.ReadFrom(this.xdrReader);
 
         public void Reply(IXdrWritable result)
         {

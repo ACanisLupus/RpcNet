@@ -63,6 +63,13 @@
             return span;
         }
 
+        // On the first iteration, this function will read as many data from the network as available
+        // On the following iterations, it depends on the yet received data:
+        // - Not enough bytes for header? Read from network again
+        // - Packet is not complete and there is space left in the buffer? Read from network again
+        // - Packet is not complete and no space available? Return and wait for XDR read
+        // - Packet is complete and XDR read is not complete? Return and wait for XDF read
+        // - Packet and XDR read is complete? Read next header. Or finish if previous packet was the last packet
         private bool FillBuffer(out SocketError socketError)
         {
             bool readFromNetwork = false;
