@@ -8,8 +8,8 @@
     public class RpcUdpServer : IDisposable
     {
         private readonly UdpClient server;
-        private readonly UdpServiceReader udpBufferReader;
-        private readonly UdpServiceWriter udpBufferWriter;
+        private readonly UdpReader reader;
+        private readonly UdpWriter writer;
         private readonly ReceivedCall receivedCall;
 
         private volatile bool stopReceiving;
@@ -18,30 +18,30 @@
         {
             this.server = new UdpClient(new IPEndPoint(ipAddress, port));
 
-            this.udpBufferReader = new UdpServiceReader(this.server.Client);
-            this.udpBufferReader.Completed += this.ReadingCompleted;
-            this.udpBufferWriter = new UdpServiceWriter(this.server.Client);
-            this.udpBufferWriter.Completed += this.WritingCompleted;
+            this.reader = new UdpReader(this.server.Client);
+            this.reader.Completed += this.ReadingCompleted;
+            this.writer = new UdpWriter(this.server.Client);
+            this.writer.Completed += this.WritingCompleted;
 
             this.receivedCall = new ReceivedCall(
                 program,
                 versions,
-                this.udpBufferReader,
-                this.udpBufferWriter,
+                this.reader,
+                this.writer,
                 receivedCallDispatcher);
         }
 
         public void Dispose() => this.Stop();
-        public void Start() => this.udpBufferReader.BeginReading();
+        public void Start() => this.reader.BeginReadingAsync();
 
         public void Stop()
         {
             this.stopReceiving = true;
-            this.udpBufferReader.Dispose();
-            this.udpBufferWriter.Dispose();
+            this.reader.Dispose();
+            this.writer.Dispose();
         }
 
-        private void ReadingCompleted(UdpResult udpResult)
+        private void ReadingCompleted(NetworkResult udpResult)
         {
             if (this.stopReceiving)
             {
@@ -50,9 +50,10 @@
 
             try
             {
-                this.udpBufferWriter.BeginWriting();
+                this.reader.EndReading();
+                this.writer.BeginWriting();
                 this.receivedCall.HandleCall(udpResult.IpEndPoint);
-                this.udpBufferWriter.EndWriting(udpResult.IpEndPoint);
+                this.writer.EndWritingAsync(udpResult.IpEndPoint);
             }
             catch (RpcException rpcException)
             {
@@ -60,7 +61,7 @@
             }
         }
 
-        private void WritingCompleted(UdpResult udpResult)
+        private void WritingCompleted(NetworkResult udpResult)
         {
             if (this.stopReceiving)
             {

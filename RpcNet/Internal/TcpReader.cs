@@ -4,7 +4,7 @@
     using System.Net.Sockets;
 
     // Public for tests
-    public class TcpBufferReader : INetworkReader
+    public class TcpReader : INetworkReader
     {
         private const int TcpHeaderLength = 4;
 
@@ -18,11 +18,11 @@
         private int bodyIndex = 0;
         private PacketState packetState = PacketState.Header;
 
-        public TcpBufferReader(Socket socket) : this(socket, 65536)
+        public TcpReader(Socket socket) : this(socket, 65536)
         {
         }
 
-        public TcpBufferReader(Socket socket, int bufferSize)
+        public TcpReader(Socket socket, int bufferSize)
         {
             if (bufferSize < TcpHeaderLength + sizeof(int) || bufferSize % 4 != 0)
             {
@@ -44,6 +44,14 @@
             this.bodyIndex = 0;
 
             return this.FillBuffer(out socketError);
+        }
+
+        public void EndReading()
+        {
+            if (this.packetState != PacketState.Complete || this.readIndex != this.writeIndex)
+            {
+                throw new RpcException("Not all data was read.");
+            }
         }
 
         public ReadOnlySpan<byte> Read(int length)

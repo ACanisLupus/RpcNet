@@ -10,7 +10,7 @@
     // SocketExceptions on server side are ugly!
     // Making ReceiveFromAsync synchronous using a reset event would block two threads instead of one,
     // therefore the implementation is fully asynchronous (not async/await).
-    public class UdpServiceReader : INetworkReader, IDisposable
+    public class UdpReader : INetworkReader, IDisposable
     {
         private readonly Socket socket;
         private readonly byte[] buffer;
@@ -18,11 +18,11 @@
         private int totalLength;
         private int readIndex;
 
-        public UdpServiceReader(Socket socket) : this(socket, 65536)
+        public UdpReader(Socket socket) : this(socket, 65536)
         {
         }
 
-        public UdpServiceReader(Socket socket, int bufferSize)
+        public UdpReader(Socket socket, int bufferSize)
         {
             if (bufferSize < sizeof(int) || bufferSize % 4 != 0)
             {
@@ -36,31 +36,58 @@
             this.socketAsyncEventArgs.RemoteEndPoint = new IPEndPoint(IPAddress.Loopback, 0);
         }
 
-        public Action<UdpResult> Completed { get; set; }
+        public Action<NetworkResult> Completed { get; set; }
 
         private void OnCompleted(object sender, SocketAsyncEventArgs e)
         {
             if (this.socketAsyncEventArgs.SocketError != SocketError.Success)
             {
-                this.Completed?.Invoke(new UdpResult { SocketError = this.socketAsyncEventArgs.SocketError });
+                this.Completed?.Invoke(new NetworkResult { SocketError = this.socketAsyncEventArgs.SocketError });
             }
 
             this.totalLength = this.socketAsyncEventArgs.BytesTransferred;
-            this.Completed?.Invoke(new UdpResult
+            this.Completed?.Invoke(new NetworkResult
             {
-                BytesLength = this.totalLength,
                 IpEndPoint = (IPEndPoint)this.socketAsyncEventArgs.RemoteEndPoint
             });
         }
 
-        public void BeginReading() => this.readIndex = 0;
-
-        public void EndReading()
+        public NetworkResult BeginReadingSync()
         {
+            this.readIndex = 0;
+            try
+            {
+                EndPoint endPoint = new IPEndPoint(IPAddress.Loopback, 0);
+                this.totalLength = this.socket.ReceiveFrom(this.buffer, ref endPoint);
+                return new NetworkResult
+                {
+                    IpEndPoint = (IPEndPoint)endPoint
+                };
+            }
+            catch (SocketException exception)
+            {
+                return new NetworkResult
+                {
+                    SocketError = exception.SocketErrorCode
+                };
+            }
+        }
+
+        public void BeginReadingAsync()
+        {
+            this.readIndex = 0;
             bool willRaiseEvent = this.socket.ReceiveFromAsync(this.socketAsyncEventArgs);
             if (!willRaiseEvent)
             {
                 this.OnCompleted(this, this.socketAsyncEventArgs);
+            }
+        }
+
+        public void EndReading()
+        {
+            if (this.readIndex != this.totalLength)
+            {
+                throw new RpcException("Not all data was read.");
             }
         }
 

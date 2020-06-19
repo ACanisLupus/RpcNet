@@ -10,18 +10,18 @@
     // SocketExceptions on server side are ugly!
     // Making SendToAsync synchronous using a reset event would block two threads instead of one,
     // therefore the implementation is fully asynchronous (not async/await).
-    public class UdpServiceWriter : INetworkWriter, IDisposable
+    public class UdpWriter : INetworkWriter, IDisposable
     {
         private readonly Socket socket;
         private readonly byte[] buffer;
         private readonly SocketAsyncEventArgs socketAsyncEventArgs = new SocketAsyncEventArgs();
         private int writeIndex;
 
-        public UdpServiceWriter(Socket socket) : this(socket, 65536)
+        public UdpWriter(Socket socket) : this(socket, 65536)
         {
         }
 
-        public UdpServiceWriter(Socket socket, int bufferSize)
+        public UdpWriter(Socket socket, int bufferSize)
         {
             if (bufferSize < sizeof(int) || bufferSize % 4 != 0)
             {
@@ -33,25 +33,24 @@
             this.socketAsyncEventArgs.Completed += this.OnCompleted;
         }
 
-        public Action<UdpResult> Completed { get; set; }
+        public Action<NetworkResult> Completed { get; set; }
 
         private void OnCompleted(object sender, SocketAsyncEventArgs e)
         {
             if (this.socketAsyncEventArgs.SocketError != SocketError.Success)
             {
-                this.Completed?.Invoke(new UdpResult { SocketError = this.socketAsyncEventArgs.SocketError });
+                this.Completed?.Invoke(new NetworkResult { SocketError = this.socketAsyncEventArgs.SocketError });
             }
 
-            this.Completed?.Invoke(new UdpResult
+            this.Completed?.Invoke(new NetworkResult
             {
-                BytesLength = this.socketAsyncEventArgs.BytesTransferred,
                 IpEndPoint = (IPEndPoint)this.socketAsyncEventArgs.RemoteEndPoint
             });
         }
 
         public void BeginWriting() => this.writeIndex = 0;
 
-        public void EndWriting(IPEndPoint remoteEndPoint)
+        public void EndWritingAsync(IPEndPoint remoteEndPoint)
         {
             this.socketAsyncEventArgs.RemoteEndPoint = remoteEndPoint;
             this.socketAsyncEventArgs.SetBuffer(this.buffer, 0, this.writeIndex);
@@ -60,6 +59,26 @@
             if (!willRaiseEvent)
             {
                 this.OnCompleted(this, this.socketAsyncEventArgs);
+            }
+        }
+
+        public NetworkResult EndWritingSync(IPEndPoint remoteEndPoint)
+        {
+            try
+            {
+                int sendSize = this.socket.SendTo(this.buffer, this.writeIndex, SocketFlags.None, remoteEndPoint);
+                return new NetworkResult
+                {
+                    SocketError = SocketError.Success,
+                    IpEndPoint = remoteEndPoint
+                };
+            }
+            catch (SocketException exception)
+            {
+                return new NetworkResult
+                {
+                    SocketError = exception.SocketErrorCode
+                };
             }
         }
 

@@ -6,10 +6,10 @@ using RpcNet.Internal;
 
 namespace RpcNet.Test
 {
-    class TestTcpCommunication
+    class TestTcpReaderWriter
     {
-        private TcpBufferReader reader;
-        private TcpBufferWriter writer;
+        private TcpReader reader;
+        private TcpWriter writer;
         private TcpListener listener;
         private TcpClient readerTcpClient;
         private TcpClient writerTcpClient;
@@ -24,8 +24,8 @@ namespace RpcNet.Test
             Task task = Task.Run(() => this.writerTcpClient = this.listener.AcceptTcpClient());
             this.readerTcpClient.Connect(IPAddress.Loopback, port);
             task.GetAwaiter().GetResult();
-            this.reader = new TcpBufferReader(this.readerTcpClient.Client);
-            this.writer = new TcpBufferWriter(this.writerTcpClient.Client);
+            this.reader = new TcpReader(this.readerTcpClient.Client);
+            this.writer = new TcpWriter(this.writerTcpClient.Client);
             this.listener.Stop();
         }
 
@@ -45,8 +45,8 @@ namespace RpcNet.Test
         [TestCase(8, 12)]
         public void ReadAndWriteMultipleFragments(int maxReadLength, int maxReserveLength)
         {
-            this.reader = new TcpBufferReader(this.readerTcpClient.Client, maxReadLength);
-            this.writer = new TcpBufferWriter(this.writerTcpClient.Client, maxReserveLength);
+            this.reader = new TcpReader(this.readerTcpClient.Client, maxReadLength);
+            this.writer = new TcpWriter(this.writerTcpClient.Client, maxReserveLength);
 
             var xdrReader = new XdrReader(this.reader);
             var xdrWriter = new XdrWriter(this.writer);
@@ -62,6 +62,7 @@ namespace RpcNet.Test
             Assert.That(socketError, Is.EqualTo(SocketError.Success));
             Assert.That(xdrReader.ReadOpaque(), Is.EqualTo(value));
             Assert.That(xdrReader.ReadInt(), Is.EqualTo(42));
+            reader.EndReading();
         }
 
         [Test]
@@ -73,8 +74,8 @@ namespace RpcNet.Test
         [TestCase(8, 12)]
         public void ReadAndWriteMultipleFragmentsThreaded(int maxReadLength, int maxReserveLength)
         {
-            this.reader = new TcpBufferReader(this.readerTcpClient.Client, maxReadLength);
-            this.writer = new TcpBufferWriter(this.writerTcpClient.Client, maxReserveLength);
+            this.reader = new TcpReader(this.readerTcpClient.Client, maxReadLength);
+            this.writer = new TcpWriter(this.writerTcpClient.Client, maxReserveLength);
 
             this.writerTcpClient.Client.SendBufferSize = 1;
 
@@ -89,6 +90,7 @@ namespace RpcNet.Test
                 Assert.That(socketError, Is.EqualTo(SocketError.Success));
                 Assert.That(xdrReader.ReadOpaque(), Is.EqualTo(value));
                 Assert.That(xdrReader.ReadInt(), Is.EqualTo(42));
+                reader.EndReading();
             });
 
             writer.BeginWriting();

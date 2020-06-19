@@ -4,18 +4,18 @@
     using System.Net.Sockets;
 
     // Public for tests
-    public class TcpBufferWriter : INetworkWriter
+    public class TcpWriter : INetworkWriter
     {
         private const int TcpHeaderLength = 4;
         private readonly Socket socket;
         private readonly byte[] buffer;
         private int writeIndex;
 
-        public TcpBufferWriter(Socket socket) : this(socket, 65536)
+        public TcpWriter(Socket socket) : this(socket, 65536)
         {
         }
 
-        public TcpBufferWriter(Socket socket, int bufferSize)
+        public TcpWriter(Socket socket, int bufferSize)
         {
             if (bufferSize < TcpHeaderLength + sizeof(int) || bufferSize % 4 != 0)
             {
