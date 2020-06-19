@@ -1,9 +1,11 @@
-﻿namespace RpcNet.Internal
+﻿using System;
+
+namespace RpcNet.Internal
 {
-    public interface INetworkClient
+    public interface INetworkClient : IDisposable
     {
         int TimeoutInMilliseconds { get; set; }
 
-        void Call(uint procedure, uint version, IXdrWritable argument, IXdrReadable result);
+        void Call(int procedure, int version, IXdrWritable argument, IXdrReadable result);
     }
 }

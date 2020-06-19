@@ -4,7 +4,6 @@
     using System.Net;
     using System.Net.Sockets;
 
-    // Public for tests
     // This service reader for UDP is asynchronous, because there is
     // no synchronous method to call ReceiveFrom without a SocketException.
     // SocketExceptions on server side are ugly!
@@ -52,7 +51,7 @@
             });
         }
 
-        public NetworkResult BeginReadingSync()
+        public NetworkResult BeginReading()
         {
             this.readIndex = 0;
             try

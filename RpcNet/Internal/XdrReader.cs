@@ -3,7 +3,6 @@
     using System;
     using System.Text;
 
-    // Public for tests
     public class XdrReader : IXdrReader
     {
         private readonly Encoding encoding = Encoding.UTF8;

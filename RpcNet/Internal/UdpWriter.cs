@@ -4,7 +4,6 @@
     using System.Net;
     using System.Net.Sockets;
 
-    // Public for tests
     // This service writer for UDP is asynchronous, because there is
     // no synchronous method to call SendTo without a SocketException.
     // SocketExceptions on server side are ugly!
@@ -15,13 +14,23 @@
         private readonly Socket socket;
         private readonly byte[] buffer;
         private readonly SocketAsyncEventArgs socketAsyncEventArgs = new SocketAsyncEventArgs();
+        private readonly IPEndPoint remoteIpEndPoint;
+
         private int writeIndex;
 
-        public UdpWriter(Socket socket) : this(socket, 65536)
+        public UdpWriter(Socket socket) : this(socket, null, 65536)
         {
         }
 
-        public UdpWriter(Socket socket, int bufferSize)
+        public UdpWriter(Socket socket, int bufferSize) : this(socket, null, bufferSize)
+        {
+        }
+
+        public UdpWriter(Socket socket, IPEndPoint remoteIpEndPoint) : this(socket, remoteIpEndPoint, 65536)
+        {
+        }
+
+        public UdpWriter(Socket socket, IPEndPoint remoteIpEndPoint, int bufferSize)
         {
             if (bufferSize < sizeof(int) || bufferSize % 4 != 0)
             {
@@ -29,6 +38,7 @@
             }
 
             this.socket = socket;
+            this.remoteIpEndPoint = remoteIpEndPoint;
             this.buffer = new byte[bufferSize];
             this.socketAsyncEventArgs.Completed += this.OnCompleted;
         }
@@ -62,7 +72,9 @@
             }
         }
 
-        public NetworkResult EndWritingSync(IPEndPoint remoteEndPoint)
+        public NetworkResult EndWriting() => this.EndWriting(this.remoteIpEndPoint);
+
+        public NetworkResult EndWriting(IPEndPoint remoteEndPoint)
         {
             try
             {

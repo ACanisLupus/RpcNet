@@ -2,9 +2,10 @@
 {
     using System;
 
-    // Public for tests
     public interface INetworkWriter
     {
+        void BeginWriting();
+        NetworkResult EndWriting();
         Span<byte> Reserve(int length);
     }
 }

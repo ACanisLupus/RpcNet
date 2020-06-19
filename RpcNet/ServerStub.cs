@@ -11,7 +11,6 @@
         public ServerStub(IPAddress ipAddress, int port, int program, int[] versions)
         {
             this.rpcUdpServer = new RpcUdpServer(ipAddress, port, program, versions, this.DispatchReceivedCall);
-            this.rpcUdpServer.Start();
         }
 
         public void Dispose()

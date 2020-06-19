@@ -1,15 +1,16 @@
 ﻿namespace RpcNet.Internal
 {
     using System;
+    using System.Net;
     using System.Net.Sockets;
 
-    // Public for tests
     public class TcpReader : INetworkReader
     {
         private const int TcpHeaderLength = 4;
 
         private readonly Socket socket;
         private readonly byte[] buffer;
+        private readonly IPEndPoint remoteIpEndPoint;
 
         private int readIndex;
         private int writeIndex;
@@ -30,10 +31,11 @@
             }
 
             this.socket = socket;
+            this.remoteIpEndPoint = (IPEndPoint)socket.RemoteEndPoint;
             this.buffer = new byte[bufferSize];
         }
 
-        public bool BeginReading(out SocketError socketError)
+        public NetworkResult BeginReading()
         {
             this.readIndex = 0;
             this.writeIndex = 0;
@@ -43,7 +45,13 @@
             this.headerIndex = 0;
             this.bodyIndex = 0;
 
-            return this.FillBuffer(out socketError);
+            SocketError socketError = this.FillBuffer();
+
+            return new NetworkResult
+            {
+                IpEndPoint = this.remoteIpEndPoint,
+                SocketError = socketError
+            };
         }
 
         public void EndReading()
@@ -56,7 +64,8 @@
 
         public ReadOnlySpan<byte> Read(int length)
         {
-            if (!this.FillBuffer(out SocketError socketError))
+            SocketError socketError = this.FillBuffer();
+            if (socketError != SocketError.Success)
             {
                 throw new RpcException($"Could not receive from TCP stream. Socket error code: {socketError}.");
             }
@@ -78,15 +87,14 @@
         // - Packet is not complete and no space available? Return and wait for XDR read
         // - Packet is complete and XDR read is not complete? Return and wait for XDF read
         // - Packet and XDR read is complete? Read next header. Or finish if previous packet was the last packet
-        private bool FillBuffer(out SocketError socketError)
+        private SocketError FillBuffer()
         {
             bool readFromNetwork = false;
             while (true)
             {
                 if (this.packetState == PacketState.Complete)
                 {
-                    socketError = SocketError.Success;
-                    return true;
+                    return SocketError.Success;
                 }
 
                 if (this.packetState == PacketState.Header)
@@ -98,16 +106,16 @@
                 {
                     if (this.ReadBody(ref readFromNetwork))
                     {
-                        socketError = SocketError.Success;
-                        return true;
+                        return SocketError.Success;
                     }
                 }
 
                 if (readFromNetwork)
                 {
-                    if (!this.ReadFromNetwork(out socketError, ref readFromNetwork))
+                    SocketError socketError = this.ReadFromNetwork(ref readFromNetwork);
+                    if (socketError != SocketError.Success)
                     {
-                        return false;
+                        return socketError;
                     }
                 }
 
@@ -153,23 +161,22 @@
             return false;
         }
 
-        private bool ReadFromNetwork(out SocketError socketError, ref bool readFromNetwork)
+        private SocketError ReadFromNetwork(ref bool readFromNetwork)
         {
-            int receivedLength = this.socket.Receive(this.buffer, this.writeIndex, this.buffer.Length - this.writeIndex, SocketFlags.None, out socketError);
+            int receivedLength = this.socket.Receive(this.buffer, this.writeIndex, this.buffer.Length - this.writeIndex, SocketFlags.None, out SocketError socketError);
             if (socketError != SocketError.Success)
             {
-                return false;
+                return socketError;
             }
 
             if (receivedLength == 0)
             {
-                socketError = SocketError.NotConnected;
-                return false;
+                return SocketError.NotConnected;
             }
 
             this.writeIndex += receivedLength;
             readFromNetwork = false;
-            return true;
+            return socketError;
         }
 
         private void ReadHeader(ref bool readFromNetwork)

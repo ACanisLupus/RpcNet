@@ -4,7 +4,6 @@
     using System.Net;
     using System.Net.Sockets;
 
-    // Public for tests
     public class RpcUdpServer : IDisposable
     {
         private readonly UdpClient server;
@@ -29,12 +28,11 @@
                 this.reader,
                 this.writer,
                 receivedCallDispatcher);
+
+            this.reader.BeginReadingAsync();
         }
 
-        public void Dispose() => this.Stop();
-        public void Start() => this.reader.BeginReadingAsync();
-
-        public void Stop()
+        public void Dispose()
         {
             this.stopReceiving = true;
             this.reader.Dispose();
@@ -50,9 +48,9 @@
 
             try
             {
-                this.reader.EndReading();
                 this.writer.BeginWriting();
                 this.receivedCall.HandleCall(udpResult.IpEndPoint);
+                this.reader.EndReading(); // TODO: This is not good. Possible solution: RpcTcpServer works async as well and ReceivedCall takes care of this
                 this.writer.EndWritingAsync(udpResult.IpEndPoint);
             }
             catch (RpcException rpcException)
@@ -68,7 +66,7 @@
                 return;
             }
 
-            this.Start();
+            this.reader.BeginReadingAsync();
         }
     }
 }

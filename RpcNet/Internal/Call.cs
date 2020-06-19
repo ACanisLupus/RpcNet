@@ -1,16 +1,24 @@
 ﻿namespace RpcNet.Internal
 {
     using System;
+    using System.Net;
+    using System.Net.Sockets;
 
-    public class Call
+    internal class Call
     {
+        private readonly IPEndPoint remoteIpEndPoint;
+        private readonly INetworkReader networkReader;
+        private readonly INetworkWriter networkWriter;
         private readonly IXdrReader xdrReader;
         private readonly IXdrWriter xdrWriter;
         private readonly Random random = new Random();
         private readonly RpcMessage rpcMessage;
 
-        public Call(uint program, INetworkReader networkReader, INetworkWriter networkWriter)
+        public Call(int program, IPEndPoint remoteIpEndPoint, INetworkReader networkReader, INetworkWriter networkWriter)
         {
+            this.remoteIpEndPoint = remoteIpEndPoint;
+            this.networkReader = networkReader;
+            this.networkWriter = networkWriter;
             this.xdrReader = new XdrReader(networkReader);
             this.xdrWriter = new XdrWriter(networkWriter);
             this.rpcMessage = new RpcMessage
@@ -22,7 +30,7 @@
                     CallBody = new CallBody
                     {
                         RpcVersion = 2,
-                        Program = program,
+                        Program = (uint)program,
                         Credential = new OpaqueAuthentication
                         {
                             AuthenticationFlavor = AuthenticationFlavor.None,
@@ -38,42 +46,100 @@
             };
         }
 
-        public void SendCall(uint procedure, uint version, IXdrWritable argument)
+        public void CallRpc(int procedure, int version, IXdrWritable argument, IXdrReadable result)
         {
-            this.rpcMessage.Xid = (uint)this.random.Next();
-            this.rpcMessage.Body.CallBody.Procedure = procedure;
-            this.rpcMessage.Body.CallBody.Version = version;
+            for (int i = 0; i < 2; i++)
+            {
+                if (!this.SendMessage(procedure, version, argument, out string errorMessage))
+                {
+                    if (i == 0)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        throw new RpcException(errorMessage);
+                    }
+                }
 
-            this.rpcMessage.WriteTo(this.xdrWriter);
-            argument.WriteTo(this.xdrWriter);
+                if (!this.ReceiveReply(result, out errorMessage))
+                {
+                    if (i == 0)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        throw new RpcException(errorMessage);
+                    }
+                }
+
+                break;
+            }
         }
 
-        public void ReceiveResult(IXdrReadable result)
+        private bool SendMessage(int procedure, int version, IXdrWritable argument, out string errorMessage)
+        {
+            this.networkWriter.BeginWriting();
+
+            this.rpcMessage.Xid = (uint)this.random.Next();
+            this.rpcMessage.Body.CallBody.Procedure = (uint)procedure;
+            this.rpcMessage.Body.CallBody.Version = (uint)version;
+            this.rpcMessage.WriteTo(this.xdrWriter);
+            argument.WriteTo(this.xdrWriter);
+
+            NetworkResult networkResult = this.networkWriter.EndWriting();
+            if (networkResult.SocketError != SocketError.Success)
+            {
+                errorMessage = $"Could not send message to {this.remoteIpEndPoint}. Socket error: {networkResult.SocketError}.";
+                return false;
+            }
+
+            networkResult = this.networkReader.BeginReading();
+            if (networkResult.SocketError != SocketError.Success)
+            {
+                errorMessage = $"Could not receive reply from {this.remoteIpEndPoint}. Socket error: {networkResult.SocketError}.";
+                return false;
+            }
+
+            errorMessage = null;
+            return true;
+        }
+
+        private bool ReceiveReply(IXdrReadable result, out string errorMessage)
         {
             var reply = new RpcMessage();
             reply.ReadFrom(this.xdrReader);
 
             if (reply.Xid != this.rpcMessage.Xid)
             {
-                throw new RpcException($"Wrong XID. Expected {this.rpcMessage.Xid}, but was {reply.Xid}.");
+                errorMessage = $"Wrong XID. Expected {this.rpcMessage.Xid}, but was {reply.Xid}.";
+                return false;
             }
 
             if (reply.Body.MessageType != MessageType.Reply)
             {
-                throw new RpcException($"Wrong message type. Expected {MessageType.Reply}, but was {reply.Body.MessageType}.");
+                errorMessage = $"Wrong message type. Expected {MessageType.Reply}, but was {reply.Body.MessageType}.";
+                return false;
             }
 
             if (reply.Body.ReplyBody.ReplyStatus != ReplyStatus.Accepted)
             {
-                throw new RpcException($"Call was denied.");
+                errorMessage = $"Call was denied.";
+                return false;
             }
 
             if (reply.Body.ReplyBody.AcceptedReply.ReplyData.AcceptStatus != AcceptStatus.Success)
             {
-                throw new RpcException($"Call was unsuccessful: {reply.Body.ReplyBody.AcceptedReply.ReplyData.AcceptStatus}.");
+                errorMessage = $"Call was unsuccessful: {reply.Body.ReplyBody.AcceptedReply.ReplyData.AcceptStatus}.";
+                return false;
             }
 
             result.ReadFrom(this.xdrReader);
+            this.networkReader.EndReading();
+
+            errorMessage = null;
+            return true;
         }
     }
 }

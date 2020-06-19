@@ -32,8 +32,14 @@ struct MyStruct
   float Float32Value3[10];
 };
 
+struct PingStruct
+{
+  Int32 Value;
+};
+
 program TestServiceProgram {
   version TestServiceVersion {
-    MyStruct TestMyStruct(MyStruct) = 1;
+    PingStruct Ping(PingStruct) = 1;
+    MyStruct TestMyStruct(MyStruct) = 2;
   } = 1;
 } = 0x02004009;

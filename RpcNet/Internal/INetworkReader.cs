@@ -2,9 +2,10 @@
 {
     using System;
 
-    // Public for tests
     public interface INetworkReader
     {
+        NetworkResult BeginReading();
+        void EndReading();
         ReadOnlySpan<byte> Read(int length);
     }
 }

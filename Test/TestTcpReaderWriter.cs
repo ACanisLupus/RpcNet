@@ -1,11 +1,11 @@
-﻿using System.Net;
-using System.Net.Sockets;
-using System.Threading.Tasks;
-using NUnit.Framework;
-using RpcNet.Internal;
-
-namespace RpcNet.Test
+﻿namespace RpcNet.Test
 {
+    using System.Net;
+    using System.Net.Sockets;
+    using System.Threading.Tasks;
+    using NUnit.Framework;
+    using RpcNet.Internal;
+
     class TestTcpReaderWriter
     {
         private TcpReader reader;
@@ -56,10 +56,11 @@ namespace RpcNet.Test
             writer.BeginWriting();
             xdrWriter.WriteVariableLengthOpaque(value);
             xdrWriter.Write(42);
-            writer.EndWriting();
+            NetworkResult result = writer.EndWriting();
+            Assert.That(result.SocketError, Is.EqualTo(SocketError.Success));
 
-            Assert.That(reader.BeginReading(out SocketError socketError), Is.True);
-            Assert.That(socketError, Is.EqualTo(SocketError.Success));
+            result = reader.BeginReading();
+            Assert.That(result.SocketError, Is.EqualTo(SocketError.Success));
             Assert.That(xdrReader.ReadOpaque(), Is.EqualTo(value));
             Assert.That(xdrReader.ReadInt(), Is.EqualTo(42));
             reader.EndReading();
@@ -86,8 +87,8 @@ namespace RpcNet.Test
 
             var task = Task.Run(() =>
             {
-                Assert.That(reader.BeginReading(out SocketError socketError), Is.True);
-                Assert.That(socketError, Is.EqualTo(SocketError.Success));
+                NetworkResult result = reader.BeginReading();
+                Assert.That(result.SocketError, Is.EqualTo(SocketError.Success));
                 Assert.That(xdrReader.ReadOpaque(), Is.EqualTo(value));
                 Assert.That(xdrReader.ReadInt(), Is.EqualTo(42));
                 reader.EndReading();
@@ -96,7 +97,7 @@ namespace RpcNet.Test
             writer.BeginWriting();
             xdrWriter.WriteVariableLengthOpaque(value);
             xdrWriter.Write(42);
-            writer.EndWriting();
+            NetworkResult result2 = writer.EndWriting();
 
             task.Wait();
         }

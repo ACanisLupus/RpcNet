@@ -6,19 +6,16 @@
 
     public class Channel<T>
     {
-        private BlockingCollection<T> _buffer;
+        private BlockingCollection<T> buffer;
 
         public Channel() : this(1) { }
-        public Channel(int size)
-        {
-            _buffer = new BlockingCollection<T>(new ConcurrentQueue<T>(), size);
-        }
+        public Channel(int size) => this.buffer = new BlockingCollection<T>(new ConcurrentQueue<T>(), size);
 
         public bool Send(T t)
         {
             try
             {
-                _buffer.Add(t);
+                this.buffer.Add(t);
             }
             catch (InvalidOperationException)
             {
@@ -33,7 +30,7 @@
         {
             try
             {
-                val = _buffer.Take();
+                val = this.buffer.Take();
             }
             catch (InvalidOperationException)
             {
@@ -45,10 +42,7 @@
             return true;
         }
 
-        public void Close()
-        {
-            _buffer.CompleteAdding();
-        }
+        public void Close() => this.buffer.CompleteAdding();
 
         public IEnumerable<T> Range()
         {

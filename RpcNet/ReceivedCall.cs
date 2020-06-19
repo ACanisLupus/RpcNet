@@ -35,7 +35,7 @@
         public uint Procedure { get; private set; }
         public IPEndPoint RemoteIpEndPoint { get; private set; }
 
-        public void HandleCall(IPEndPoint remoteIpEndPoint)
+        internal void HandleCall(IPEndPoint remoteIpEndPoint)
         {
             var rpcMessage = new RpcMessage(this.xdrReader);
             this.xid = rpcMessage.Xid;

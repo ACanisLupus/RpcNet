@@ -48,7 +48,7 @@
         }
 
         [Test]
-        public void SendAndReceiveData1([Values(0, 10, 100)] int length, [Values(true, false)] bool syncWriting, [Values(true, false)] bool syncReading)
+        public void SendAndReceiveData([Values(0, 10, 100)] int length, [Values(true, false)] bool syncWriting, [Values(true, false)] bool syncReading)
         {
             this.writer.BeginWriting();
             Span<byte> writeSpan = this.writer.Reserve(length);
@@ -61,7 +61,7 @@
             NetworkResult udpResult;
             if (syncWriting)
             {
-                udpResult = this.writer.EndWritingSync(this.remoteIpEndPoint);
+                udpResult = this.writer.EndWriting(this.remoteIpEndPoint);
             }
             else
             {
@@ -73,7 +73,7 @@
 
             if (syncReading)
             {
-                udpResult = this.reader.BeginReadingSync();
+                udpResult = this.reader.BeginReading();
             }
             else
             {
@@ -107,7 +107,7 @@
             NetworkResult udpResult;
             if (syncWriting)
             {
-                udpResult = this.writer.EndWritingSync(this.remoteIpEndPoint);
+                udpResult = this.writer.EndWriting(this.remoteIpEndPoint);
             }
             else
             {
@@ -119,7 +119,7 @@
 
             if (syncReading)
             {
-                udpResult = this.reader.BeginReadingSync();
+                udpResult = this.reader.BeginReading();
             }
             else
             {
@@ -165,10 +165,10 @@
             this.writer.BeginWriting();
             this.writer.Reserve(10);
 
-            NetworkResult udpResult = this.writer.EndWritingSync(this.remoteIpEndPoint);
+            NetworkResult udpResult = this.writer.EndWriting(this.remoteIpEndPoint);
             Assert.That(udpResult.SocketError, Is.EqualTo(SocketError.Success));
 
-            udpResult = this.reader.BeginReadingSync();
+            udpResult = this.reader.BeginReading();
             Assert.That(udpResult.SocketError, Is.EqualTo(SocketError.Success));
 
             for (int i = 0; i < arguments.Length - 1; i++)
@@ -187,7 +187,7 @@
                 NetworkResult udpResult;
                 if (syncReading)
                 {
-                    udpResult = this.reader.BeginReadingSync();
+                    udpResult = this.reader.BeginReading();
                     Assert.That(udpResult.SocketError, Is.EqualTo(SocketError.Interrupted));
                 }
                 else

@@ -18,6 +18,18 @@
         public int ReadIndex { get; private set; }
         public int WriteIndex { get; private set; }
 
+        public NetworkResult BeginReading() => new NetworkResult();
+
+        public void EndReading()
+        {
+        }
+
+        public void BeginWriting()
+        {
+        }
+
+        public NetworkResult EndWriting() => new NetworkResult();
+
         public void Reset()
         {
             this.ReadIndex = 0;

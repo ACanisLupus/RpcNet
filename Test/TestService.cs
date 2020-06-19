@@ -7,7 +7,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Test
+namespace RpcNet.Test
 {
     using System;
     using System.Net;
@@ -16,7 +16,8 @@ namespace Test
     internal static class TestServiceConstants
     {
         public const int TestServiceVersion = 1;
-        public const int TestMyStruct_1 = 1;
+        public const int Ping_1 = 1;
+        public const int TestMyStruct_1 = 2;
         public const int TestServiceProgram = 0x02004009;
     }
 
@@ -131,11 +132,42 @@ namespace Test
         }
     }
 
+    internal partial class PingStruct : IXdrReadable, IXdrWritable
+    {
+        public int Value { get; set; }
+
+        public PingStruct()
+        {
+        }
+
+        public PingStruct(IXdrReader reader)
+        {
+            ReadFrom(reader);
+        }
+
+        public void WriteTo(IXdrWriter writer)
+        {
+            writer.Write(Value);
+        }
+
+        public void ReadFrom(IXdrReader reader)
+        {
+            Value = reader.ReadInt();
+        }
+    }
+
     internal class TestServiceClient : ClientStub
     {
         public TestServiceClient(Protocol protocol, IPAddress ipAddress, int port = 0) :
             base(protocol, ipAddress, port, TestServiceConstants.TestServiceProgram)
         {
+        }
+
+        public PingStruct Ping_1(PingStruct arg1)
+        {
+            var result = new PingStruct();
+            Call(TestServiceConstants.Ping_1, TestServiceConstants.TestServiceVersion, arg1, result);
+            return result;
         }
 
         public MyStruct TestMyStruct_1(MyStruct arg1)
@@ -159,6 +191,14 @@ namespace Test
             {
                 switch (call.Procedure)
                 {
+                    case TestServiceConstants.Ping_1:
+                    {
+                        var args = new PingStruct();
+                        call.RetrieveCall(args);
+                        var result = Ping_1(call.RemoteIpEndPoint, args);
+                        call.Reply(result);
+                        break;
+                    }
                     case TestServiceConstants.TestMyStruct_1:
                     {
                         var args = new MyStruct();
@@ -178,6 +218,7 @@ namespace Test
             }
         }
 
+        public abstract PingStruct Ping_1(IPEndPoint remoteIpEndPoint, PingStruct arg1);
         public abstract MyStruct TestMyStruct_1(IPEndPoint remoteIpEndPoint, MyStruct arg1);
     }
 }

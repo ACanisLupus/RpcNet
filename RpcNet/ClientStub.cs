@@ -4,7 +4,7 @@
     using System.Net;
     using RpcNet.Internal;
 
-    public abstract class ClientStub
+    public abstract class ClientStub : IDisposable
     {
         private readonly INetworkClient networkClient;
 
@@ -16,7 +16,7 @@
                     // TODO
                     break;
                 case Protocol.Udp:
-                    this.networkClient = new RpcUdpClient(ipAddress, port, (uint)program);
+                    this.networkClient = new RpcUdpClient(ipAddress, port, program);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(protocol));
@@ -30,6 +30,8 @@
         }
 
         public void Call(int procedure, int version, IXdrWritable argument, IXdrReadable result) =>
-            this.networkClient.Call((uint)procedure, (uint)version, argument, result);
+            this.networkClient.Call(procedure, version, argument, result);
+
+        public void Dispose() => this.networkClient.Dispose();
     }
 }

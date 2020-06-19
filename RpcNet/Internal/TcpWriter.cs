@@ -1,14 +1,17 @@
 ﻿namespace RpcNet.Internal
 {
     using System;
+    using System.Net;
     using System.Net.Sockets;
 
-    // Public for tests
     public class TcpWriter : INetworkWriter
     {
         private const int TcpHeaderLength = 4;
+
         private readonly Socket socket;
+        private readonly IPEndPoint remoteIpEndPoint;
         private readonly byte[] buffer;
+
         private int writeIndex;
 
         public TcpWriter(Socket socket) : this(socket, 65536)
@@ -23,11 +26,12 @@
             }
 
             this.socket = socket;
+            this.remoteIpEndPoint = (IPEndPoint)socket.RemoteEndPoint;
             this.buffer = new byte[bufferSize];
         }
 
         public void BeginWriting() => this.writeIndex = TcpHeaderLength;
-        public void EndWriting() => this.FlushPacket(true);
+        public NetworkResult EndWriting() => this.FlushPacket(true);
 
         public Span<byte> Reserve(int length)
         {
@@ -47,7 +51,7 @@
             return span;
         }
 
-        private void FlushPacket(bool lastPacket)
+        private NetworkResult FlushPacket(bool lastPacket)
         {
             int length = this.writeIndex - TcpHeaderLength;
 
@@ -56,10 +60,16 @@
 
             Utilities.WriteBytesBigEndian(this.buffer.AsSpan(), lengthToDecode);
             this.socket.Send(this.buffer, 0, length + TcpHeaderLength, SocketFlags.None, out SocketError socketError);
-            if (socketError != SocketError.Success)
+            if (socketError == SocketError.Success)
             {
-                throw new RpcException($"Could not send packet. Socket error code: {socketError}.");
+                this.BeginWriting();
             }
+
+            return new NetworkResult
+            {
+                IpEndPoint = this.remoteIpEndPoint,
+                SocketError = socketError
+            };
 
             // For test purposes. This simulates a slow network
             //for (int i = 0; i < length + TcpHeader; i++)
@@ -72,8 +82,6 @@
             //    }
             //    System.Threading.Thread.Sleep(1);
             //}
-
-            this.BeginWriting();
         }
     }
 }
