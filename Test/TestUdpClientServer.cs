@@ -4,7 +4,7 @@
     using NUnit.Framework;
     using RpcNet.Internal;
 
-    class TestUdpClientServer
+    internal class TestUdpClientServer
     {
         [Test]
         public void SendAndReceiveData()
@@ -16,6 +16,7 @@
             int procedure = 14;
 
             var receivedCallChannel = new Channel<ReceivedCall>();
+
             void Dispatcher(ReceivedCall call)
             {
                 // To assert it on the main thread
@@ -30,10 +31,7 @@
 
             var client = new RpcUdpClient(ipAddress, port, program);
 
-            var argument = new PingStruct
-            {
-                Value = 42
-            };
+            var argument = new PingStruct { Value = 42 };
             var result = new PingStruct();
 
             client.Call(procedure, version, argument, result);
@@ -44,6 +42,8 @@
             Assert.That(receivedCall.RemoteIpEndPoint, Is.Not.Null);
 
             Assert.That(argument.Value, Is.EqualTo(result.Value));
+
+            server.Dispose();
         }
     }
 }

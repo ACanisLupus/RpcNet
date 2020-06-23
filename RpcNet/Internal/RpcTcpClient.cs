@@ -5,10 +5,8 @@
 
     public class RpcTcpClient : INetworkClient
     {
-        private readonly IPEndPoint remoteIpEndPoint;
-        private readonly TcpReader reader;
-        private readonly TcpWriter writer;
         private readonly Call call;
+        private readonly IPEndPoint remoteIpEndPoint;
 
         private TcpClient client;
 
@@ -17,14 +15,9 @@
             this.remoteIpEndPoint = new IPEndPoint(ipAddress, port);
             this.client = new TcpClient();
             this.EstablishConnection();
-            this.reader = new TcpReader(this.client.Client);
-            this.writer = new TcpWriter(this.client.Client);
-            this.call = new Call(
-                program,
-                this.remoteIpEndPoint,
-                this.reader,
-                this.writer,
-                this.ReestablishConnection);
+            var reader = new TcpReader(this.client.Client);
+            var writer = new TcpWriter(this.client.Client);
+            this.call = new Call(program, this.remoteIpEndPoint, reader, writer, this.ReestablishConnection);
             this.TimeoutInMilliseconds = 10000;
         }
 
@@ -34,15 +27,10 @@
             set => this.client.Client.ReceiveTimeout = value;
         }
 
-        public void Call(int procedure, int version, IXdrWritable argument, IXdrReadable result)
-            => this.call.SendCall(procedure, version, argument, result);
+        public void Call(int procedure, int version, IXdrWritable argument, IXdrReadable result) =>
+            this.call.SendCall(procedure, version, argument, result);
 
-        public void Dispose()
-        {
-            this.client.Dispose();
-            //this.reader.Dispose();
-            //this.writer.Dispose();
-        }
+        public void Dispose() => this.client.Dispose();
 
         private void EstablishConnection()
         {

@@ -6,19 +6,18 @@
 
     public class RpcUdpClient : INetworkClient, IDisposable
     {
-        private readonly IPEndPoint remoteIpEndPoint;
+        private readonly Call call;
         private readonly UdpClient client;
         private readonly UdpReader reader;
         private readonly UdpWriter writer;
-        private readonly Call call;
 
         public RpcUdpClient(IPAddress ipAddress, int port, int program)
         {
-            this.remoteIpEndPoint = new IPEndPoint(ipAddress, port);
+            var remoteIpEndPoint = new IPEndPoint(ipAddress, port);
             this.client = new UdpClient();
             this.reader = new UdpReader(this.client.Client);
-            this.writer = new UdpWriter(this.client.Client, this.remoteIpEndPoint);
-            this.call = new Call(program, this.remoteIpEndPoint, this.reader, this.writer);
+            this.writer = new UdpWriter(this.client.Client, remoteIpEndPoint);
+            this.call = new Call(program, remoteIpEndPoint, this.reader, this.writer);
             this.TimeoutInMilliseconds = 10000;
         }
 
@@ -28,8 +27,8 @@
             set => this.client.Client.ReceiveTimeout = value;
         }
 
-        public void Call(int procedure, int version, IXdrWritable argument, IXdrReadable result)
-            => this.call.SendCall(procedure, version, argument, result);
+        public void Call(int procedure, int version, IXdrWritable argument, IXdrReadable result) =>
+            this.call.SendCall(procedure, version, argument, result);
 
         public void Dispose()
         {

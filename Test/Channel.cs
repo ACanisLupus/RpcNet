@@ -2,11 +2,10 @@
 {
     using System;
     using System.Collections.Concurrent;
-    using System.Collections.Generic;
 
     public class Channel<T>
     {
-        private BlockingCollection<T> buffer;
+        private readonly BlockingCollection<T> buffer;
 
         public Channel() : this(1) { }
         public Channel(int size) => this.buffer = new BlockingCollection<T>(new ConcurrentQueue<T>(), size);
@@ -19,7 +18,7 @@
             }
             catch (InvalidOperationException)
             {
-                // will be thrown when the collection gets closed
+                // Will be thrown when the collection gets closed
                 return false;
             }
 
@@ -34,7 +33,7 @@
             }
             catch (InvalidOperationException)
             {
-                // will be thrown when the collection is empty and got closed
+                // Will be thrown when the collection is empty and got closed
                 val = default;
                 return false;
             }
@@ -43,13 +42,5 @@
         }
 
         public void Close() => this.buffer.CompleteAdding();
-
-        public IEnumerable<T> Range()
-        {
-            while (this.Receive(out T val))
-            {
-                yield return val;
-            }
-        }
     }
 }

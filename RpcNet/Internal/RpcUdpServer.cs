@@ -6,10 +6,9 @@
 
     public class RpcUdpServer : IDisposable
     {
-        private readonly UdpClient server;
         private readonly UdpReader reader;
-        private readonly UdpWriter writer;
         private readonly ReceivedCall receivedCall;
+        private readonly UdpWriter writer;
 
         private volatile bool stopReceiving;
 
@@ -20,19 +19,14 @@
             int[] versions,
             Action<ReceivedCall> receivedCallDispatcher)
         {
-            this.server = new UdpClient(new IPEndPoint(ipAddress, port));
+            var server = new UdpClient(new IPEndPoint(ipAddress, port));
 
-            this.reader = new UdpReader(this.server.Client);
+            this.reader = new UdpReader(server.Client);
             this.reader.Completed += this.ReadingCompleted;
-            this.writer = new UdpWriter(this.server.Client);
+            this.writer = new UdpWriter(server.Client);
             this.writer.Completed += this.WritingCompleted;
 
-            this.receivedCall = new ReceivedCall(
-                program,
-                versions,
-                this.reader,
-                this.writer,
-                receivedCallDispatcher);
+            this.receivedCall = new ReceivedCall(program, versions, this.reader, this.writer, receivedCallDispatcher);
 
             this.reader.BeginReadingAsync();
         }

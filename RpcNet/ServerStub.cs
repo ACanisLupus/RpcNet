@@ -6,14 +6,20 @@
 
     public abstract class ServerStub : IDisposable
     {
-        private readonly RpcUdpServer rpcUdpServer;
         private readonly RpcTcpServer rpcTcpServer;
+        private readonly RpcUdpServer rpcUdpServer;
         private bool isDisposed;
 
-        public ServerStub(IPAddress ipAddress, int port, int program, int[] versions)
+        protected ServerStub(IPAddress ipAddress, int port, int program, int[] versions)
         {
             this.rpcUdpServer = new RpcUdpServer(ipAddress, port, program, versions, this.DispatchReceivedCall);
             this.rpcTcpServer = new RpcTcpServer(ipAddress, port, program, versions, this.DispatchReceivedCall);
+        }
+
+        public void Dispose()
+        {
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         protected abstract void DispatchReceivedCall(ReceivedCall call);
@@ -30,12 +36,6 @@
 
                 this.isDisposed = true;
             }
-        }
-
-        public void Dispose()
-        {
-            this.Dispose(true);
-            GC.SuppressFinalize(this);
         }
     }
 }

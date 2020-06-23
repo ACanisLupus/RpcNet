@@ -6,12 +6,12 @@
     using NUnit.Framework;
     using RpcNet.Internal;
 
-    class TestTcpReaderWriter
+    internal class TestTcpReaderWriter
     {
-        private TcpReader reader;
-        private TcpWriter writer;
         private TcpListener listener;
+        private TcpReader reader;
         private TcpClient readerTcpClient;
+        private TcpWriter writer;
         private TcpClient writerTcpClient;
 
         [SetUp]
@@ -53,17 +53,17 @@
 
             byte[] value = TestXdr.GenerateByteTestData(17);
 
-            writer.BeginWriting();
+            this.writer.BeginWriting();
             xdrWriter.WriteVariableLengthOpaque(value);
             xdrWriter.Write(42);
-            NetworkResult result = writer.EndWriting();
+            NetworkResult result = this.writer.EndWriting();
             Assert.That(result.SocketError, Is.EqualTo(SocketError.Success));
 
-            result = reader.BeginReading();
+            result = this.reader.BeginReading();
             Assert.That(result.SocketError, Is.EqualTo(SocketError.Success));
             Assert.That(xdrReader.ReadOpaque(), Is.EqualTo(value));
             Assert.That(xdrReader.ReadInt(), Is.EqualTo(42));
-            reader.EndReading();
+            this.reader.EndReading();
         }
 
         [Test]
@@ -85,19 +85,20 @@
 
             byte[] value = TestXdr.GenerateByteTestData(17);
 
-            var task = Task.Run(() =>
-            {
-                NetworkResult result = reader.BeginReading();
-                Assert.That(result.SocketError, Is.EqualTo(SocketError.Success));
-                Assert.That(xdrReader.ReadOpaque(), Is.EqualTo(value));
-                Assert.That(xdrReader.ReadInt(), Is.EqualTo(42));
-                reader.EndReading();
-            });
+            var task = Task.Run(
+                () =>
+                {
+                    NetworkResult result = this.reader.BeginReading();
+                    Assert.That(result.SocketError, Is.EqualTo(SocketError.Success));
+                    Assert.That(xdrReader.ReadOpaque(), Is.EqualTo(value));
+                    Assert.That(xdrReader.ReadInt(), Is.EqualTo(42));
+                    this.reader.EndReading();
+                });
 
-            writer.BeginWriting();
+            this.writer.BeginWriting();
             xdrWriter.WriteVariableLengthOpaque(value);
             xdrWriter.Write(42);
-            NetworkResult result2 = writer.EndWriting();
+            this.writer.EndWriting();
 
             task.Wait();
         }

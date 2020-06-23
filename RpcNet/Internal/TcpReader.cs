@@ -8,16 +8,16 @@
     {
         private const int TcpHeaderLength = 4;
 
-        private Socket socket;
         private readonly byte[] buffer;
-        private IPEndPoint remoteIpEndPoint;
 
-        private int readIndex;
-        private int writeIndex;
+        private int bodyIndex;
+        private int headerIndex;
         private bool lastPacket;
-        private int headerIndex = 0;
-        private int bodyIndex = 0;
         private PacketState packetState = PacketState.Header;
+        private int readIndex;
+        private IPEndPoint remoteIpEndPoint;
+        private Socket socket;
+        private int writeIndex;
 
         public TcpReader(Socket socket) : this(socket, 65536)
         {
@@ -192,8 +192,7 @@
         {
             if (this.writeIndex >= this.headerIndex + TcpHeaderLength)
             {
-                int packetLength = Utilities.ToInt32BigEndian(
-                    this.buffer.AsSpan(this.headerIndex, TcpHeaderLength));
+                int packetLength = Utilities.ToInt32BigEndian(this.buffer.AsSpan(this.headerIndex, TcpHeaderLength));
                 if (packetLength < 0)
                 {
                     this.lastPacket = true;

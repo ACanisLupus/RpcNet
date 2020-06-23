@@ -11,11 +11,12 @@
     // therefore the implementation is fully asynchronous (not async/await).
     public class UdpReader : INetworkReader, IDisposable
     {
-        private readonly Socket socket;
         private readonly byte[] buffer;
+        private readonly Socket socket;
         private readonly SocketAsyncEventArgs socketAsyncEventArgs = new SocketAsyncEventArgs();
-        private int totalLength;
+
         private int readIndex;
+        private int totalLength;
 
         public UdpReader(Socket socket) : this(socket, 65536)
         {
@@ -37,20 +38,6 @@
 
         public Action<NetworkResult> Completed { get; set; }
 
-        private void OnCompleted(object sender, SocketAsyncEventArgs e)
-        {
-            if (this.socketAsyncEventArgs.SocketError != SocketError.Success)
-            {
-                this.Completed?.Invoke(new NetworkResult { SocketError = this.socketAsyncEventArgs.SocketError });
-            }
-
-            this.totalLength = this.socketAsyncEventArgs.BytesTransferred;
-            this.Completed?.Invoke(new NetworkResult
-            {
-                RemoteIpEndPoint = (IPEndPoint)this.socketAsyncEventArgs.RemoteEndPoint
-            });
-        }
-
         public NetworkResult BeginReading()
         {
             this.readIndex = 0;
@@ -58,17 +45,11 @@
             {
                 EndPoint endPoint = new IPEndPoint(IPAddress.Loopback, 0);
                 this.totalLength = this.socket.ReceiveFrom(this.buffer, ref endPoint);
-                return new NetworkResult
-                {
-                    RemoteIpEndPoint = (IPEndPoint)endPoint
-                };
+                return new NetworkResult { RemoteIpEndPoint = (IPEndPoint)endPoint };
             }
             catch (SocketException exception)
             {
-                return new NetworkResult
-                {
-                    SocketError = exception.SocketErrorCode
-                };
+                return new NetworkResult { SocketError = exception.SocketErrorCode };
             }
         }
 
@@ -102,6 +83,18 @@
             Span<byte> span = this.buffer.AsSpan(this.readIndex, length);
             this.readIndex += length;
             return span;
+        }
+
+        private void OnCompleted(object sender, SocketAsyncEventArgs e)
+        {
+            if (this.socketAsyncEventArgs.SocketError != SocketError.Success)
+            {
+                this.Completed?.Invoke(new NetworkResult { SocketError = this.socketAsyncEventArgs.SocketError });
+            }
+
+            this.totalLength = this.socketAsyncEventArgs.BytesTransferred;
+            this.Completed?.Invoke(
+                new NetworkResult { RemoteIpEndPoint = (IPEndPoint)this.socketAsyncEventArgs.RemoteEndPoint });
         }
     }
 }

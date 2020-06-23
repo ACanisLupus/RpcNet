@@ -8,15 +8,15 @@
     using NUnit.Framework;
     using RpcNet.Internal;
 
-    class TestUdpReaderWriter
+    internal class TestUdpReaderWriter
     {
-        private UdpReader reader;
-        private UdpWriter writer;
-        private UdpClient server;
         private UdpClient client;
-        private IPEndPoint remoteIpEndPoint;
         private Channel<NetworkResult> readChannel;
+        private UdpReader reader;
+        private IPEndPoint remoteIpEndPoint;
+        private UdpClient server;
         private Channel<NetworkResult> writeChannel;
+        private UdpWriter writer;
 
         [SetUp]
         public void SetUp()
@@ -135,7 +135,7 @@
 
             Assert.That(udpResult.SocketError, Is.EqualTo(SocketError.Success));
 
-            byte[] buffer = new byte[100];
+            var buffer = new byte[100];
             int index = 0;
             for (int i = 0; i < 100 / length; i++)
             {
@@ -188,21 +188,22 @@
         [Test]
         public void AbortReading([Values(true, false)] bool syncReading)
         {
-            var task = Task.Run(() =>
-            {
-                NetworkResult udpResult;
-                if (syncReading)
+            var task = Task.Run(
+                () =>
                 {
-                    udpResult = this.reader.BeginReading();
-                    Assert.That(udpResult.SocketError, Is.EqualTo(SocketError.Interrupted));
-                }
-                else
-                {
-                    this.reader.BeginReadingAsync();
-                    Assert.That(this.readChannel.Receive(out udpResult));
-                    Assert.That(udpResult.SocketError, Is.EqualTo(SocketError.OperationAborted));
-                }
-            });
+                    NetworkResult udpResult;
+                    if (syncReading)
+                    {
+                        udpResult = this.reader.BeginReading();
+                        Assert.That(udpResult.SocketError, Is.EqualTo(SocketError.Interrupted));
+                    }
+                    else
+                    {
+                        this.reader.BeginReadingAsync();
+                        Assert.That(this.readChannel.Receive(out udpResult));
+                        Assert.That(udpResult.SocketError, Is.EqualTo(SocketError.OperationAborted));
+                    }
+                });
             Thread.Sleep(100);
             this.server.Dispose();
             this.reader.Dispose();

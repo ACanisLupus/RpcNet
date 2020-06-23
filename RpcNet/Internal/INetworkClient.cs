@@ -1,7 +1,7 @@
-﻿using System;
-
-namespace RpcNet.Internal
+﻿namespace RpcNet.Internal
 {
+    using System;
+
     public interface INetworkClient : IDisposable
     {
         int TimeoutInMilliseconds { get; set; }

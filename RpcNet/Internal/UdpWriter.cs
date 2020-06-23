@@ -11,10 +11,10 @@
     // therefore the implementation is fully asynchronous (not async/await).
     public class UdpWriter : INetworkWriter, IDisposable
     {
-        private readonly Socket socket;
         private readonly byte[] buffer;
-        private readonly SocketAsyncEventArgs socketAsyncEventArgs = new SocketAsyncEventArgs();
         private readonly IPEndPoint remoteIpEndPoint;
+        private readonly Socket socket;
+        private readonly SocketAsyncEventArgs socketAsyncEventArgs = new SocketAsyncEventArgs();
 
         private int writeIndex;
 
@@ -45,19 +45,6 @@
 
         public Action<NetworkResult> Completed { get; set; }
 
-        private void OnCompleted(object sender, SocketAsyncEventArgs e)
-        {
-            if (this.socketAsyncEventArgs.SocketError != SocketError.Success)
-            {
-                this.Completed?.Invoke(new NetworkResult { SocketError = this.socketAsyncEventArgs.SocketError });
-            }
-
-            this.Completed?.Invoke(new NetworkResult
-            {
-                RemoteIpEndPoint = (IPEndPoint)this.socketAsyncEventArgs.RemoteEndPoint
-            });
-        }
-
         public void BeginWriting() => this.writeIndex = 0;
 
         public void EndWritingAsync(IPEndPoint remoteEndPoint)
@@ -78,7 +65,7 @@
         {
             try
             {
-                int sendSize = this.socket.SendTo(this.buffer, this.writeIndex, SocketFlags.None, remoteEndPoint);
+                this.socket.SendTo(this.buffer, this.writeIndex, SocketFlags.None, remoteEndPoint);
                 return new NetworkResult
                 {
                     SocketError = SocketError.Success,
@@ -87,10 +74,7 @@
             }
             catch (SocketException exception)
             {
-                return new NetworkResult
-                {
-                    SocketError = exception.SocketErrorCode
-                };
+                return new NetworkResult { SocketError = exception.SocketErrorCode };
             }
         }
 
@@ -107,5 +91,16 @@
         }
 
         public void Dispose() => this.socketAsyncEventArgs.Dispose();
+
+        private void OnCompleted(object sender, SocketAsyncEventArgs e)
+        {
+            if (this.socketAsyncEventArgs.SocketError != SocketError.Success)
+            {
+                this.Completed?.Invoke(new NetworkResult { SocketError = this.socketAsyncEventArgs.SocketError });
+            }
+
+            this.Completed?.Invoke(
+                new NetworkResult { RemoteIpEndPoint = (IPEndPoint)this.socketAsyncEventArgs.RemoteEndPoint });
+        }
     }
 }

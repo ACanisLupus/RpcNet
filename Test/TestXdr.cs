@@ -1,13 +1,12 @@
 ﻿namespace RpcNet.Test
 {
     using NUnit.Framework;
-    using RpcNet;
     using RpcNet.Internal;
 
-    class TestXdr
+    internal class TestXdr
     {
-        private readonly StubNetwork stubNetwork;
         private readonly IXdrReader reader;
+        private readonly StubNetwork stubNetwork;
         private readonly IXdrWriter writer;
 
         public TestXdr()
@@ -15,6 +14,17 @@
             this.stubNetwork = new StubNetwork(65536, 65536);
             this.reader = new XdrReader(this.stubNetwork);
             this.writer = new XdrWriter(this.stubNetwork);
+        }
+
+        public static byte[] GenerateByteTestData(int length)
+        {
+            var value = new byte[length];
+            for (int i = 0; i < length; i++)
+            {
+                value[i] = (byte)i;
+            }
+
+            return value;
         }
 
         [SetUp]
@@ -550,7 +560,7 @@
 
         private static bool[] GenerateBoolTestData(int length)
         {
-            bool[] value = new bool[length];
+            var value = new bool[length];
             for (int i = 0; i < length; i++)
             {
                 value[i] = i % 2 == 0;
@@ -559,20 +569,9 @@
             return value;
         }
 
-        public static byte[] GenerateByteTestData(int length)
-        {
-            byte[] value = new byte[length];
-            for (int i = 0; i < length; i++)
-            {
-                value[i] = (byte)i;
-            }
-
-            return value;
-        }
-
         private static sbyte[] GenerateSByteTestData(int length)
         {
-            sbyte[] value = new sbyte[length];
+            var value = new sbyte[length];
             for (int i = 0; i < length; i++)
             {
                 value[i] = (sbyte)i;
@@ -583,7 +582,7 @@
 
         private static short[] GenerateShortTestData(int length)
         {
-            short[] value = new short[length];
+            var value = new short[length];
             for (int i = 0; i < length; i++)
             {
                 value[i] = (short)i;
@@ -594,7 +593,7 @@
 
         private static ushort[] GenerateUShortTestData(int length)
         {
-            ushort[] value = new ushort[length];
+            var value = new ushort[length];
             for (int i = 0; i < length; i++)
             {
                 value[i] = (ushort)i;
@@ -605,7 +604,7 @@
 
         private static int[] GenerateIntTestData(int length)
         {
-            int[] value = new int[length];
+            var value = new int[length];
             for (int i = 0; i < length; i++)
             {
                 value[i] = i;
@@ -616,7 +615,7 @@
 
         private static uint[] GenerateUIntTestData(int length)
         {
-            uint[] value = new uint[length];
+            var value = new uint[length];
             for (int i = 0; i < length; i++)
             {
                 value[i] = (uint)i;
@@ -627,7 +626,7 @@
 
         private static long[] GenerateLongTestData(int length)
         {
-            long[] value = new long[length];
+            var value = new long[length];
             for (int i = 0; i < length; i++)
             {
                 value[i] = i;
@@ -638,7 +637,7 @@
 
         private static ulong[] GenerateULongTestData(int length)
         {
-            ulong[] value = new ulong[length];
+            var value = new ulong[length];
             for (int i = 0; i < length; i++)
             {
                 value[i] = (ulong)i;
@@ -649,7 +648,7 @@
 
         private static float[] GenerateFloatTestData(int length)
         {
-            float[] value = new float[length];
+            var value = new float[length];
             for (int i = 0; i < length; i++)
             {
                 value[i] = i;
@@ -660,7 +659,7 @@
 
         private static double[] GenerateDoubleTestData(int length)
         {
-            double[] value = new double[length];
+            var value = new double[length];
             for (int i = 0; i < length; i++)
             {
                 value[i] = i;

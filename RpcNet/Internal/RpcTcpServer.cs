@@ -7,11 +7,11 @@
 
     public class RpcTcpServer : IDisposable
     {
-        private readonly TcpListener server;
-        private readonly int program;
-        private readonly int[] versions;
-        private readonly Action<ReceivedCall> receivedCallDispatcher;
         private readonly SortedSet<RpcTcpConnection> connections = new SortedSet<RpcTcpConnection>();
+        private readonly int program;
+        private readonly Action<ReceivedCall> receivedCallDispatcher;
+        private readonly TcpListener server;
+        private readonly int[] versions;
 
         private volatile bool stopAccepting;
 

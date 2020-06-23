@@ -5,7 +5,7 @@
 
     public struct NetworkResult
     {
-        public SocketError SocketError;
         public IPEndPoint RemoteIpEndPoint;
+        public SocketError SocketError;
     }
 }

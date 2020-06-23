@@ -10,8 +10,8 @@
 
         private readonly byte[] buffer;
 
-        private Socket socket;
         private IPEndPoint remoteIpEndPoint;
+        private Socket socket;
         private int writeIndex;
 
         public TcpWriter(Socket socket) : this(socket, 65536)
@@ -64,12 +64,7 @@
             int lengthToDecode = lastPacket ? length | unchecked((int)0x80000000) : length;
 
             Utilities.WriteBytesBigEndian(this.buffer.AsSpan(), lengthToDecode);
-            this.socket.Send(
-                this.buffer,
-                0,
-                length + TcpHeaderLength,
-                SocketFlags.None,
-                out SocketError socketError);
+            this.socket.Send(this.buffer, 0, length + TcpHeaderLength, SocketFlags.None, out SocketError socketError);
             if (socketError == SocketError.Success)
             {
                 this.BeginWriting();

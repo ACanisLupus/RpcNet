@@ -64,10 +64,8 @@
                         this.reestablishConnection?.Invoke();
                         continue;
                     }
-                    else
-                    {
-                        throw new RpcException(errorMessage);
-                    }
+
+                    throw new RpcException(errorMessage);
                 }
 
                 if (!this.ReceiveReply(result, out errorMessage))
@@ -77,10 +75,8 @@
                         this.reestablishConnection?.Invoke();
                         continue;
                     }
-                    else
-                    {
-                        throw new RpcException(errorMessage);
-                    }
+
+                    throw new RpcException(errorMessage);
                 }
 
                 break;

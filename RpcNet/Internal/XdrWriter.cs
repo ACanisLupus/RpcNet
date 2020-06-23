@@ -17,8 +17,9 @@
         }
 
         public void Write(ulong value) => this.Write((long)value);
-        public void Write(int value)
-            => Utilities.WriteBytesBigEndian(this.networkWriter.Reserve(sizeof(int)), value);
+
+        public void Write(int value) => Utilities.WriteBytesBigEndian(this.networkWriter.Reserve(sizeof(int)), value);
+
         public void Write(uint value) => this.Write((int)value);
         public void Write(short value) => this.Write((int)value);
         public void Write(ushort value) => this.Write((int)value);

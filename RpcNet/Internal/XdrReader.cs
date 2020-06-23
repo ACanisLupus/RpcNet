@@ -10,7 +10,7 @@
 
         public XdrReader(INetworkReader networkReader) => this.networkReader = networkReader;
 
-        public long ReadLong() => ((long)this.ReadInt() << 32) | (this.ReadInt() & 0xffffffff);
+        public long ReadLong() => (long)this.ReadInt() << 32 | this.ReadInt() & 0xffffffff;
         public ulong ReadULong() => (ulong)this.ReadLong();
         public int ReadInt() => Utilities.ToInt32BigEndian(this.networkReader.Read(sizeof(int)));
         public uint ReadUInt() => (uint)this.ReadInt();
@@ -25,7 +25,7 @@
         public byte[] ReadOpaque(int length)
         {
             int padding = Utilities.CalculateXdrPadding(length);
-            byte[] value = new byte[length];
+            var value = new byte[length];
             int writeIndex = 0;
 
             while (length > 0)
@@ -45,7 +45,7 @@
 
         public bool[] ReadBoolArray(int length)
         {
-            bool[] array = new bool[length];
+            var array = new bool[length];
             for (int i = 0; i < length; i++)
             {
                 array[i] = this.ReadBool();
@@ -56,7 +56,7 @@
 
         public byte[] ReadByteArray(int length)
         {
-            byte[] array = new byte[length];
+            var array = new byte[length];
             for (int i = 0; i < length; i++)
             {
                 array[i] = this.ReadByte();
@@ -67,7 +67,7 @@
 
         public double[] ReadDoubleArray(int length)
         {
-            double[] array = new double[length];
+            var array = new double[length];
             for (int i = 0; i < length; i++)
             {
                 array[i] = this.ReadDouble();
@@ -78,7 +78,7 @@
 
         public float[] ReadFloatArray(int length)
         {
-            float[] array = new float[length];
+            var array = new float[length];
             for (int i = 0; i < length; i++)
             {
                 array[i] = this.ReadFloat();
@@ -89,7 +89,7 @@
 
         public int[] ReadIntArray(int length)
         {
-            int[] array = new int[length];
+            var array = new int[length];
             for (int i = 0; i < length; i++)
             {
                 array[i] = this.ReadInt();
@@ -100,7 +100,7 @@
 
         public long[] ReadLongArray(int length)
         {
-            long[] array = new long[length];
+            var array = new long[length];
             for (int i = 0; i < length; i++)
             {
                 array[i] = this.ReadLong();
@@ -111,7 +111,7 @@
 
         public sbyte[] ReadSByteArray(int length)
         {
-            sbyte[] array = new sbyte[length];
+            var array = new sbyte[length];
             for (int i = 0; i < length; i++)
             {
                 array[i] = this.ReadSByte();
@@ -122,7 +122,7 @@
 
         public short[] ReadShortArray(int length)
         {
-            short[] array = new short[length];
+            var array = new short[length];
             for (int i = 0; i < length; i++)
             {
                 array[i] = this.ReadShort();
@@ -133,7 +133,7 @@
 
         public uint[] ReadUIntArray(int length)
         {
-            uint[] array = new uint[length];
+            var array = new uint[length];
             for (int i = 0; i < length; i++)
             {
                 array[i] = this.ReadUInt();
@@ -144,7 +144,7 @@
 
         public ulong[] ReadULongArray(int length)
         {
-            ulong[] array = new ulong[length];
+            var array = new ulong[length];
             for (int i = 0; i < length; i++)
             {
                 array[i] = this.ReadULong();
@@ -155,7 +155,7 @@
 
         public ushort[] ReadUShortArray(int length)
         {
-            ushort[] array = new ushort[length];
+            var array = new ushort[length];
             for (int i = 0; i < length; i++)
             {
                 array[i] = this.ReadUShort();

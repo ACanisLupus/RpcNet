@@ -7,12 +7,12 @@
 
     public class ReceivedCall
     {
+        private readonly uint highVersion;
+        private readonly uint lowVersion;
+        private readonly int program;
+        private readonly Action<ReceivedCall> receivedCallDispatcher;
         private readonly IXdrReader xdrReader;
         private readonly IXdrWriter xdrWriter;
-        private readonly int program;
-        private readonly uint lowVersion;
-        private readonly uint highVersion;
-        private readonly Action<ReceivedCall> receivedCallDispatcher;
 
         private uint xid;
 
@@ -34,6 +34,27 @@
         public uint Version { get; private set; }
         public uint Procedure { get; private set; }
         public IPEndPoint RemoteIpEndPoint { get; private set; }
+
+        public void RetrieveCall(IXdrReadable argument) => argument.ReadFrom(this.xdrReader);
+
+        public void Reply(IXdrWritable result)
+        {
+            RpcMessage reply = this.GenerateReply(AcceptStatus.Success);
+            reply.WriteTo(this.xdrWriter);
+            result.WriteTo(this.xdrWriter);
+        }
+
+        public void ProcedureUnavailable()
+        {
+            RpcMessage reply = this.GenerateReply(AcceptStatus.ProcedureUnavailable);
+            reply.WriteTo(this.xdrWriter);
+        }
+
+        public void ProgramMismatch()
+        {
+            RpcMessage reply = this.GenerateProgramMismatch(this.lowVersion, this.highVersion);
+            reply.WriteTo(this.xdrWriter);
+        }
 
         internal void HandleCall(IPEndPoint remoteIpEndPoint)
         {
@@ -66,27 +87,6 @@
             this.receivedCallDispatcher(this);
         }
 
-        public void RetrieveCall(IXdrReadable argument) => argument.ReadFrom(this.xdrReader);
-
-        public void Reply(IXdrWritable result)
-        {
-            RpcMessage reply = this.GenerateReply(AcceptStatus.Success);
-            reply.WriteTo(this.xdrWriter);
-            result.WriteTo(this.xdrWriter);
-        }
-
-        public void ProcedureUnavailable()
-        {
-            RpcMessage reply = this.GenerateReply(AcceptStatus.ProcedureUnavailable);
-            reply.WriteTo(this.xdrWriter);
-        }
-
-        public void ProgramMismatch()
-        {
-            RpcMessage reply = this.GenerateProgramMismatch(this.lowVersion, this.highVersion);
-            reply.WriteTo(this.xdrWriter);
-        }
-
         private RpcMessage GenerateReply(ReplyBody replyBody) =>
             new RpcMessage
             {
@@ -99,53 +99,54 @@
             };
 
         private RpcMessage GenerateReply(RejectedReply rejectedReply) =>
-            this.GenerateReply(new ReplyBody
-            {
-                ReplyStatus = ReplyStatus.Denied,
-                RejectedReply = rejectedReply
-            });
+            this.GenerateReply(
+                new ReplyBody
+                {
+                    ReplyStatus = ReplyStatus.Denied,
+                    RejectedReply = rejectedReply
+                });
 
         private RpcMessage GenerateRpcVersionMismatch(uint low, uint high) =>
-            this.GenerateReply(new RejectedReply
-            {
-                RejectStatus = RejectStatus.RpcVersionMismatch,
-                MismatchInfo = new MismatchInfo
+            this.GenerateReply(
+                new RejectedReply
                 {
-                    High = high,
-                    Low = low
-                }
-            });
+                    RejectStatus = RejectStatus.RpcVersionMismatch,
+                    MismatchInfo = new MismatchInfo
+                    {
+                        High = high,
+                        Low = low
+                    }
+                });
 
         private RpcMessage GenerateReply(ReplyData replyData) =>
-            this.GenerateReply(new ReplyBody
-            {
-                ReplyStatus = ReplyStatus.Accepted,
-                AcceptedReply = new AcceptedReply
+            this.GenerateReply(
+                new ReplyBody
                 {
-                    Verifier = new OpaqueAuthentication
+                    ReplyStatus = ReplyStatus.Accepted,
+                    AcceptedReply = new AcceptedReply
                     {
-                        AuthenticationFlavor = AuthenticationFlavor.None,
-                        Body = new byte[0]
-                    },
-                    ReplyData = replyData
-                }
-            });
+                        Verifier = new OpaqueAuthentication
+                        {
+                            AuthenticationFlavor = AuthenticationFlavor.None,
+                            Body = new byte[0]
+                        },
+                        ReplyData = replyData
+                    }
+                });
 
         private RpcMessage GenerateReply(AcceptStatus acceptStatus) =>
-            this.GenerateReply(new ReplyData
-            {
-                AcceptStatus = acceptStatus
-            });
+            this.GenerateReply(new ReplyData { AcceptStatus = acceptStatus });
 
         private RpcMessage GenerateProgramMismatch(uint low, uint high) =>
-            this.GenerateReply(new ReplyData
-            {
-                AcceptStatus = AcceptStatus.ProgramMismatch,
-                MismatchInfo = new MismatchInfo
+            this.GenerateReply(
+                new ReplyData
                 {
-                    Low = low,
-                    High = high
-                }
-            });
+                    AcceptStatus = AcceptStatus.ProgramMismatch,
+                    MismatchInfo = new MismatchInfo
+                    {
+                        Low = low,
+                        High = high
+                    }
+                });
     }
 }
