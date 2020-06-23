@@ -48,7 +48,10 @@
         }
 
         [Test]
-        public void SendAndReceiveData([Values(0, 10, 100)] int length, [Values(true, false)] bool syncWriting, [Values(true, false)] bool syncReading)
+        public void SendAndReceiveData(
+            [Values(0, 10, 100)] int length,
+            [Values(true, false)] bool syncWriting,
+            [Values(true, false)] bool syncReading)
         {
             this.writer.BeginWriting();
             Span<byte> writeSpan = this.writer.Reserve(length);
@@ -82,9 +85,9 @@
             }
 
             Assert.That(udpResult.SocketError, Is.EqualTo(SocketError.Success));
-            Assert.That(udpResult.IpEndPoint.Address, Is.EqualTo(this.remoteIpEndPoint.Address));
-            Assert.That(udpResult.IpEndPoint.Port, Is.Not.EqualTo(this.remoteIpEndPoint.Port));
-            Assert.That(udpResult.IpEndPoint.Port, Is.GreaterThanOrEqualTo(49152));
+            Assert.That(udpResult.RemoteIpEndPoint.Address, Is.EqualTo(this.remoteIpEndPoint.Address));
+            Assert.That(udpResult.RemoteIpEndPoint.Port, Is.Not.EqualTo(this.remoteIpEndPoint.Port));
+            Assert.That(udpResult.RemoteIpEndPoint.Port, Is.GreaterThanOrEqualTo(49152));
 
             ReadOnlySpan<byte> readSpan = this.reader.Read(length);
             this.reader.EndReading();
@@ -94,7 +97,10 @@
         }
 
         [Test]
-        public void SendCompleteAndReceiveFragmentedData([Values(2, 10, 100)] int length, [Values(true, false)] bool syncWriting, [Values(true, false)] bool syncReading)
+        public void SendCompleteAndReceiveFragmentedData(
+            [Values(2, 10, 100)] int length,
+            [Values(true, false)] bool syncWriting,
+            [Values(true, false)] bool syncReading)
         {
             this.writer.BeginWriting();
             Span<byte> writeSpan = this.writer.Reserve(100);

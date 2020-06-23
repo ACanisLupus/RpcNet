@@ -41,7 +41,8 @@
             this.xid = rpcMessage.Xid;
             if (rpcMessage.Body.MessageType != MessageType.Call)
             {
-                throw new RpcException($"Message type should be {nameof(MessageType.Call)} but was {rpcMessage.Body.MessageType}.");
+                throw new RpcException(
+                    $"Message type should be {nameof(MessageType.Call)} but was {rpcMessage.Body.MessageType}.");
             }
 
             if (rpcMessage.Body.CallBody.RpcVersion != 2)

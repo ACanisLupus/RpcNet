@@ -19,6 +19,7 @@
             this.reader = new UdpReader(this.client.Client);
             this.writer = new UdpWriter(this.client.Client, this.remoteIpEndPoint);
             this.call = new Call(program, this.remoteIpEndPoint, this.reader, this.writer);
+            this.TimeoutInMilliseconds = 10000;
         }
 
         public int TimeoutInMilliseconds
@@ -27,7 +28,8 @@
             set => this.client.Client.ReceiveTimeout = value;
         }
 
-        public void Call(int procedure, int version, IXdrWritable argument, IXdrReadable result) => this.call.CallRpc(procedure, version, argument, result);
+        public void Call(int procedure, int version, IXdrWritable argument, IXdrReadable result)
+            => this.call.SendCall(procedure, version, argument, result);
 
         public void Dispose()
         {

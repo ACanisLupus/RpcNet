@@ -8,9 +8,9 @@
     {
         private const int TcpHeaderLength = 4;
 
-        private readonly Socket socket;
+        private Socket socket;
         private readonly byte[] buffer;
-        private readonly IPEndPoint remoteIpEndPoint;
+        private IPEndPoint remoteIpEndPoint;
 
         private int readIndex;
         private int writeIndex;
@@ -30,9 +30,14 @@
                 throw new ArgumentOutOfRangeException(nameof(bufferSize));
             }
 
+            this.Reset(socket);
+            this.buffer = new byte[bufferSize];
+        }
+
+        public void Reset(Socket socket)
+        {
             this.socket = socket;
             this.remoteIpEndPoint = (IPEndPoint)socket.RemoteEndPoint;
-            this.buffer = new byte[bufferSize];
         }
 
         public NetworkResult BeginReading()
@@ -40,16 +45,15 @@
             this.readIndex = 0;
             this.writeIndex = 0;
             this.lastPacket = false;
-
-            this.packetState = PacketState.Header;
             this.headerIndex = 0;
             this.bodyIndex = 0;
+            this.packetState = PacketState.Header;
 
             SocketError socketError = this.FillBuffer();
 
             return new NetworkResult
             {
-                IpEndPoint = this.remoteIpEndPoint,
+                RemoteIpEndPoint = this.remoteIpEndPoint,
                 SocketError = socketError
             };
         }
@@ -163,7 +167,12 @@
 
         private SocketError ReadFromNetwork(ref bool readFromNetwork)
         {
-            int receivedLength = this.socket.Receive(this.buffer, this.writeIndex, this.buffer.Length - this.writeIndex, SocketFlags.None, out SocketError socketError);
+            int receivedLength = this.socket.Receive(
+                this.buffer,
+                this.writeIndex,
+                this.buffer.Length - this.writeIndex,
+                SocketFlags.None,
+                out SocketError socketError);
             if (socketError != SocketError.Success)
             {
                 return socketError;
@@ -183,7 +192,8 @@
         {
             if (this.writeIndex >= this.headerIndex + TcpHeaderLength)
             {
-                int packetLength = Utilities.ToInt32BigEndian(this.buffer.AsSpan(this.headerIndex, TcpHeaderLength));
+                int packetLength = Utilities.ToInt32BigEndian(
+                    this.buffer.AsSpan(this.headerIndex, TcpHeaderLength));
                 if (packetLength < 0)
                 {
                     this.lastPacket = true;

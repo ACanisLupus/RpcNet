@@ -47,7 +47,7 @@
             this.totalLength = this.socketAsyncEventArgs.BytesTransferred;
             this.Completed?.Invoke(new NetworkResult
             {
-                IpEndPoint = (IPEndPoint)this.socketAsyncEventArgs.RemoteEndPoint
+                RemoteIpEndPoint = (IPEndPoint)this.socketAsyncEventArgs.RemoteEndPoint
             });
         }
 
@@ -60,7 +60,7 @@
                 this.totalLength = this.socket.ReceiveFrom(this.buffer, ref endPoint);
                 return new NetworkResult
                 {
-                    IpEndPoint = (IPEndPoint)endPoint
+                    RemoteIpEndPoint = (IPEndPoint)endPoint
                 };
             }
             catch (SocketException exception)

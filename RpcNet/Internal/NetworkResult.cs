@@ -6,6 +6,6 @@
     public struct NetworkResult
     {
         public SocketError SocketError;
-        public IPEndPoint IpEndPoint;
+        public IPEndPoint RemoteIpEndPoint;
     }
 }

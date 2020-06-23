@@ -13,8 +13,14 @@
         private readonly IXdrWriter xdrWriter;
         private readonly Random random = new Random();
         private readonly RpcMessage rpcMessage;
+        private readonly Action reestablishConnection;
 
-        public Call(int program, IPEndPoint remoteIpEndPoint, INetworkReader networkReader, INetworkWriter networkWriter)
+        public Call(
+            int program,
+            IPEndPoint remoteIpEndPoint,
+            INetworkReader networkReader,
+            INetworkWriter networkWriter,
+            Action reestablishConnection = null)
         {
             this.remoteIpEndPoint = remoteIpEndPoint;
             this.networkReader = networkReader;
@@ -44,9 +50,10 @@
                     }
                 }
             };
+            this.reestablishConnection = reestablishConnection;
         }
 
-        public void CallRpc(int procedure, int version, IXdrWritable argument, IXdrReadable result)
+        public void SendCall(int procedure, int version, IXdrWritable argument, IXdrReadable result)
         {
             for (int i = 0; i < 2; i++)
             {
@@ -54,6 +61,7 @@
                 {
                     if (i == 0)
                     {
+                        this.reestablishConnection?.Invoke();
                         continue;
                     }
                     else
@@ -66,6 +74,7 @@
                 {
                     if (i == 0)
                     {
+                        this.reestablishConnection?.Invoke();
                         continue;
                     }
                     else
@@ -91,14 +100,16 @@
             NetworkResult networkResult = this.networkWriter.EndWriting();
             if (networkResult.SocketError != SocketError.Success)
             {
-                errorMessage = $"Could not send message to {this.remoteIpEndPoint}. Socket error: {networkResult.SocketError}.";
+                errorMessage =
+                    $"Could not send message to {this.remoteIpEndPoint}. Socket error: {networkResult.SocketError}.";
                 return false;
             }
 
             networkResult = this.networkReader.BeginReading();
             if (networkResult.SocketError != SocketError.Success)
             {
-                errorMessage = $"Could not receive reply from {this.remoteIpEndPoint}. Socket error: {networkResult.SocketError}.";
+                errorMessage =
+                    $"Could not receive reply from {this.remoteIpEndPoint}. Socket error: {networkResult.SocketError}.";
                 return false;
             }
 
@@ -119,7 +130,8 @@
 
             if (reply.Body.MessageType != MessageType.Reply)
             {
-                errorMessage = $"Wrong message type. Expected {MessageType.Reply}, but was {reply.Body.MessageType}.";
+                errorMessage =
+                    $"Wrong message type. Expected {MessageType.Reply}, but was {reply.Body.MessageType}.";
                 return false;
             }
 
@@ -131,7 +143,8 @@
 
             if (reply.Body.ReplyBody.AcceptedReply.ReplyData.AcceptStatus != AcceptStatus.Success)
             {
-                errorMessage = $"Call was unsuccessful: {reply.Body.ReplyBody.AcceptedReply.ReplyData.AcceptStatus}.";
+                errorMessage =
+                    $"Call was unsuccessful: {reply.Body.ReplyBody.AcceptedReply.ReplyData.AcceptStatus}.";
                 return false;
             }
 

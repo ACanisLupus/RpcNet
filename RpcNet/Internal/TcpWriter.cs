@@ -8,10 +8,10 @@
     {
         private const int TcpHeaderLength = 4;
 
-        private readonly Socket socket;
-        private readonly IPEndPoint remoteIpEndPoint;
         private readonly byte[] buffer;
 
+        private Socket socket;
+        private IPEndPoint remoteIpEndPoint;
         private int writeIndex;
 
         public TcpWriter(Socket socket) : this(socket, 65536)
@@ -25,9 +25,14 @@
                 throw new ArgumentOutOfRangeException(nameof(bufferSize));
             }
 
+            this.Reset(socket);
+            this.buffer = new byte[bufferSize];
+        }
+
+        public void Reset(Socket socket)
+        {
             this.socket = socket;
             this.remoteIpEndPoint = (IPEndPoint)socket.RemoteEndPoint;
-            this.buffer = new byte[bufferSize];
         }
 
         public void BeginWriting() => this.writeIndex = TcpHeaderLength;
@@ -59,7 +64,12 @@
             int lengthToDecode = lastPacket ? length | unchecked((int)0x80000000) : length;
 
             Utilities.WriteBytesBigEndian(this.buffer.AsSpan(), lengthToDecode);
-            this.socket.Send(this.buffer, 0, length + TcpHeaderLength, SocketFlags.None, out SocketError socketError);
+            this.socket.Send(
+                this.buffer,
+                0,
+                length + TcpHeaderLength,
+                SocketFlags.None,
+                out SocketError socketError);
             if (socketError == SocketError.Success)
             {
                 this.BeginWriting();
@@ -67,7 +77,7 @@
 
             return new NetworkResult
             {
-                IpEndPoint = this.remoteIpEndPoint,
+                RemoteIpEndPoint = this.remoteIpEndPoint,
                 SocketError = socketError
             };
 

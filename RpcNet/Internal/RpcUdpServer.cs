@@ -13,7 +13,12 @@
 
         private volatile bool stopReceiving;
 
-        public RpcUdpServer(IPAddress ipAddress, int port, int program, int[] versions, Action<ReceivedCall> receivedCallDispatcher)
+        public RpcUdpServer(
+            IPAddress ipAddress,
+            int port,
+            int program,
+            int[] versions,
+            Action<ReceivedCall> receivedCallDispatcher)
         {
             this.server = new UdpClient(new IPEndPoint(ipAddress, port));
 
@@ -49,9 +54,9 @@
             try
             {
                 this.writer.BeginWriting();
-                this.receivedCall.HandleCall(udpResult.IpEndPoint);
-                this.reader.EndReading(); // TODO: This is not good. Possible solution: RpcTcpServer works async as well and ReceivedCall takes care of this
-                this.writer.EndWritingAsync(udpResult.IpEndPoint);
+                this.receivedCall.HandleCall(udpResult.RemoteIpEndPoint);
+                this.reader.EndReading();
+                this.writer.EndWritingAsync(udpResult.RemoteIpEndPoint);
             }
             catch (RpcException rpcException)
             {

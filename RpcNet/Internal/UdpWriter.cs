@@ -54,7 +54,7 @@
 
             this.Completed?.Invoke(new NetworkResult
             {
-                IpEndPoint = (IPEndPoint)this.socketAsyncEventArgs.RemoteEndPoint
+                RemoteIpEndPoint = (IPEndPoint)this.socketAsyncEventArgs.RemoteEndPoint
             });
         }
 
@@ -82,7 +82,7 @@
                 return new NetworkResult
                 {
                     SocketError = SocketError.Success,
-                    IpEndPoint = remoteEndPoint
+                    RemoteIpEndPoint = remoteEndPoint
                 };
             }
             catch (SocketException exception)

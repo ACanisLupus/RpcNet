@@ -13,7 +13,7 @@
             switch (protocol)
             {
                 case Protocol.Tcp:
-                    // TODO
+                    this.networkClient = new RpcTcpClient(ipAddress, port, program);
                     break;
                 case Protocol.Udp:
                     this.networkClient = new RpcUdpClient(ipAddress, port, program);
@@ -29,8 +29,8 @@
             set => this.networkClient.TimeoutInMilliseconds = value;
         }
 
-        public void Call(int procedure, int version, IXdrWritable argument, IXdrReadable result) =>
-            this.networkClient.Call(procedure, version, argument, result);
+        public void Call(int procedure, int version, IXdrWritable argument, IXdrReadable result)
+            => this.networkClient.Call(procedure, version, argument, result);
 
         public void Dispose() => this.networkClient.Dispose();
     }
