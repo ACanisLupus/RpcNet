@@ -28,10 +28,10 @@
 
             this.client = new UdpClient();
 
-            this.reader = new UdpReader(this.server.Client, 100);
+            this.reader = new UdpReader(this.server.Client, 100, TestLogger.Instance);
             this.reader.Completed += udpResult => this.readChannel.Send(udpResult);
 
-            this.writer = new UdpWriter(this.client.Client, 100);
+            this.writer = new UdpWriter(this.client.Client, 100, TestLogger.Instance);
             this.writer.Completed += udpResult => this.writeChannel.Send(udpResult);
 
             this.readChannel = new Channel<NetworkResult>();

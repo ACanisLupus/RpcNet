@@ -162,8 +162,8 @@ namespace RpcNet.Internal
 
     internal class PortMapperClient : ClientStub
     {
-        public PortMapperClient(Protocol protocol, IPAddress ipAddress, int port = 0) :
-            base(protocol, ipAddress, port, PortMapperConstants.PortMapperProgram)
+        public PortMapperClient(Protocol protocol, IPAddress ipAddress, int port = 0, ILogger logger = null) :
+            base(protocol, ipAddress, port, PortMapperConstants.PortMapperProgram, logger)
         {
         }
 
@@ -264,8 +264,8 @@ namespace RpcNet.Internal
 
     internal abstract class PortMapperServerStub : ServerStub
     {
-        public PortMapperServerStub(IPAddress ipAddress, int port = 0) :
-            base(ipAddress, port, PortMapperConstants.PortMapperProgram, new[] { PortMapperConstants.PortMapperVersion })
+        public PortMapperServerStub(IPAddress ipAddress, int port = 0, ILogger logger = null) :
+            base(ipAddress, port, PortMapperConstants.PortMapperProgram, new[] { PortMapperConstants.PortMapperVersion }, logger)
         {
         }
 

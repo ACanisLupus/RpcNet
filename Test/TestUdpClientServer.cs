@@ -27,23 +27,23 @@
                 call.Reply(pingStruct);
             }
 
-            var server = new RpcUdpServer(ipAddress, port, program, new[] { version }, Dispatcher);
+            using (new RpcUdpServer(ipAddress, port, program, new[] { version }, Dispatcher, TestLogger.Instance))
+            {
+                using (var client = new RpcUdpClient(ipAddress, port, program, TestLogger.Instance))
+                {
+                    var argument = new PingStruct { Value = 42 };
+                    var result = new PingStruct();
 
-            var client = new RpcUdpClient(ipAddress, port, program);
+                    client.Call(procedure, version, argument, result);
 
-            var argument = new PingStruct { Value = 42 };
-            var result = new PingStruct();
+                    Assert.That(receivedCallChannel.Receive(out ReceivedCall receivedCall));
+                    Assert.That(receivedCall.Procedure, Is.EqualTo(procedure));
+                    Assert.That(receivedCall.Version, Is.EqualTo(version));
+                    Assert.That(receivedCall.RemoteIpEndPoint, Is.Not.Null);
 
-            client.Call(procedure, version, argument, result);
-
-            Assert.That(receivedCallChannel.Receive(out ReceivedCall receivedCall));
-            Assert.That(receivedCall.Procedure, Is.EqualTo(procedure));
-            Assert.That(receivedCall.Version, Is.EqualTo(version));
-            Assert.That(receivedCall.RemoteIpEndPoint, Is.Not.Null);
-
-            Assert.That(argument.Value, Is.EqualTo(result.Value));
-
-            server.Dispose();
+                    Assert.That(argument.Value, Is.EqualTo(result.Value));
+                }
+            }
         }
     }
 }

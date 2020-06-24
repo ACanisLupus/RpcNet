@@ -13,6 +13,7 @@
         private readonly IXdrWriter xdrWriter;
         private readonly Random random = new Random();
         private readonly RpcMessage rpcMessage;
+        private readonly ILogger logger;
         private readonly Action reestablishConnection;
 
         public Call(
@@ -20,7 +21,8 @@
             IPEndPoint remoteIpEndPoint,
             INetworkReader networkReader,
             INetworkWriter networkWriter,
-            Action reestablishConnection = null)
+            Action reestablishConnection,
+            ILogger logger)
         {
             this.remoteIpEndPoint = remoteIpEndPoint;
             this.networkReader = networkReader;
@@ -50,6 +52,7 @@
                     }
                 }
             };
+            this.logger = logger;
             this.reestablishConnection = reestablishConnection;
         }
 
@@ -61,10 +64,12 @@
                 {
                     if (i == 0)
                     {
+                        this.logger?.Error(errorMessage + " Retrying...");
                         this.reestablishConnection?.Invoke();
                         continue;
                     }
 
+                    this.logger?.Error(errorMessage);
                     throw new RpcException(errorMessage);
                 }
 
@@ -72,10 +77,12 @@
                 {
                     if (i == 0)
                     {
+                        this.logger?.Error(errorMessage + " Retrying...");
                         this.reestablishConnection?.Invoke();
                         continue;
                     }
 
+                    this.logger?.Error(errorMessage);
                     throw new RpcException(errorMessage);
                 }
 

@@ -9,6 +9,7 @@
         private readonly UdpReader reader;
         private readonly ReceivedCall receivedCall;
         private readonly UdpWriter writer;
+        private readonly ILogger logger;
 
         private volatile bool stopReceiving;
 
@@ -17,16 +18,19 @@
             int port,
             int program,
             int[] versions,
-            Action<ReceivedCall> receivedCallDispatcher)
+            Action<ReceivedCall> receivedCallDispatcher,
+            ILogger logger)
         {
             var server = new UdpClient(new IPEndPoint(ipAddress, port));
 
-            this.reader = new UdpReader(server.Client);
+            this.reader = new UdpReader(server.Client, logger);
             this.reader.Completed += this.ReadingCompleted;
-            this.writer = new UdpWriter(server.Client);
+            this.writer = new UdpWriter(server.Client, logger);
             this.writer.Completed += this.WritingCompleted;
 
             this.receivedCall = new ReceivedCall(program, versions, this.reader, this.writer, receivedCallDispatcher);
+
+            this.logger = logger;
 
             this.reader.BeginReadingAsync();
         }
@@ -54,7 +58,8 @@
             }
             catch (RpcException rpcException)
             {
-                Console.WriteLine($"Could not handle call. {rpcException}");
+                string errorMessage = $"Unexpected exception during call: {rpcException}";
+                this.logger?.Error(errorMessage);
             }
         }
 

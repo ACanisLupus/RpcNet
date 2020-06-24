@@ -8,15 +8,15 @@
     {
         private readonly INetworkClient networkClient;
 
-        protected ClientStub(Protocol protocol, IPAddress ipAddress, int port, int program)
+        protected ClientStub(Protocol protocol, IPAddress ipAddress, int port, int program, ILogger logger)
         {
             switch (protocol)
             {
                 case Protocol.Tcp:
-                    this.networkClient = new RpcTcpClient(ipAddress, port, program);
+                    this.networkClient = new RpcTcpClient(ipAddress, port, program, logger);
                     break;
                 case Protocol.Udp:
-                    this.networkClient = new RpcUdpClient(ipAddress, port, program);
+                    this.networkClient = new RpcUdpClient(ipAddress, port, program, logger);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(protocol));

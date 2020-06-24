@@ -5,19 +5,21 @@
 
     public class RpcTcpClient : INetworkClient
     {
+        private readonly ILogger logger;
         private readonly Call call;
         private readonly IPEndPoint remoteIpEndPoint;
 
         private TcpClient client;
 
-        public RpcTcpClient(IPAddress ipAddress, int port, int program)
+        public RpcTcpClient(IPAddress ipAddress, int port, int program, ILogger logger)
         {
+            this.logger = logger;
             this.remoteIpEndPoint = new IPEndPoint(ipAddress, port);
             this.client = new TcpClient();
             this.EstablishConnection();
-            var reader = new TcpReader(this.client.Client);
+            var reader = new TcpReader(this.client.Client, logger);
             var writer = new TcpWriter(this.client.Client);
-            this.call = new Call(program, this.remoteIpEndPoint, reader, writer, this.ReestablishConnection);
+            this.call = new Call(program, this.remoteIpEndPoint, reader, writer, this.ReestablishConnection, logger);
             this.TimeoutInMilliseconds = 10000;
         }
 
@@ -40,8 +42,10 @@
             }
             catch (SocketException exception)
             {
-                throw new RpcException(
-                    $"Could not connect to {this.remoteIpEndPoint}. Socket error: {exception.SocketErrorCode}.");
+                string errorMessage =
+                    $"Could not connect to {this.remoteIpEndPoint}. Socket error: {exception.SocketErrorCode}.";
+                this.logger?.Error(errorMessage);
+                throw new RpcException(errorMessage);
             }
         }
 

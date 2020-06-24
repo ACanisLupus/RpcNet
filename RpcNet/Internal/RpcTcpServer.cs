@@ -12,6 +12,7 @@
         private readonly Action<ReceivedCall> receivedCallDispatcher;
         private readonly TcpListener server;
         private readonly int[] versions;
+        private readonly ILogger logger;
 
         private volatile bool stopAccepting;
 
@@ -20,11 +21,13 @@
             int port,
             int program,
             int[] versions,
-            Action<ReceivedCall> receivedCallDispatcher)
+            Action<ReceivedCall> receivedCallDispatcher,
+            ILogger logger)
         {
             this.program = program;
             this.versions = versions;
             this.receivedCallDispatcher = receivedCallDispatcher;
+            this.logger = logger;
             this.server = new TcpListener(ipAddress, port);
             this.server.Start();
             this.server.BeginAcceptTcpClient(this.OnAccepted, null);
@@ -46,7 +49,7 @@
 
         private void OnAccepted(IAsyncResult asyncResult)
         {
-            if (!this.stopAccepting)
+            if (this.stopAccepting)
             {
                 return;
             }
@@ -55,7 +58,17 @@
             lock (this.connections)
             {
                 this.connections.Add(
-                    new RpcTcpConnection(tcpClient, this.program, this.versions, this.receivedCallDispatcher));
+                    new RpcTcpConnection(tcpClient, this.program, this.versions, this.receivedCallDispatcher, this.logger));
+
+                foreach (RpcTcpConnection connection in this.connections)
+                {
+                    if (connection.IsFinished)
+                    {
+                        connection.Dispose();
+                    }
+                }
+
+                this.connections.RemoveWhere(match => match.IsFinished);
             }
 
             this.server.BeginAcceptTcpClient(this.OnAccepted, null);

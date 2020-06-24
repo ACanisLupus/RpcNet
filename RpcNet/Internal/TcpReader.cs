@@ -9,6 +9,7 @@
         private const int TcpHeaderLength = 4;
 
         private readonly byte[] buffer;
+        private readonly ILogger logger;
 
         private int bodyIndex;
         private int headerIndex;
@@ -19,11 +20,11 @@
         private Socket socket;
         private int writeIndex;
 
-        public TcpReader(Socket socket) : this(socket, 65536)
+        public TcpReader(Socket socket, ILogger logger) : this(socket, 65536, logger)
         {
         }
 
-        public TcpReader(Socket socket, int bufferSize)
+        public TcpReader(Socket socket, int bufferSize, ILogger logger)
         {
             if (bufferSize < TcpHeaderLength + sizeof(int) || bufferSize % 4 != 0)
             {
@@ -32,6 +33,7 @@
 
             this.Reset(socket);
             this.buffer = new byte[bufferSize];
+            this.logger = logger;
         }
 
         public void Reset(Socket socket)
@@ -62,7 +64,9 @@
         {
             if (this.packetState != PacketState.Complete || this.readIndex != this.writeIndex)
             {
-                throw new RpcException("Not all data was read.");
+                const string errorMessage = "Not all data was read.";
+                this.logger?.Error(errorMessage);
+                throw new RpcException(errorMessage);
             }
         }
 
@@ -71,7 +75,9 @@
             SocketError socketError = this.FillBuffer();
             if (socketError != SocketError.Success)
             {
-                throw new RpcException($"Could not receive from TCP stream. Socket error code: {socketError}.");
+                string errorMessage = $"Could not receive from TCP stream. Socket error code: {socketError}.";
+                this.logger?.Error(errorMessage);
+                throw new RpcException(errorMessage);
             }
 
             int endIndex = Math.Min(this.headerIndex, this.buffer.Length);
@@ -201,7 +207,9 @@
 
                 if (packetLength % 4 != 0 || packetLength == 0)
                 {
-                    throw new RpcException("This ain't an XDR stream.");
+                    const string errorMessage = "This is not an XDR stream.";
+                    this.logger?.Error(errorMessage);
+                    throw new RpcException(errorMessage);
                 }
 
                 this.packetState = PacketState.Body;

@@ -24,7 +24,7 @@
             Task task = Task.Run(() => this.writerTcpClient = this.listener.AcceptTcpClient());
             this.readerTcpClient.Connect(IPAddress.Loopback, port);
             task.GetAwaiter().GetResult();
-            this.reader = new TcpReader(this.readerTcpClient.Client);
+            this.reader = new TcpReader(this.readerTcpClient.Client, TestLogger.Instance);
             this.writer = new TcpWriter(this.writerTcpClient.Client);
             this.listener.Stop();
         }
@@ -45,7 +45,7 @@
         [TestCase(8, 12)]
         public void ReadAndWriteMultipleFragments(int maxReadLength, int maxReserveLength)
         {
-            this.reader = new TcpReader(this.readerTcpClient.Client, maxReadLength);
+            this.reader = new TcpReader(this.readerTcpClient.Client, maxReadLength, TestLogger.Instance);
             this.writer = new TcpWriter(this.writerTcpClient.Client, maxReserveLength);
 
             var xdrReader = new XdrReader(this.reader);
@@ -75,7 +75,7 @@
         [TestCase(8, 12)]
         public void ReadAndWriteMultipleFragmentsThreaded(int maxReadLength, int maxReserveLength)
         {
-            this.reader = new TcpReader(this.readerTcpClient.Client, maxReadLength);
+            this.reader = new TcpReader(this.readerTcpClient.Client, maxReadLength, TestLogger.Instance);
             this.writer = new TcpWriter(this.writerTcpClient.Client, maxReserveLength);
 
             this.writerTcpClient.Client.SendBufferSize = 1;

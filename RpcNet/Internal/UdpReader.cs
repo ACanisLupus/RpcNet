@@ -14,15 +14,16 @@
         private readonly byte[] buffer;
         private readonly Socket socket;
         private readonly SocketAsyncEventArgs socketAsyncEventArgs = new SocketAsyncEventArgs();
+        private readonly ILogger logger;
 
         private int readIndex;
         private int totalLength;
 
-        public UdpReader(Socket socket) : this(socket, 65536)
+        public UdpReader(Socket socket, ILogger logger) : this(socket, 65536, logger)
         {
         }
 
-        public UdpReader(Socket socket, int bufferSize)
+        public UdpReader(Socket socket, int bufferSize, ILogger logger)
         {
             if (bufferSize < sizeof(int) || bufferSize % 4 != 0)
             {
@@ -34,6 +35,7 @@
             this.socketAsyncEventArgs.Completed += this.OnCompleted;
             this.socketAsyncEventArgs.SetBuffer(this.buffer, 0, bufferSize);
             this.socketAsyncEventArgs.RemoteEndPoint = new IPEndPoint(IPAddress.Loopback, 0);
+            this.logger = logger;
         }
 
         public Action<NetworkResult> Completed { get; set; }
@@ -67,7 +69,9 @@
         {
             if (this.readIndex != this.totalLength)
             {
-                throw new RpcException("Not all data was read.");
+                const string errorMessage = "Not all data was read.";
+                this.logger?.Error(errorMessage);
+                throw new RpcException(errorMessage);
             }
         }
 
@@ -77,7 +81,9 @@
         {
             if (this.readIndex + length > this.totalLength)
             {
-                throw new RpcException("Buffer underflow.");
+                const string errorMessage = "Buffer underflow.";
+                this.logger?.Error(errorMessage);
+                throw new RpcException(errorMessage);
             }
 
             Span<byte> span = this.buffer.AsSpan(this.readIndex, length);

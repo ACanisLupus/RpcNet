@@ -158,8 +158,8 @@ namespace RpcNet.Test
 
     internal class TestServiceClient : ClientStub
     {
-        public TestServiceClient(Protocol protocol, IPAddress ipAddress, int port = 0) :
-            base(protocol, ipAddress, port, TestServiceConstants.TestServiceProgram)
+        public TestServiceClient(Protocol protocol, IPAddress ipAddress, int port = 0, ILogger logger = null) :
+            base(protocol, ipAddress, port, TestServiceConstants.TestServiceProgram, logger)
         {
         }
 
@@ -180,8 +180,8 @@ namespace RpcNet.Test
 
     internal abstract class TestServiceServerStub : ServerStub
     {
-        public TestServiceServerStub(IPAddress ipAddress, int port = 0) :
-            base(ipAddress, port, TestServiceConstants.TestServiceProgram, new[] { TestServiceConstants.TestServiceVersion })
+        public TestServiceServerStub(IPAddress ipAddress, int port = 0, ILogger logger = null) :
+            base(ipAddress, port, TestServiceConstants.TestServiceProgram, new[] { TestServiceConstants.TestServiceVersion }, logger)
         {
         }
 

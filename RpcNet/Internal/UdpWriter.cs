@@ -15,22 +15,23 @@
         private readonly IPEndPoint remoteIpEndPoint;
         private readonly Socket socket;
         private readonly SocketAsyncEventArgs socketAsyncEventArgs = new SocketAsyncEventArgs();
+        private readonly ILogger logger;
 
         private int writeIndex;
 
-        public UdpWriter(Socket socket) : this(socket, null, 65536)
+        public UdpWriter(Socket socket, ILogger logger) : this(socket, null, 65536, logger)
         {
         }
 
-        public UdpWriter(Socket socket, int bufferSize) : this(socket, null, bufferSize)
+        public UdpWriter(Socket socket, int bufferSize, ILogger logger) : this(socket, null, bufferSize, logger)
         {
         }
 
-        public UdpWriter(Socket socket, IPEndPoint remoteIpEndPoint) : this(socket, remoteIpEndPoint, 65536)
+        public UdpWriter(Socket socket, IPEndPoint remoteIpEndPoint, ILogger logger) : this(socket, remoteIpEndPoint, 65536, logger)
         {
         }
 
-        public UdpWriter(Socket socket, IPEndPoint remoteIpEndPoint, int bufferSize)
+        public UdpWriter(Socket socket, IPEndPoint remoteIpEndPoint, int bufferSize, ILogger logger)
         {
             if (bufferSize < sizeof(int) || bufferSize % 4 != 0)
             {
@@ -41,6 +42,7 @@
             this.remoteIpEndPoint = remoteIpEndPoint;
             this.buffer = new byte[bufferSize];
             this.socketAsyncEventArgs.Completed += this.OnCompleted;
+            this.logger = logger;
         }
 
         public Action<NetworkResult> Completed { get; set; }
@@ -82,7 +84,9 @@
         {
             if (this.writeIndex + length > this.buffer.Length)
             {
-                throw new RpcException("Buffer overflow.");
+                const string errorMessage = "Buffer overflow.";
+                this.logger?.Error(errorMessage);
+                throw new RpcException(errorMessage);
             }
 
             Span<byte> span = this.buffer.AsSpan(this.writeIndex, length);
