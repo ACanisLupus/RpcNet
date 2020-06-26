@@ -38,20 +38,20 @@
             this.logger = logger;
         }
 
-        public Action<NetworkResult> Completed { get; set; }
+        public Action<NetworkReadResult> Completed { get; set; }
 
-        public NetworkResult BeginReading()
+        public NetworkReadResult BeginReading()
         {
             this.readIndex = 0;
             try
             {
                 EndPoint endPoint = new IPEndPoint(IPAddress.Loopback, 0);
                 this.totalLength = this.socket.ReceiveFrom(this.buffer, ref endPoint);
-                return new NetworkResult { RemoteIpEndPoint = (IPEndPoint)endPoint };
+                return NetworkReadResult.CreateSuccess((IPEndPoint)endPoint);
             }
             catch (SocketException exception)
             {
-                return new NetworkResult { SocketError = exception.SocketErrorCode };
+                return NetworkReadResult.CreateError(exception.SocketErrorCode);
             }
         }
 
@@ -95,12 +95,12 @@
         {
             if (this.socketAsyncEventArgs.SocketError != SocketError.Success)
             {
-                this.Completed?.Invoke(new NetworkResult { SocketError = this.socketAsyncEventArgs.SocketError });
+                this.Completed?.Invoke(NetworkReadResult.CreateError(e.SocketError));
             }
 
             this.totalLength = this.socketAsyncEventArgs.BytesTransferred;
             this.Completed?.Invoke(
-                new NetworkResult { RemoteIpEndPoint = (IPEndPoint)this.socketAsyncEventArgs.RemoteEndPoint });
+                NetworkReadResult.CreateSuccess((IPEndPoint)this.socketAsyncEventArgs.RemoteEndPoint));
         }
     }
 }

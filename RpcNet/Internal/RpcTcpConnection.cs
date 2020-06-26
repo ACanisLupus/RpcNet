@@ -56,10 +56,17 @@
             {
                 while (!this.stopReceiving)
                 {
-                    NetworkResult result = this.reader.BeginReading();
-                    if (result.SocketError != SocketError.Success)
+                    NetworkReadResult readResult = this.reader.BeginReading();
+                    if (readResult.HasError)
                     {
-                        this.logger?.Trace($"Could not read data from {this.remoteIpEndPoint}. Socket error: {result.SocketError}.");
+                        this.logger?.Trace($"Could not read data from {this.remoteIpEndPoint}. Socket error: {readResult.SocketError}.");
+                        this.IsFinished = true;
+                        return;
+                    }
+
+                    if (readResult.IsDisconnected)
+                    {
+                        this.logger?.Trace($"{this.remoteIpEndPoint} disconnected.");
                         this.IsFinished = true;
                         return;
                     }
@@ -68,10 +75,11 @@
                     this.writer.BeginWriting();
                     this.receivedCall.HandleCall(this.remoteIpEndPoint);
                     this.reader.EndReading();
-                    result = this.writer.EndWriting();
-                    if (result.SocketError != SocketError.Success)
+
+                    NetworkWriteResult writeResult = this.writer.EndWriting();
+                    if (writeResult.HasError)
                     {
-                        this.logger?.Trace($"Could not write data to {this.remoteIpEndPoint}. Socket error: {result.SocketError}.");
+                        this.logger?.Trace($"Could not write data to {this.remoteIpEndPoint}. Socket error: {writeResult.SocketError}.");
                         this.IsFinished = true;
                         return;
                     }

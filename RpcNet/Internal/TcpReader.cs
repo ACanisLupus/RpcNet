@@ -1,7 +1,6 @@
 ﻿namespace RpcNet.Internal
 {
     using System;
-    using System.Net;
     using System.Net.Sockets;
 
     public class TcpReader : INetworkReader
@@ -16,7 +15,6 @@
         private bool lastPacket;
         private PacketState packetState = PacketState.Header;
         private int readIndex;
-        private IPEndPoint remoteIpEndPoint;
         private Socket socket;
         private int writeIndex;
 
@@ -36,13 +34,9 @@
             this.logger = logger;
         }
 
-        public void Reset(Socket socket)
-        {
-            this.socket = socket;
-            this.remoteIpEndPoint = (IPEndPoint)socket.RemoteEndPoint;
-        }
+        public void Reset(Socket socket) => this.socket = socket;
 
-        public NetworkResult BeginReading()
+        public NetworkReadResult BeginReading()
         {
             this.readIndex = 0;
             this.writeIndex = 0;
@@ -51,13 +45,7 @@
             this.bodyIndex = 0;
             this.packetState = PacketState.Header;
 
-            SocketError socketError = this.FillBuffer();
-
-            return new NetworkResult
-            {
-                RemoteIpEndPoint = this.remoteIpEndPoint,
-                SocketError = socketError
-            };
+            return this.FillBuffer();
         }
 
         public void EndReading()
@@ -72,12 +60,19 @@
 
         public ReadOnlySpan<byte> Read(int length)
         {
-            SocketError socketError = this.FillBuffer();
-            if (socketError != SocketError.Success)
+            NetworkReadResult networkReadResult = this.FillBuffer();
+            if (networkReadResult.HasError)
             {
-                string errorMessage = $"Could not receive from TCP stream. Socket error code: {socketError}.";
+                string errorMessage = $"Could not receive from TCP stream. Socket error code: {networkReadResult.SocketError}.";
                 this.logger?.Error(errorMessage);
                 throw new RpcException(errorMessage);
+            }
+
+            if (networkReadResult.IsDisconnected)
+            {
+                const string ErrorMessage = "Could not receive from TCP stream. Remote end point disconnected.";
+                this.logger?.Error(ErrorMessage);
+                throw new RpcException(ErrorMessage);
             }
 
             int endIndex = Math.Min(this.headerIndex, this.buffer.Length);
@@ -97,14 +92,14 @@
         // - Packet is not complete and no space available? Return and wait for XDR read
         // - Packet is complete and XDR read is not complete? Return and wait for XDF read
         // - Packet and XDR read is complete? Read next header. Or finish if previous packet was the last packet
-        private SocketError FillBuffer()
+        private NetworkReadResult FillBuffer()
         {
             bool readFromNetwork = false;
             while (true)
             {
                 if (this.packetState == PacketState.Complete)
                 {
-                    return SocketError.Success;
+                    return NetworkReadResult.CreateSuccess();
                 }
 
                 if (this.packetState == PacketState.Header)
@@ -116,16 +111,16 @@
                 {
                     if (this.ReadBody(ref readFromNetwork))
                     {
-                        return SocketError.Success;
+                        return NetworkReadResult.CreateSuccess();
                     }
                 }
 
                 if (readFromNetwork)
                 {
-                    SocketError socketError = this.ReadFromNetwork(ref readFromNetwork);
-                    if (socketError != SocketError.Success)
+                    NetworkReadResult networkReadResult = this.ReadFromNetwork(ref readFromNetwork);
+                    if (networkReadResult.HasError || networkReadResult.IsDisconnected)
                     {
-                        return socketError;
+                        return networkReadResult;
                     }
                 }
 
@@ -171,7 +166,7 @@
             return false;
         }
 
-        private SocketError ReadFromNetwork(ref bool readFromNetwork)
+        private NetworkReadResult ReadFromNetwork(ref bool readFromNetwork)
         {
             int receivedLength = this.socket.Receive(
                 this.buffer,
@@ -181,17 +176,17 @@
                 out SocketError socketError);
             if (socketError != SocketError.Success)
             {
-                return socketError;
+                return NetworkReadResult.CreateError(socketError);
             }
 
             if (receivedLength == 0)
             {
-                return SocketError.NotConnected;
+                return NetworkReadResult.CreateDisconnected();
             }
 
             this.writeIndex += receivedLength;
             readFromNetwork = false;
-            return socketError;
+            return NetworkReadResult.CreateSuccess();
         }
 
         private void ReadHeader(ref bool readFromNetwork)

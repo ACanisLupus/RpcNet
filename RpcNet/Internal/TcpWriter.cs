@@ -1,7 +1,6 @@
 ﻿namespace RpcNet.Internal
 {
     using System;
-    using System.Net;
     using System.Net.Sockets;
 
     public class TcpWriter : INetworkWriter
@@ -10,7 +9,6 @@
 
         private readonly byte[] buffer;
 
-        private IPEndPoint remoteIpEndPoint;
         private Socket socket;
         private int writeIndex;
 
@@ -29,14 +27,9 @@
             this.buffer = new byte[bufferSize];
         }
 
-        public void Reset(Socket socket)
-        {
-            this.socket = socket;
-            this.remoteIpEndPoint = (IPEndPoint)socket.RemoteEndPoint;
-        }
-
+        public void Reset(Socket socket) => this.socket = socket;
         public void BeginWriting() => this.writeIndex = TcpHeaderLength;
-        public NetworkResult EndWriting() => this.FlushPacket(true);
+        public NetworkWriteResult EndWriting() => this.FlushPacket(true);
 
         public Span<byte> Reserve(int length)
         {
@@ -56,7 +49,7 @@
             return span;
         }
 
-        private NetworkResult FlushPacket(bool lastPacket)
+        private NetworkWriteResult FlushPacket(bool lastPacket)
         {
             int length = this.writeIndex - TcpHeaderLength;
 
@@ -70,11 +63,7 @@
                 this.BeginWriting();
             }
 
-            return new NetworkResult
-            {
-                RemoteIpEndPoint = this.remoteIpEndPoint,
-                SocketError = socketError
-            };
+            return new NetworkWriteResult(socketError);
 
             // For test purposes. This simulates a slow network
             //for (int i = 0; i < length + TcpHeader; i++)

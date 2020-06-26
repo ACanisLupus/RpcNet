@@ -5,7 +5,7 @@
     public interface INetworkWriter
     {
         void BeginWriting();
-        NetworkResult EndWriting();
+        NetworkWriteResult EndWriting();
         Span<byte> Reserve(int length);
     }
 }

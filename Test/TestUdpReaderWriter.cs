@@ -11,11 +11,11 @@
     internal class TestUdpReaderWriter
     {
         private UdpClient client;
-        private Channel<NetworkResult> readChannel;
+        private Channel<NetworkReadResult> readChannel;
         private UdpReader reader;
         private IPEndPoint remoteIpEndPoint;
         private UdpClient server;
-        private Channel<NetworkResult> writeChannel;
+        private Channel<NetworkWriteResult> writeChannel;
         private UdpWriter writer;
 
         [SetUp]
@@ -34,8 +34,8 @@
             this.writer = new UdpWriter(this.client.Client, 100, TestLogger.Instance);
             this.writer.Completed += udpResult => this.writeChannel.Send(udpResult);
 
-            this.readChannel = new Channel<NetworkResult>();
-            this.writeChannel = new Channel<NetworkResult>();
+            this.readChannel = new Channel<NetworkReadResult>();
+            this.writeChannel = new Channel<NetworkWriteResult>();
         }
 
         [TearDown]
@@ -61,33 +61,34 @@
                 writeSpan[i] = (byte)i;
             }
 
-            NetworkResult udpResult;
+            NetworkWriteResult writeResult;
             if (syncWriting)
             {
-                udpResult = this.writer.EndWriting(this.remoteIpEndPoint);
+                writeResult = this.writer.EndWriting(this.remoteIpEndPoint);
             }
             else
             {
                 this.writer.EndWritingAsync(this.remoteIpEndPoint);
-                Assert.That(this.writeChannel.Receive(out udpResult));
+                Assert.That(this.writeChannel.Receive(out writeResult));
             }
 
-            Assert.That(udpResult.SocketError, Is.EqualTo(SocketError.Success));
+            Assert.That(writeResult.SocketError, Is.EqualTo(SocketError.Success));
 
+            NetworkReadResult readResult;
             if (syncReading)
             {
-                udpResult = this.reader.BeginReading();
+                readResult = this.reader.BeginReading();
             }
             else
             {
                 this.reader.BeginReadingAsync();
-                Assert.That(this.readChannel.Receive(out udpResult));
+                Assert.That(this.readChannel.Receive(out readResult));
             }
 
-            Assert.That(udpResult.SocketError, Is.EqualTo(SocketError.Success));
-            Assert.That(udpResult.RemoteIpEndPoint.Address, Is.EqualTo(this.remoteIpEndPoint.Address));
-            Assert.That(udpResult.RemoteIpEndPoint.Port, Is.Not.EqualTo(this.remoteIpEndPoint.Port));
-            Assert.That(udpResult.RemoteIpEndPoint.Port, Is.GreaterThanOrEqualTo(49152));
+            Assert.That(readResult.SocketError, Is.EqualTo(SocketError.Success));
+            Assert.That(readResult.RemoteIpEndPoint.Address, Is.EqualTo(this.remoteIpEndPoint.Address));
+            Assert.That(readResult.RemoteIpEndPoint.Port, Is.Not.EqualTo(this.remoteIpEndPoint.Port));
+            Assert.That(readResult.RemoteIpEndPoint.Port, Is.GreaterThanOrEqualTo(49152));
 
             ReadOnlySpan<byte> readSpan = this.reader.Read(length);
             this.reader.EndReading();
@@ -110,30 +111,31 @@
                 writeSpan[i] = (byte)i;
             }
 
-            NetworkResult udpResult;
+            NetworkWriteResult writeResult;
             if (syncWriting)
             {
-                udpResult = this.writer.EndWriting(this.remoteIpEndPoint);
+                writeResult = this.writer.EndWriting(this.remoteIpEndPoint);
             }
             else
             {
                 this.writer.EndWritingAsync(this.remoteIpEndPoint);
-                Assert.That(this.writeChannel.Receive(out udpResult));
+                Assert.That(this.writeChannel.Receive(out writeResult));
             }
 
-            Assert.That(udpResult.SocketError, Is.EqualTo(SocketError.Success));
+            Assert.That(writeResult.SocketError, Is.EqualTo(SocketError.Success));
 
+            NetworkReadResult readResult;
             if (syncReading)
             {
-                udpResult = this.reader.BeginReading();
+                readResult = this.reader.BeginReading();
             }
             else
             {
                 this.reader.BeginReadingAsync();
-                Assert.That(this.readChannel.Receive(out udpResult));
+                Assert.That(this.readChannel.Receive(out readResult));
             }
 
-            Assert.That(udpResult.SocketError, Is.EqualTo(SocketError.Success));
+            Assert.That(readResult.SocketError, Is.EqualTo(SocketError.Success));
 
             var buffer = new byte[100];
             int index = 0;
@@ -171,11 +173,11 @@
             this.writer.BeginWriting();
             this.writer.Reserve(10);
 
-            NetworkResult udpResult = this.writer.EndWriting(this.remoteIpEndPoint);
-            Assert.That(udpResult.SocketError, Is.EqualTo(SocketError.Success));
+            NetworkWriteResult writeResult = this.writer.EndWriting(this.remoteIpEndPoint);
+            Assert.That(writeResult.SocketError, Is.EqualTo(SocketError.Success));
 
-            udpResult = this.reader.BeginReading();
-            Assert.That(udpResult.SocketError, Is.EqualTo(SocketError.Success));
+            NetworkReadResult readResult = this.reader.BeginReading();
+            Assert.That(readResult.SocketError, Is.EqualTo(SocketError.Success));
 
             for (int i = 0; i < arguments.Length - 1; i++)
             {
@@ -191,17 +193,17 @@
             var task = Task.Run(
                 () =>
                 {
-                    NetworkResult udpResult;
+                    NetworkReadResult readResult;
                     if (syncReading)
                     {
-                        udpResult = this.reader.BeginReading();
-                        Assert.That(udpResult.SocketError, Is.EqualTo(SocketError.Interrupted));
+                        readResult = this.reader.BeginReading();
+                        Assert.That(readResult.SocketError, Is.EqualTo(SocketError.Interrupted));
                     }
                     else
                     {
                         this.reader.BeginReadingAsync();
-                        Assert.That(this.readChannel.Receive(out udpResult));
-                        Assert.That(udpResult.SocketError, Is.EqualTo(SocketError.OperationAborted));
+                        Assert.That(this.readChannel.Receive(out readResult));
+                        Assert.That(readResult.SocketError, Is.EqualTo(SocketError.OperationAborted));
                     }
                 });
             Thread.Sleep(100);

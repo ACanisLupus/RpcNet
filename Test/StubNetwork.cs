@@ -18,7 +18,7 @@
         public int ReadIndex { get; private set; }
         public int WriteIndex { get; private set; }
 
-        public NetworkResult BeginReading() => new NetworkResult();
+        public NetworkReadResult BeginReading() => new NetworkReadResult();
 
         public void EndReading()
         {
@@ -28,7 +28,7 @@
         {
         }
 
-        public NetworkResult EndWriting() => new NetworkResult();
+        public NetworkWriteResult EndWriting() => new NetworkWriteResult();
 
         public void Reset()
         {

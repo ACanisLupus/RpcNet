@@ -1,4 +1,10 @@
-﻿namespace RpcNet.Internal
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright company="dSPACE GmbH" file="UdpWriter.cs">
+//   Copyright dSPACE GmbH. All rights reserved.
+// </copyright>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace RpcNet.Internal
 {
     using System;
     using System.Net;
@@ -12,10 +18,10 @@
     public class UdpWriter : INetworkWriter, IDisposable
     {
         private readonly byte[] buffer;
+        private readonly ILogger logger;
         private readonly IPEndPoint remoteIpEndPoint;
         private readonly Socket socket;
         private readonly SocketAsyncEventArgs socketAsyncEventArgs = new SocketAsyncEventArgs();
-        private readonly ILogger logger;
 
         private int writeIndex;
 
@@ -27,7 +33,11 @@
         {
         }
 
-        public UdpWriter(Socket socket, IPEndPoint remoteIpEndPoint, ILogger logger) : this(socket, remoteIpEndPoint, 65536, logger)
+        public UdpWriter(Socket socket, IPEndPoint remoteIpEndPoint, ILogger logger) : this(
+            socket,
+            remoteIpEndPoint,
+            65536,
+            logger)
         {
         }
 
@@ -45,7 +55,7 @@
             this.logger = logger;
         }
 
-        public Action<NetworkResult> Completed { get; set; }
+        public Action<NetworkWriteResult> Completed { get; set; }
 
         public void BeginWriting() => this.writeIndex = 0;
 
@@ -61,22 +71,18 @@
             }
         }
 
-        public NetworkResult EndWriting() => this.EndWriting(this.remoteIpEndPoint);
+        public NetworkWriteResult EndWriting() => this.EndWriting(this.remoteIpEndPoint);
 
-        public NetworkResult EndWriting(IPEndPoint remoteEndPoint)
+        public NetworkWriteResult EndWriting(IPEndPoint remoteEndPoint)
         {
             try
             {
                 this.socket.SendTo(this.buffer, this.writeIndex, SocketFlags.None, remoteEndPoint);
-                return new NetworkResult
-                {
-                    SocketError = SocketError.Success,
-                    RemoteIpEndPoint = remoteEndPoint
-                };
+                return new NetworkWriteResult(SocketError.Success);
             }
             catch (SocketException exception)
             {
-                return new NetworkResult { SocketError = exception.SocketErrorCode };
+                return new NetworkWriteResult(exception.SocketErrorCode);
             }
         }
 
@@ -96,15 +102,7 @@
 
         public void Dispose() => this.socketAsyncEventArgs.Dispose();
 
-        private void OnCompleted(object sender, SocketAsyncEventArgs e)
-        {
-            if (this.socketAsyncEventArgs.SocketError != SocketError.Success)
-            {
-                this.Completed?.Invoke(new NetworkResult { SocketError = this.socketAsyncEventArgs.SocketError });
-            }
-
-            this.Completed?.Invoke(
-                new NetworkResult { RemoteIpEndPoint = (IPEndPoint)this.socketAsyncEventArgs.RemoteEndPoint });
-        }
+        private void OnCompleted(object sender, SocketAsyncEventArgs e) =>
+            this.Completed?.Invoke(new NetworkWriteResult(e.SocketError));
     }
 }

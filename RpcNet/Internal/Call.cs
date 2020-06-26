@@ -2,7 +2,6 @@
 {
     using System;
     using System.Net;
-    using System.Net.Sockets;
 
     internal class Call
     {
@@ -100,19 +99,19 @@
             this.rpcMessage.WriteTo(this.xdrWriter);
             argument.WriteTo(this.xdrWriter);
 
-            NetworkResult networkResult = this.networkWriter.EndWriting();
-            if (networkResult.SocketError != SocketError.Success)
+            NetworkWriteResult writeResult = this.networkWriter.EndWriting();
+            if (writeResult.HasError)
             {
                 errorMessage =
-                    $"Could not send message to {this.remoteIpEndPoint}. Socket error: {networkResult.SocketError}.";
+                    $"Could not send message to {this.remoteIpEndPoint}. Socket error: {writeResult.SocketError}.";
                 return false;
             }
 
-            networkResult = this.networkReader.BeginReading();
-            if (networkResult.SocketError != SocketError.Success)
+            NetworkReadResult readResult = this.networkReader.BeginReading();
+            if (readResult.HasError)
             {
                 errorMessage =
-                    $"Could not receive reply from {this.remoteIpEndPoint}. Socket error: {networkResult.SocketError}.";
+                    $"Could not receive reply from {this.remoteIpEndPoint}. Socket error: {readResult.SocketError}.";
                 return false;
             }
 

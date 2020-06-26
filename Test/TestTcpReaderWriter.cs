@@ -56,11 +56,11 @@
             this.writer.BeginWriting();
             xdrWriter.WriteVariableLengthOpaque(value);
             xdrWriter.Write(42);
-            NetworkResult result = this.writer.EndWriting();
-            Assert.That(result.SocketError, Is.EqualTo(SocketError.Success));
+            NetworkWriteResult writeResult = this.writer.EndWriting();
+            Assert.That(writeResult.SocketError, Is.EqualTo(SocketError.Success));
 
-            result = this.reader.BeginReading();
-            Assert.That(result.SocketError, Is.EqualTo(SocketError.Success));
+            NetworkReadResult readResult = this.reader.BeginReading();
+            Assert.That(readResult.SocketError, Is.EqualTo(SocketError.Success));
             Assert.That(xdrReader.ReadOpaque(), Is.EqualTo(value));
             Assert.That(xdrReader.ReadInt(), Is.EqualTo(42));
             this.reader.EndReading();
@@ -88,8 +88,8 @@
             var task = Task.Run(
                 () =>
                 {
-                    NetworkResult result = this.reader.BeginReading();
-                    Assert.That(result.SocketError, Is.EqualTo(SocketError.Success));
+                    NetworkReadResult readResult = this.reader.BeginReading();
+                    Assert.That(readResult.SocketError, Is.EqualTo(SocketError.Success));
                     Assert.That(xdrReader.ReadOpaque(), Is.EqualTo(value));
                     Assert.That(xdrReader.ReadInt(), Is.EqualTo(42));
                     this.reader.EndReading();

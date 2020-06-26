@@ -4,7 +4,7 @@
 
     public interface INetworkReader
     {
-        NetworkResult BeginReading();
+        NetworkReadResult BeginReading();
         void EndReading();
         ReadOnlySpan<byte> Read(int length);
     }

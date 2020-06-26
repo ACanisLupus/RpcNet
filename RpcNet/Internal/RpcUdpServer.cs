@@ -42,12 +42,14 @@
             this.writer.Dispose();
         }
 
-        private void ReadingCompleted(NetworkResult udpResult)
+        private void ReadingCompleted(NetworkReadResult udpResult)
         {
             if (this.stopReceiving)
             {
                 return;
             }
+
+            this.logger?.Trace($"UDP call received from {udpResult.RemoteIpEndPoint}.");
 
             try
             {
@@ -58,12 +60,12 @@
             }
             catch (RpcException rpcException)
             {
-                string errorMessage = $"Unexpected exception during call: {rpcException}";
+                string errorMessage = $"Unexpected exception during UDP call from {udpResult.RemoteIpEndPoint}: {rpcException}";
                 this.logger?.Error(errorMessage);
             }
         }
 
-        private void WritingCompleted(NetworkResult udpResult)
+        private void WritingCompleted(NetworkWriteResult udpResult)
         {
             if (this.stopReceiving)
             {
