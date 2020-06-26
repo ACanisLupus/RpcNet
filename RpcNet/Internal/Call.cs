@@ -140,7 +140,7 @@
 
             if (reply.Body.ReplyBody.ReplyStatus != ReplyStatus.Accepted)
             {
-                errorMessage = $"Call was denied.";
+                errorMessage = "Call was denied.";
                 return false;
             }
 

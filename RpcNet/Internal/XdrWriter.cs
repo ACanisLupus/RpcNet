@@ -55,7 +55,7 @@
         public void Write(string value)
         {
             int length = value?.Length ?? 0;
-            if (length == 0)
+            if (value == null || length == 0)
             {
                 this.Write(length);
                 return;

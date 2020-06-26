@@ -64,9 +64,9 @@
         {
             if (this.packetState != PacketState.Complete || this.readIndex != this.writeIndex)
             {
-                const string errorMessage = "Not all data was read.";
-                this.logger?.Error(errorMessage);
-                throw new RpcException(errorMessage);
+                const string ErrorMessage = "Not all data was read.";
+                this.logger?.Error(ErrorMessage);
+                throw new RpcException(ErrorMessage);
             }
         }
 
@@ -207,9 +207,9 @@
 
                 if (packetLength % 4 != 0 || packetLength == 0)
                 {
-                    const string errorMessage = "This is not an XDR stream.";
-                    this.logger?.Error(errorMessage);
-                    throw new RpcException(errorMessage);
+                    const string ErrorMessage = "This is not an XDR stream.";
+                    this.logger?.Error(ErrorMessage);
+                    throw new RpcException(ErrorMessage);
                 }
 
                 this.packetState = PacketState.Body;

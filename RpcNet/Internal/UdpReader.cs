@@ -69,9 +69,9 @@
         {
             if (this.readIndex != this.totalLength)
             {
-                const string errorMessage = "Not all data was read.";
-                this.logger?.Error(errorMessage);
-                throw new RpcException(errorMessage);
+                const string ErrorMessage = "Not all data was read.";
+                this.logger?.Error(ErrorMessage);
+                throw new RpcException(ErrorMessage);
             }
         }
 
@@ -81,9 +81,9 @@
         {
             if (this.readIndex + length > this.totalLength)
             {
-                const string errorMessage = "Buffer underflow.";
-                this.logger?.Error(errorMessage);
-                throw new RpcException(errorMessage);
+                const string ErrorMessage = "Buffer underflow.";
+                this.logger?.Error(ErrorMessage);
+                throw new RpcException(ErrorMessage);
             }
 
             Span<byte> span = this.buffer.AsSpan(this.readIndex, length);

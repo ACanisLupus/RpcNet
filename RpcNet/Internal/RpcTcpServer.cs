@@ -7,7 +7,7 @@
 
     public class RpcTcpServer : IDisposable
     {
-        private readonly SortedSet<RpcTcpConnection> connections = new SortedSet<RpcTcpConnection>();
+        private readonly List<RpcTcpConnection> connections = new List<RpcTcpConnection>();
         private readonly int program;
         private readonly Action<ReceivedCall> receivedCallDispatcher;
         private readonly TcpListener server;
@@ -60,15 +60,15 @@
                 this.connections.Add(
                     new RpcTcpConnection(tcpClient, this.program, this.versions, this.receivedCallDispatcher, this.logger));
 
-                foreach (RpcTcpConnection connection in this.connections)
+                for (int i = this.connections.Count - 1; i >= 0; i--)
                 {
+                    RpcTcpConnection connection = this.connections[i];
                     if (connection.IsFinished)
                     {
                         connection.Dispose();
+                        this.connections.RemoveAt(i);
                     }
                 }
-
-                this.connections.RemoveWhere(match => match.IsFinished);
             }
 
             this.server.BeginAcceptTcpClient(this.OnAccepted, null);

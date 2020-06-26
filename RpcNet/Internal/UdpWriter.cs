@@ -84,9 +84,9 @@
         {
             if (this.writeIndex + length > this.buffer.Length)
             {
-                const string errorMessage = "Buffer overflow.";
-                this.logger?.Error(errorMessage);
-                throw new RpcException(errorMessage);
+                const string ErrorMessage = "Buffer overflow.";
+                this.logger?.Error(ErrorMessage);
+                throw new RpcException(ErrorMessage);
             }
 
             Span<byte> span = this.buffer.AsSpan(this.writeIndex, length);
