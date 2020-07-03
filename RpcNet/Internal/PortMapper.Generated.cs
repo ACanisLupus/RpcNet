@@ -163,7 +163,7 @@ namespace RpcNet.Internal
     internal class PortMapperClient : ClientStub
     {
         public PortMapperClient(Protocol protocol, IPAddress ipAddress, int port = 0, ILogger logger = null) :
-            base(protocol, ipAddress, port, PortMapperConstants.PortMapperProgram, logger)
+            base(protocol, ipAddress, port, PortMapperConstants.PortMapperProgram, PortMapperConstants.PortMapperVersion, logger)
         {
         }
 

@@ -21,159 +21,195 @@
         public bool ReadBool() => this.ReadInt() != 0;
         public float ReadFloat() => Utilities.Int32BitsToSingle(this.ReadInt());
         public double ReadDouble() => BitConverter.Int64BitsToDouble(this.ReadLong());
+        public string ReadString() => this.encoding.GetString(this.ReadOpaque());
 
-        public byte[] ReadOpaque(int length)
+        public void ReadOpaque(byte[] array)
         {
+            int length = array.Length;
             int padding = Utilities.CalculateXdrPadding(length);
-            var value = new byte[length];
             int writeIndex = 0;
 
             while (length > 0)
             {
                 ReadOnlySpan<byte> span = this.networkReader.Read(length);
-                span.CopyTo(value.AsSpan(writeIndex, span.Length));
+                span.CopyTo(array.AsSpan(writeIndex, span.Length));
                 writeIndex += span.Length;
                 length -= span.Length;
             }
 
             _ = this.networkReader.Read(padding);
-            return value;
         }
 
-        public byte[] ReadOpaque() => this.ReadOpaque(this.ReadInt());
-        public string ReadString() => this.encoding.GetString(this.ReadOpaque());
-
-        public bool[] ReadBoolArray(int length)
+        public void ReadBoolArray(bool[] array)
         {
-            var array = new bool[length];
-            for (int i = 0; i < length; i++)
+            for (int i = 0; i < array.Length; i++)
             {
                 array[i] = this.ReadBool();
             }
-
-            return array;
         }
 
-        public byte[] ReadByteArray(int length)
+        public void ReadByteArray(byte[] array)
         {
-            var array = new byte[length];
-            for (int i = 0; i < length; i++)
+            for (int i = 0; i < array.Length; i++)
             {
                 array[i] = this.ReadByte();
             }
-
-            return array;
         }
 
-        public double[] ReadDoubleArray(int length)
+        public void ReadDoubleArray(double[] array)
         {
-            var array = new double[length];
-            for (int i = 0; i < length; i++)
+            for (int i = 0; i < array.Length; i++)
             {
                 array[i] = this.ReadDouble();
             }
-
-            return array;
         }
 
-        public float[] ReadFloatArray(int length)
+        public void ReadFloatArray(float[] array)
         {
-            var array = new float[length];
-            for (int i = 0; i < length; i++)
+            for (int i = 0; i < array.Length; i++)
             {
                 array[i] = this.ReadFloat();
             }
-
-            return array;
         }
 
-        public int[] ReadIntArray(int length)
+        public void ReadIntArray(int[] array)
         {
-            var array = new int[length];
-            for (int i = 0; i < length; i++)
+            for (int i = 0; i < array.Length; i++)
             {
                 array[i] = this.ReadInt();
             }
-
-            return array;
         }
 
-        public long[] ReadLongArray(int length)
+        public void ReadLongArray(long[] array)
         {
-            var array = new long[length];
-            for (int i = 0; i < length; i++)
+            for (int i = 0; i < array.Length; i++)
             {
                 array[i] = this.ReadLong();
             }
-
-            return array;
         }
 
-        public sbyte[] ReadSByteArray(int length)
+        public void ReadSByteArray(sbyte[] array)
         {
-            var array = new sbyte[length];
-            for (int i = 0; i < length; i++)
+            for (int i = 0; i < array.Length; i++)
             {
                 array[i] = this.ReadSByte();
             }
-
-            return array;
         }
 
-        public short[] ReadShortArray(int length)
+        public void ReadShortArray(short[] array)
         {
-            var array = new short[length];
-            for (int i = 0; i < length; i++)
+            for (int i = 0; i < array.Length; i++)
             {
                 array[i] = this.ReadShort();
             }
-
-            return array;
         }
 
-        public uint[] ReadUIntArray(int length)
+        public void ReadUIntArray(uint[] array)
         {
-            var array = new uint[length];
-            for (int i = 0; i < length; i++)
+            for (int i = 0; i < array.Length; i++)
             {
                 array[i] = this.ReadUInt();
             }
-
-            return array;
         }
 
-        public ulong[] ReadULongArray(int length)
+        public void ReadULongArray(ulong[] array)
         {
-            var array = new ulong[length];
-            for (int i = 0; i < length; i++)
+            for (int i = 0; i < array.Length; i++)
             {
                 array[i] = this.ReadULong();
             }
-
-            return array;
         }
 
-        public ushort[] ReadUShortArray(int length)
+        public void ReadUShortArray(ushort[] array)
         {
-            var array = new ushort[length];
-            for (int i = 0; i < length; i++)
+            for (int i = 0; i < array.Length; i++)
             {
                 array[i] = this.ReadUShort();
             }
+        }
 
+        public byte[] ReadOpaque()
+        {
+            var array = new byte[this.ReadInt()];
+            this.ReadOpaque(array);
             return array;
         }
 
-        public bool[] ReadBoolArray() => this.ReadBoolArray(this.ReadInt());
-        public byte[] ReadByteArray() => this.ReadByteArray(this.ReadInt());
-        public double[] ReadDoubleArray() => this.ReadDoubleArray(this.ReadInt());
-        public float[] ReadFloatArray() => this.ReadFloatArray(this.ReadInt());
-        public int[] ReadIntArray() => this.ReadIntArray(this.ReadInt());
-        public long[] ReadLongArray() => this.ReadLongArray(this.ReadInt());
-        public sbyte[] ReadSByteArray() => this.ReadSByteArray(this.ReadInt());
-        public short[] ReadShortArray() => this.ReadShortArray(this.ReadInt());
-        public uint[] ReadUIntArray() => this.ReadUIntArray(this.ReadInt());
-        public ulong[] ReadULongArray() => this.ReadULongArray(this.ReadInt());
-        public ushort[] ReadUShortArray() => this.ReadUShortArray(this.ReadInt());
+        public bool[] ReadBoolArray()
+        {
+            var array = new bool[this.ReadInt()];
+            this.ReadBoolArray(array);
+            return array;
+        }
+
+        public byte[] ReadByteArray()
+        {
+            var array = new byte[this.ReadInt()];
+            this.ReadByteArray(array);
+            return array;
+        }
+
+        public double[] ReadDoubleArray()
+        {
+            var array = new double[this.ReadInt()];
+            this.ReadDoubleArray(array);
+            return array;
+        }
+
+        public float[] ReadFloatArray()
+        {
+            var array = new float[this.ReadInt()];
+            this.ReadFloatArray(array);
+            return array;
+        }
+
+        public int[] ReadIntArray()
+        {
+            var array = new int[this.ReadInt()];
+            this.ReadIntArray(array);
+            return array;
+        }
+
+        public long[] ReadLongArray()
+        {
+            var array = new long[this.ReadInt()];
+            this.ReadLongArray(array);
+            return array;
+        }
+
+        public sbyte[] ReadSByteArray()
+        {
+            var array = new sbyte[this.ReadInt()];
+            this.ReadSByteArray(array);
+            return array;
+        }
+
+        public short[] ReadShortArray()
+        {
+            var array = new short[this.ReadInt()];
+            this.ReadShortArray(array);
+            return array;
+        }
+
+        public uint[] ReadUIntArray()
+        {
+            var array = new uint[this.ReadInt()];
+            this.ReadUIntArray(array);
+            return array;
+        }
+
+        public ulong[] ReadULongArray()
+        {
+            var array = new ulong[this.ReadInt()];
+            this.ReadULongArray(array);
+            return array;
+        }
+
+        public ushort[] ReadUShortArray()
+        {
+            var array = new ushort[this.ReadInt()];
+            this.ReadUShortArray(array);
+            return array;
+        }
     }
 }

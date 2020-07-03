@@ -216,7 +216,10 @@
             this.writer.WriteFixedLengthOpaque(value);
 
             Assert.That(this.stubNetwork.WriteIndex, Is.EqualTo(expectedWriteIndex));
-            Assert.That(this.reader.ReadOpaque(length), Is.EqualTo(value));
+
+            var result = new byte[length];
+            this.reader.ReadOpaque(result);
+            Assert.That(result, Is.EqualTo(value));
         }
 
         [Test]
@@ -261,7 +264,10 @@
             this.writer.WriteFixedLengthArray(value);
 
             Assert.That(this.stubNetwork.WriteIndex, Is.EqualTo(expectedWriteIndex));
-            Assert.That(this.reader.ReadBoolArray(length), Is.EqualTo(value));
+
+            var result = new bool[length];
+            this.reader.ReadBoolArray(result);
+            Assert.That(result, Is.EqualTo(value));
         }
 
         [Test]
@@ -289,7 +295,10 @@
             this.writer.WriteFixedLengthArray(value);
 
             Assert.That(this.stubNetwork.WriteIndex, Is.EqualTo(expectedWriteIndex));
-            Assert.That(this.reader.ReadByteArray(length), Is.EqualTo(value));
+
+            var result = new byte[length];
+            this.reader.ReadByteArray(result);
+            Assert.That(result, Is.EqualTo(value));
         }
 
         [Test]
@@ -317,7 +326,10 @@
             this.writer.WriteFixedLengthArray(value);
 
             Assert.That(this.stubNetwork.WriteIndex, Is.EqualTo(expectedWriteIndex));
-            Assert.That(this.reader.ReadSByteArray(length), Is.EqualTo(value));
+
+            var result = new sbyte[length];
+            this.reader.ReadSByteArray(result);
+            Assert.That(result, Is.EqualTo(value));
         }
 
         [Test]
@@ -345,7 +357,10 @@
             this.writer.WriteFixedLengthArray(value);
 
             Assert.That(this.stubNetwork.WriteIndex, Is.EqualTo(expectedWriteIndex));
-            Assert.That(this.reader.ReadShortArray(length), Is.EqualTo(value));
+
+            var result = new short[length];
+            this.reader.ReadShortArray(result);
+            Assert.That(result, Is.EqualTo(value));
         }
 
         [Test]
@@ -373,7 +388,10 @@
             this.writer.WriteFixedLengthArray(value);
 
             Assert.That(this.stubNetwork.WriteIndex, Is.EqualTo(expectedWriteIndex));
-            Assert.That(this.reader.ReadUShortArray(length), Is.EqualTo(value));
+
+            var result = new ushort[length];
+            this.reader.ReadUShortArray(result);
+            Assert.That(result, Is.EqualTo(value));
         }
 
         [Test]
@@ -401,7 +419,10 @@
             this.writer.WriteFixedLengthArray(value);
 
             Assert.That(this.stubNetwork.WriteIndex, Is.EqualTo(expectedWriteIndex));
-            Assert.That(this.reader.ReadIntArray(length), Is.EqualTo(value));
+
+            var result = new int[length];
+            this.reader.ReadIntArray(result);
+            Assert.That(result, Is.EqualTo(value));
         }
 
         [Test]
@@ -429,7 +450,10 @@
             this.writer.WriteFixedLengthArray(value);
 
             Assert.That(this.stubNetwork.WriteIndex, Is.EqualTo(expectedWriteIndex));
-            Assert.That(this.reader.ReadUIntArray(length), Is.EqualTo(value));
+
+            var result = new uint[length];
+            this.reader.ReadUIntArray(result);
+            Assert.That(result, Is.EqualTo(value));
         }
 
         [Test]
@@ -457,7 +481,10 @@
             this.writer.WriteFixedLengthArray(value);
 
             Assert.That(this.stubNetwork.WriteIndex, Is.EqualTo(expectedWriteIndex));
-            Assert.That(this.reader.ReadLongArray(length), Is.EqualTo(value));
+
+            var result = new long[length];
+            this.reader.ReadLongArray(result);
+            Assert.That(result, Is.EqualTo(value));
         }
 
         [Test]
@@ -485,7 +512,10 @@
             this.writer.WriteFixedLengthArray(value);
 
             Assert.That(this.stubNetwork.WriteIndex, Is.EqualTo(expectedWriteIndex));
-            Assert.That(this.reader.ReadULongArray(length), Is.EqualTo(value));
+
+            var result = new ulong[length];
+            this.reader.ReadULongArray(result);
+            Assert.That(result, Is.EqualTo(value));
         }
 
         [Test]
@@ -513,7 +543,10 @@
             this.writer.WriteFixedLengthArray(value);
 
             Assert.That(this.stubNetwork.WriteIndex, Is.EqualTo(expectedWriteIndex));
-            Assert.That(this.reader.ReadFloatArray(length), Is.EqualTo(value));
+
+            var result = new float[length];
+            this.reader.ReadFloatArray(result);
+            Assert.That(result, Is.EqualTo(value));
         }
 
         [Test]
@@ -541,7 +574,10 @@
             this.writer.WriteFixedLengthArray(value);
 
             Assert.That(this.stubNetwork.WriteIndex, Is.EqualTo(expectedWriteIndex));
-            Assert.That(this.reader.ReadDoubleArray(length), Is.EqualTo(value));
+
+            var result = new double[length];
+            this.reader.ReadDoubleArray(result);
+            Assert.That(result, Is.EqualTo(value));
         }
 
         [Test]

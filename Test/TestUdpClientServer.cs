@@ -3,6 +3,7 @@
     using System.Net;
     using NUnit.Framework;
     using RpcNet.Internal;
+    using TestService;
 
     internal class TestUdpClientServer
     {

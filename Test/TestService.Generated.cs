@@ -7,7 +7,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace RpcNet.Test
+namespace TestService
 {
     using System;
     using System.Net;
@@ -43,16 +43,16 @@ namespace RpcNet.Test
         public ulong[] UInt64Value2 { get; set; }
         public double[] Float64Value2 { get; set; }
         public float[] Float32Value2 { get; set; }
-        public bool[] BoolValue3 { get; set; }
-        public byte[] Int8Value3 { get; set; }
-        public short[] Int16Value3 { get; set; }
-        public int[] Int32Value3 { get; set; }
-        public long[] Int64Value3 { get; set; }
-        public ushort[] UInt16Value3 { get; set; }
-        public uint[] UInt32Value3 { get; set; }
-        public ulong[] UInt64Value3 { get; set; }
-        public double[] Float64Value3 { get; set; }
-        public float[] Float32Value3 { get; set; }
+        public bool[] BoolValue3 { get; } = new bool[10];
+        public byte[] Int8Value3 { get; } = new byte[10];
+        public short[] Int16Value3 { get; } = new short[10];
+        public int[] Int32Value3 { get; } = new int[10];
+        public long[] Int64Value3 { get; } = new long[10];
+        public ushort[] UInt16Value3 { get; } = new ushort[10];
+        public uint[] UInt32Value3 { get; } = new uint[10];
+        public ulong[] UInt64Value3 { get; } = new ulong[10];
+        public double[] Float64Value3 { get; } = new double[10];
+        public float[] Float32Value3 { get; } = new float[10];
 
         public MyStruct()
         {
@@ -85,16 +85,16 @@ namespace RpcNet.Test
             writer.WriteVariableLengthArray(UInt64Value2);
             writer.WriteVariableLengthArray(Float64Value2);
             writer.WriteVariableLengthArray(Float32Value2);
-            writer.WriteFixedLengthArray(BoolValue3.AsSpan<bool>(0, 10));
-            writer.WriteFixedLengthArray(Int8Value3.AsSpan<byte>(0, 10));
-            writer.WriteFixedLengthArray(Int16Value3.AsSpan<short>(0, 10));
-            writer.WriteFixedLengthArray(Int32Value3.AsSpan<int>(0, 10));
-            writer.WriteFixedLengthArray(Int64Value3.AsSpan<long>(0, 10));
-            writer.WriteFixedLengthArray(UInt16Value3.AsSpan<ushort>(0, 10));
-            writer.WriteFixedLengthArray(UInt32Value3.AsSpan<uint>(0, 10));
-            writer.WriteFixedLengthArray(UInt64Value3.AsSpan<ulong>(0, 10));
-            writer.WriteFixedLengthArray(Float64Value3.AsSpan<double>(0, 10));
-            writer.WriteFixedLengthArray(Float32Value3.AsSpan<float>(0, 10));
+            writer.WriteFixedLengthArray(BoolValue3);
+            writer.WriteFixedLengthArray(Int8Value3);
+            writer.WriteFixedLengthArray(Int16Value3);
+            writer.WriteFixedLengthArray(Int32Value3);
+            writer.WriteFixedLengthArray(Int64Value3);
+            writer.WriteFixedLengthArray(UInt16Value3);
+            writer.WriteFixedLengthArray(UInt32Value3);
+            writer.WriteFixedLengthArray(UInt64Value3);
+            writer.WriteFixedLengthArray(Float64Value3);
+            writer.WriteFixedLengthArray(Float32Value3);
         }
 
         public void ReadFrom(IXdrReader reader)
@@ -119,16 +119,16 @@ namespace RpcNet.Test
             UInt64Value2 = reader.ReadULongArray();
             Float64Value2 = reader.ReadDoubleArray();
             Float32Value2 = reader.ReadFloatArray();
-            BoolValue3 = reader.ReadBoolArray(10);
-            Int8Value3 = reader.ReadByteArray(10);
-            Int16Value3 = reader.ReadShortArray(10);
-            Int32Value3 = reader.ReadIntArray(10);
-            Int64Value3 = reader.ReadLongArray(10);
-            UInt16Value3 = reader.ReadUShortArray(10);
-            UInt32Value3 = reader.ReadUIntArray(10);
-            UInt64Value3 = reader.ReadULongArray(10);
-            Float64Value3 = reader.ReadDoubleArray(10);
-            Float32Value3 = reader.ReadFloatArray(10);
+            reader.ReadBoolArray(BoolValue3);
+            reader.ReadByteArray(Int8Value3);
+            reader.ReadShortArray(Int16Value3);
+            reader.ReadIntArray(Int32Value3);
+            reader.ReadLongArray(Int64Value3);
+            reader.ReadUShortArray(UInt16Value3);
+            reader.ReadUIntArray(UInt32Value3);
+            reader.ReadULongArray(UInt64Value3);
+            reader.ReadDoubleArray(Float64Value3);
+            reader.ReadFloatArray(Float32Value3);
         }
     }
 
@@ -159,7 +159,7 @@ namespace RpcNet.Test
     internal class TestServiceClient : ClientStub
     {
         public TestServiceClient(Protocol protocol, IPAddress ipAddress, int port = 0, ILogger logger = null) :
-            base(protocol, ipAddress, port, TestServiceConstants.TestServiceProgram, logger)
+            base(protocol, ipAddress, port, TestServiceConstants.TestServiceProgram, TestServiceConstants.TestServiceVersion, logger)
         {
         }
 
