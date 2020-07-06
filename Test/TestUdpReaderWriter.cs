@@ -1,4 +1,4 @@
-﻿namespace RpcNet.Test
+namespace RpcNet.Test
 {
     using System;
     using System.Net;
@@ -48,10 +48,7 @@
         }
 
         [Test]
-        public void SendAndReceiveData(
-            [Values(0, 10, 100)] int length,
-            [Values(true, false)] bool syncWriting,
-            [Values(true, false)] bool syncReading)
+        public void SendAndReceiveData([Values(0, 10, 100)] int length, [Values(true, false)] bool syncWriting, [Values(true, false)] bool syncReading)
         {
             this.writer.BeginWriting();
             Span<byte> writeSpan = this.writer.Reserve(length);
@@ -139,7 +136,7 @@
 
             var buffer = new byte[100];
             int index = 0;
-            for (int i = 0; i < 100 / length; i++)
+            for (int i = 0; i < (100 / length); i++)
             {
                 this.reader.Read(length).CopyTo(buffer.AsSpan(index, length));
                 index += length;
@@ -156,7 +153,7 @@
         public void Overflow(params int[] arguments)
         {
             this.writer.BeginWriting();
-            for (int i = 0; i < arguments.Length - 1; i++)
+            for (int i = 0; i < (arguments.Length - 1); i++)
             {
                 this.writer.Reserve(arguments[i]);
             }
@@ -179,7 +176,7 @@
             NetworkReadResult readResult = this.reader.BeginReading();
             Assert.That(readResult.SocketError, Is.EqualTo(SocketError.Success));
 
-            for (int i = 0; i < arguments.Length - 1; i++)
+            for (int i = 0; i < (arguments.Length - 1); i++)
             {
                 this.reader.Read(arguments[i]);
             }

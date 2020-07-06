@@ -1,6 +1,7 @@
-﻿namespace RpcNet.Internal
+namespace RpcNet.Internal
 {
     using System;
+    using System.Linq;
     using System.Net;
     using System.Net.Sockets;
 
@@ -31,6 +32,14 @@
             this.receivedCall = new ReceivedCall(program, versions, this.reader, this.writer, receivedCallDispatcher);
 
             this.logger = logger;
+
+            if (port == 0)
+            {
+                port = ((IPEndPoint)server.Client.LocalEndPoint).Port;
+                PortMapperUtilities.UnsetAndSetPort(ProtocolKind.Udp, ipAddress, port, program, versions.Last());
+            }
+
+            this.logger?.Trace($"UDP Server listening on {server.Client.LocalEndPoint}...");
 
             this.reader.BeginReadingAsync();
         }

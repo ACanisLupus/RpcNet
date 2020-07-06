@@ -1,4 +1,4 @@
-﻿namespace RpcNet.Test
+namespace RpcNet.Test
 {
     using NUnit.Framework;
     using RpcNet.Internal;
@@ -599,7 +599,7 @@
             var value = new bool[length];
             for (int i = 0; i < length; i++)
             {
-                value[i] = i % 2 == 0;
+                value[i] = (i % 2) == 0;
             }
 
             return value;

@@ -1,4 +1,4 @@
-﻿namespace RpcNet.Test
+namespace RpcNet.Test
 {
     using System.Net;
     using NUnit.Framework;
@@ -14,32 +14,30 @@
         [Test]
         public void ServerIsNotRunning()
         {
-            const int program = 12;
+            const int Program = 12;
+            const int Version = 13;
 
-            RpcException exception =
-                Assert.Throws<RpcException>(() => _ = new RpcTcpClient(this.ipAddress, Port, program, TestLogger.Instance));
+            RpcException exception = Assert.Throws<RpcException>(() => _ = new RpcTcpClient(this.ipAddress, Port, Program, Version, TestLogger.Instance));
 
-            Assert.That(
-                exception.Message,
-                Is.EqualTo($"Could not connect to {this.ipAddress}:{Port}. Socket error: ConnectionRefused."));
+            Assert.That(exception.Message, Is.EqualTo($"Could not connect to {this.ipAddress}:{Port}. Socket error: ConnectionRefused."));
         }
 
         [Test]
         public void ServerShutdownWithoutException()
         {
-            const int program = 12;
-            const int version = 13;
+            const int Program = 12;
+            const int Version = 13;
 
-            var server = new RpcTcpServer(this.ipAddress, Port, program, new[] { version }, call => { }, TestLogger.Instance);
+            var server = new RpcTcpServer(this.ipAddress, Port, Program, new[] { Version }, call => { }, TestLogger.Instance);
             Assert.DoesNotThrow(() => server.Dispose());
         }
 
         [Test]
         public void TcpConnection()
         {
-            const int program = 12;
-            const int version = 13;
-            const int procedure = 14;
+            const int Program = 12;
+            const int Version = 13;
+            const int Procedure = 14;
 
             var receivedCallChannel = new Channel<ReceivedCall>();
 
@@ -53,20 +51,20 @@
                 call.Reply(pingStruct);
             }
 
-            using (new RpcTcpServer(this.ipAddress, Port, program, new[] { version }, Dispatcher, TestLogger.Instance))
+            using (new RpcTcpServer(this.ipAddress, Port, Program, new[] { Version }, Dispatcher, TestLogger.Instance))
             {
                 for (int i = 0; i < 10; i++)
                 {
-                    using (var client = new RpcTcpClient(this.ipAddress, Port, program, TestLogger.Instance))
+                    using (var client = new RpcTcpClient(this.ipAddress, Port, Program, Version, TestLogger.Instance))
                     {
                         var argument = new PingStruct { Value = i };
                         var result = new PingStruct();
 
-                        client.Call(procedure, version, argument, result);
+                        client.Call(Procedure, Version, argument, result);
 
                         Assert.That(receivedCallChannel.Receive(out ReceivedCall receivedCall));
-                        Assert.That(receivedCall.Procedure, Is.EqualTo(procedure));
-                        Assert.That(receivedCall.Version, Is.EqualTo(version));
+                        Assert.That(receivedCall.Procedure, Is.EqualTo(Procedure));
+                        Assert.That(receivedCall.Version, Is.EqualTo(Version));
 
                         Assert.That(argument.Value, Is.EqualTo(result.Value));
                     }

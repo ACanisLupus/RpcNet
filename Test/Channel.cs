@@ -1,4 +1,4 @@
-﻿namespace RpcNet.Test
+namespace RpcNet.Test
 {
     using System;
     using System.Collections.Concurrent;
@@ -7,8 +7,14 @@
     {
         private readonly BlockingCollection<T> buffer;
 
-        public Channel() : this(1) { }
-        public Channel(int size) => this.buffer = new BlockingCollection<T>(new ConcurrentQueue<T>(), size);
+        public Channel() : this(1)
+        {
+        }
+
+        public Channel(int size)
+        {
+            this.buffer = new BlockingCollection<T>(new ConcurrentQueue<T>(), size);
+        }
 
         public bool Send(T t)
         {

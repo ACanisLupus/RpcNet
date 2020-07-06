@@ -1,4 +1,4 @@
-﻿namespace RpcNet.Test
+namespace RpcNet.Test
 {
     using System.Net;
     using NUnit.Framework;
@@ -11,10 +11,10 @@
         public void SendAndReceiveData()
         {
             IPAddress ipAddress = IPAddress.Loopback;
-            int port = 12345;
-            int program = 12;
-            int version = 13;
-            int procedure = 14;
+            const int Port = 12345;
+            const int Program = 12;
+            const int Version = 13;
+            const int Procedure = 14;
 
             var receivedCallChannel = new Channel<ReceivedCall>();
 
@@ -28,18 +28,18 @@
                 call.Reply(pingStruct);
             }
 
-            using (new RpcUdpServer(ipAddress, port, program, new[] { version }, Dispatcher, TestLogger.Instance))
+            using (new RpcUdpServer(ipAddress, Port, Program, new[] { Version }, Dispatcher, TestLogger.Instance))
             {
-                using (var client = new RpcUdpClient(ipAddress, port, program, TestLogger.Instance))
+                using (var client = new RpcUdpClient(ipAddress, Port, Program, Version, TestLogger.Instance))
                 {
                     var argument = new PingStruct { Value = 42 };
                     var result = new PingStruct();
 
-                    client.Call(procedure, version, argument, result);
+                    client.Call(Procedure, Version, argument, result);
 
                     Assert.That(receivedCallChannel.Receive(out ReceivedCall receivedCall));
-                    Assert.That(receivedCall.Procedure, Is.EqualTo(procedure));
-                    Assert.That(receivedCall.Version, Is.EqualTo(version));
+                    Assert.That(receivedCall.Procedure, Is.EqualTo(Procedure));
+                    Assert.That(receivedCall.Version, Is.EqualTo(Version));
                     Assert.That(receivedCall.RemoteIpEndPoint, Is.Not.Null);
 
                     Assert.That(argument.Value, Is.EqualTo(result.Value));

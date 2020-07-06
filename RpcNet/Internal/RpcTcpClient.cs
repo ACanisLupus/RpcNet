@@ -11,8 +11,13 @@
 
         private TcpClient client;
 
-        public RpcTcpClient(IPAddress ipAddress, int port, int program, ILogger logger)
+        public RpcTcpClient(IPAddress ipAddress, int port, int program, int version, ILogger logger)
         {
+            if (port == 0)
+            {
+                port = PortMapperUtilities.GetPort(ProtocolKind.Tcp, ipAddress, program, version);
+            }
+
             this.logger = logger;
             this.remoteIpEndPoint = new IPEndPoint(ipAddress, port);
             this.client = new TcpClient();

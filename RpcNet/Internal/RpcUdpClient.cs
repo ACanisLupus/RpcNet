@@ -1,6 +1,5 @@
 ﻿namespace RpcNet.Internal
 {
-    using System;
     using System.Net;
     using System.Net.Sockets;
 
@@ -11,8 +10,13 @@
         private readonly UdpReader reader;
         private readonly UdpWriter writer;
 
-        public RpcUdpClient(IPAddress ipAddress, int port, int program, ILogger logger)
+        public RpcUdpClient(IPAddress ipAddress, int port, int program, int version, ILogger logger)
         {
+            if (port == 0)
+            {
+                port = PortMapperUtilities.GetPort(ProtocolKind.Udp, ipAddress, program, version);
+            }
+
             var remoteIpEndPoint = new IPEndPoint(ipAddress, port);
             this.client = new UdpClient();
             this.reader = new UdpReader(this.client.Client, logger);

@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Net;
     using System.Net.Sockets;
 
@@ -30,6 +31,15 @@
             this.logger = logger;
             this.server = new TcpListener(ipAddress, port);
             this.server.Start();
+
+            if (port == 0)
+            {
+                port = ((IPEndPoint)this.server.Server.LocalEndPoint).Port;
+                PortMapperUtilities.UnsetAndSetPort(ProtocolKind.Tcp, ipAddress, port, program, versions.Last());
+            }
+
+            logger?.Trace($"TCP Server listening on {this.server.Server.LocalEndPoint}...");
+
             this.server.BeginAcceptTcpClient(this.OnAccepted, null);
         }
 

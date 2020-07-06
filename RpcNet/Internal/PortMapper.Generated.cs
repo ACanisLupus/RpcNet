@@ -16,8 +16,6 @@ namespace RpcNet.Internal
     internal static class PortMapperConstants
     {
         public const int PortMapperPort = 111;
-        public const int ProtocolTcp = 6;
-        public const int ProtocolUdp = 17;
         public const int PortMapperVersion = 2;
         public const int Ping_2 = 0;
         public const int Set_2 = 1;
@@ -30,9 +28,9 @@ namespace RpcNet.Internal
 
     internal partial class CallArguments : IXdrReadable, IXdrWritable
     {
-        public uint Program { get; set; }
-        public uint Version { get; set; }
-        public uint Procedure { get; set; }
+        public int Program { get; set; }
+        public int Version { get; set; }
+        public int Procedure { get; set; }
         public byte[] Arguments { get; set; }
 
         public CallArguments()
@@ -54,16 +52,16 @@ namespace RpcNet.Internal
 
         public void ReadFrom(IXdrReader reader)
         {
-            Program = reader.ReadUInt();
-            Version = reader.ReadUInt();
-            Procedure = reader.ReadUInt();
+            Program = reader.ReadInt();
+            Version = reader.ReadInt();
+            Procedure = reader.ReadInt();
             Arguments = reader.ReadOpaque();
         }
     }
 
     internal partial class CallResult : IXdrReadable, IXdrWritable
     {
-        public uint Port { get; set; }
+        public int Port { get; set; }
         public byte[] Result { get; set; }
 
         public CallResult()
@@ -83,17 +81,17 @@ namespace RpcNet.Internal
 
         public void ReadFrom(IXdrReader reader)
         {
-            Port = reader.ReadUInt();
+            Port = reader.ReadInt();
             Result = reader.ReadOpaque();
         }
     }
 
     internal partial class Mapping : IXdrReadable, IXdrWritable
     {
-        public uint Program { get; set; }
-        public uint Version { get; set; }
-        public uint Protocol { get; set; }
-        public uint Port { get; set; }
+        public int Program { get; set; }
+        public int Version { get; set; }
+        public ProtocolKind Protocol { get; set; }
+        public int Port { get; set; }
 
         public Mapping()
         {
@@ -108,16 +106,16 @@ namespace RpcNet.Internal
         {
             writer.Write(Program);
             writer.Write(Version);
-            writer.Write(Protocol);
+            writer.Write((int)Protocol);
             writer.Write(Port);
         }
 
         public void ReadFrom(IXdrReader reader)
         {
-            Program = reader.ReadUInt();
-            Version = reader.ReadUInt();
-            Protocol = reader.ReadUInt();
-            Port = reader.ReadUInt();
+            Program = reader.ReadInt();
+            Version = reader.ReadInt();
+            Protocol = (ProtocolKind)reader.ReadInt();
+            Port = reader.ReadInt();
         }
     }
 
@@ -158,6 +156,12 @@ namespace RpcNet.Internal
                 current = next;
             } while (current != null);
         }
+    }
+
+    internal enum ProtocolKind
+    {
+        Tcp = 6,
+        Udp = 17,
     }
 
     internal class PortMapperClient : ClientStub
@@ -224,15 +228,15 @@ namespace RpcNet.Internal
 
         private class Result_3 : IXdrReadable
         {
-            public uint Value;
+            public int Value;
 
             public void ReadFrom(IXdrReader reader)
             {
-                Value = reader.ReadUInt();
+                Value = reader.ReadInt();
             }
         }
 
-        public uint GetPort_2(Mapping arg1)
+        public int GetPort_2(Mapping arg1)
         {
             var result = new Result_3();
             Call(PortMapperConstants.GetPort_2, PortMapperConstants.PortMapperVersion, arg1, result);
@@ -305,7 +309,7 @@ namespace RpcNet.Internal
 
         private class Result_3 : IXdrWritable
         {
-            public uint Value;
+            public int Value;
 
             public void WriteTo(IXdrWriter writer)
             {
@@ -391,7 +395,7 @@ namespace RpcNet.Internal
         public abstract void Ping_2(IPEndPoint remoteIpEndPoint);
         public abstract bool Set_2(IPEndPoint remoteIpEndPoint, Mapping arg1);
         public abstract bool Unset_2(IPEndPoint remoteIpEndPoint, Mapping arg1);
-        public abstract uint GetPort_2(IPEndPoint remoteIpEndPoint, Mapping arg1);
+        public abstract int GetPort_2(IPEndPoint remoteIpEndPoint, Mapping arg1);
         public abstract MappingList Dump_2(IPEndPoint remoteIpEndPoint);
         public abstract CallResult Call_2(IPEndPoint remoteIpEndPoint, CallArguments arg1);
     }

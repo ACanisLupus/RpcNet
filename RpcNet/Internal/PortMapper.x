@@ -1,12 +1,15 @@
 ﻿const PortMapperPort = 111;
-const ProtocolTcp = 6;
-const ProtocolUdp = 17;
+
+enum ProtocolKind {
+  Tcp = 6,
+  Udp = 17
+};
 
 struct Mapping {
-  unsigned int Program;
-  unsigned int Version;
-  unsigned int Protocol;
-  unsigned int Port;
+  int Program;
+  int Version;
+  ProtocolKind Protocol;
+  int Port;
 };
 
 struct MappingList {
@@ -15,14 +18,14 @@ struct MappingList {
 };
 
 struct CallArguments {
-  unsigned int Program;
-  unsigned int Version;
-  unsigned int Procedure;
+  int Program;
+  int Version;
+  int Procedure;
   opaque Arguments<>;
 };
 
 struct CallResult {
-  unsigned int Port;
+  int Port;
   opaque Result<>;
 };
 
@@ -31,7 +34,7 @@ program PortMapperProgram {
     void Ping(void) = 0;
     bool Set(Mapping) = 1;
     bool Unset(Mapping) = 2;
-    unsigned int GetPort(Mapping) = 3;
+    int GetPort(Mapping) = 3;
     MappingList Dump(void) = 4;
     CallResult Call(CallArguments) = 5;
   } = 2;
