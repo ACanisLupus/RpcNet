@@ -37,7 +37,7 @@ namespace RpcNet
 
             public override bool Set_2(IPEndPoint remoteIpEndPoint, Mapping mapping)
             {
-                this.logger?.Info($"[{remoteIpEndPoint}] SET     {ToLogString(mapping)}.");
+                this.logger?.Info($"{remoteIpEndPoint} SET     {ToLogString(mapping)}.");
                 lock (this.mappings)
                 {
                     if (this.mappings.Any(m => IsEqual(m, mapping)))
@@ -52,7 +52,7 @@ namespace RpcNet
 
             public override bool Unset_2(IPEndPoint remoteIpEndPoint, Mapping mapping)
             {
-                this.logger?.Info($"[{remoteIpEndPoint}] UNSET   {ToLogString(mapping)}.");
+                this.logger?.Info($"{remoteIpEndPoint} UNSET   {ToLogString(mapping)}.");
                 lock (this.mappings)
                 {
                     for (int i = this.mappings.Count - 1; i >= 0; i--)
@@ -70,7 +70,7 @@ namespace RpcNet
 
             public override int GetPort_2(IPEndPoint remoteIpEndPoint, Mapping mapping)
             {
-                this.logger?.Info($"[{remoteIpEndPoint}] GETPORT {ToLogString(mapping)}.");
+                this.logger?.Info($"{remoteIpEndPoint} GETPORT {ToLogString(mapping)}.");
                 lock (this.mappings)
                 {
                     Mapping found = this.mappings.FirstOrDefault(m => IsEqualExceptPort(m, mapping));

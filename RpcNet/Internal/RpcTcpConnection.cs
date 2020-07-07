@@ -1,4 +1,4 @@
-﻿namespace RpcNet.Internal
+namespace RpcNet.Internal
 {
     using System;
     using System.Net;
@@ -26,8 +26,8 @@
         {
             this.tcpClient = tcpClient;
             this.remoteIpEndPoint = (IPEndPoint)tcpClient.Client.RemoteEndPoint;
-            this.reader = new TcpReader(tcpClient.Client, logger);
-            this.writer = new TcpWriter(tcpClient.Client);
+            this.reader = new TcpReader(tcpClient, logger);
+            this.writer = new TcpWriter(tcpClient);
             this.logger = logger;
 
             this.receivedCall = new ReceivedCall(
@@ -71,7 +71,6 @@
                         return;
                     }
 
-                    this.logger?.Trace($"TCP call received from {this.remoteIpEndPoint}.");
                     this.writer.BeginWriting();
                     this.receivedCall.HandleCall(this.remoteIpEndPoint);
                     this.reader.EndReading();

@@ -1,4 +1,4 @@
-﻿namespace RpcNet.Internal
+namespace RpcNet.Internal
 {
     using System;
     using System.Net.Sockets;
@@ -15,26 +15,26 @@
         private bool lastPacket;
         private PacketState packetState = PacketState.Header;
         private int readIndex;
-        private Socket socket;
+        private TcpClient tcpClient;
         private int writeIndex;
 
-        public TcpReader(Socket socket, ILogger logger) : this(socket, 65536, logger)
+        public TcpReader(TcpClient tcpClient, ILogger logger) : this(tcpClient, 65536, logger)
         {
         }
 
-        public TcpReader(Socket socket, int bufferSize, ILogger logger)
+        public TcpReader(TcpClient tcpClient, int bufferSize, ILogger logger)
         {
             if (bufferSize < TcpHeaderLength + sizeof(int) || bufferSize % 4 != 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(bufferSize));
             }
 
-            this.Reset(socket);
+            this.Reset(tcpClient);
             this.buffer = new byte[bufferSize];
             this.logger = logger;
         }
 
-        public void Reset(Socket socket) => this.socket = socket;
+        public void Reset(TcpClient tcpClient) => this.tcpClient = tcpClient;
 
         public NetworkReadResult BeginReading()
         {
@@ -168,7 +168,7 @@
 
         private NetworkReadResult ReadFromNetwork(ref bool readFromNetwork)
         {
-            int receivedLength = this.socket.Receive(
+            int receivedLength = this.tcpClient.Client.Receive(
                 this.buffer,
                 this.writeIndex,
                 this.buffer.Length - this.writeIndex,

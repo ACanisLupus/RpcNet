@@ -1,4 +1,4 @@
-﻿namespace RpcNet.Internal
+namespace RpcNet.Internal
 {
     using System.Net;
     using System.Net.Sockets;
@@ -8,6 +8,8 @@
         private readonly ILogger logger;
         private readonly Call call;
         private readonly IPEndPoint remoteIpEndPoint;
+        private readonly TcpReader tcpReader;
+        private readonly TcpWriter tcpWriter;
 
         private TcpClient client;
 
@@ -22,9 +24,9 @@
             this.remoteIpEndPoint = new IPEndPoint(ipAddress, port);
             this.client = new TcpClient();
             this.EstablishConnection();
-            var reader = new TcpReader(this.client.Client, logger);
-            var writer = new TcpWriter(this.client.Client);
-            this.call = new Call(program, this.remoteIpEndPoint, reader, writer, this.ReestablishConnection, logger);
+            this.tcpReader = new TcpReader(this.client, logger);
+            this.tcpWriter = new TcpWriter(this.client);
+            this.call = new Call(program, this.remoteIpEndPoint, this.tcpReader, this.tcpWriter, this.ReestablishConnection, logger);
             this.TimeoutInMilliseconds = 10000;
         }
 
@@ -59,6 +61,8 @@
             this.client.Close();
             this.client = new TcpClient();
             this.EstablishConnection();
+            this.tcpReader.Reset(this.client);
+            this.tcpWriter.Reset(this.client);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace RpcNet.Internal
+namespace RpcNet.Internal
 {
     using System.Net;
 
@@ -21,11 +21,11 @@
             }
         }
 
-        public static void UnsetAndSetPort(ProtocolKind protocol, IPAddress ipAddress, int port, int program, int version)
+        public static void UnsetAndSetPort(ProtocolKind protocol, int port, int program, int version)
         {
             using (var portMapperClient = new PortMapperClient(
                 Protocol.Tcp,
-                ipAddress,
+                IPAddress.Loopback,
                 PortMapperConstants.PortMapperPort))
             {
                 portMapperClient.Unset_2(

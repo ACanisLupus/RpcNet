@@ -36,7 +36,7 @@ namespace RpcNet.Internal
             if (port == 0)
             {
                 port = ((IPEndPoint)server.Client.LocalEndPoint).Port;
-                PortMapperUtilities.UnsetAndSetPort(ProtocolKind.Udp, ipAddress, port, program, versions.Last());
+                PortMapperUtilities.UnsetAndSetPort(ProtocolKind.Udp, port, program, versions.Last());
             }
 
             this.logger?.Trace($"UDP Server listening on {server.Client.LocalEndPoint}...");
@@ -57,8 +57,6 @@ namespace RpcNet.Internal
             {
                 return;
             }
-
-            this.logger?.Trace($"UDP call received from {udpResult.RemoteIpEndPoint}.");
 
             try
             {

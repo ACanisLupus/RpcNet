@@ -1,4 +1,4 @@
-﻿namespace RpcNet.Internal
+namespace RpcNet.Internal
 {
     using System;
     using System.Net.Sockets;
@@ -9,25 +9,25 @@
 
         private readonly byte[] buffer;
 
-        private Socket socket;
+        private TcpClient tcpClient;
         private int writeIndex;
 
-        public TcpWriter(Socket socket) : this(socket, 65536)
+        public TcpWriter(TcpClient tcpClient) : this(tcpClient, 65536)
         {
         }
 
-        public TcpWriter(Socket socket, int bufferSize)
+        public TcpWriter(TcpClient tcpClient, int bufferSize)
         {
             if (bufferSize < TcpHeaderLength + sizeof(int) || bufferSize % 4 != 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(bufferSize));
             }
 
-            this.Reset(socket);
+            this.Reset(tcpClient);
             this.buffer = new byte[bufferSize];
         }
 
-        public void Reset(Socket socket) => this.socket = socket;
+        public void Reset(TcpClient tcpClient) => this.tcpClient = tcpClient;
         public void BeginWriting() => this.writeIndex = TcpHeaderLength;
         public NetworkWriteResult EndWriting() => this.FlushPacket(true);
 
@@ -57,7 +57,7 @@
             int lengthToDecode = lastPacket ? length | unchecked((int)0x80000000) : length;
 
             Utilities.WriteBytesBigEndian(this.buffer.AsSpan(), lengthToDecode);
-            this.socket.Send(this.buffer, 0, length + TcpHeaderLength, SocketFlags.None, out SocketError socketError);
+            this.tcpClient.Client.Send(this.buffer, 0, length + TcpHeaderLength, SocketFlags.None, out SocketError socketError);
             if (socketError == SocketError.Success)
             {
                 this.BeginWriting();
