@@ -11,6 +11,7 @@ namespace RpcNet.Internal
         private readonly ReceivedCall receivedCall;
         private readonly UdpWriter writer;
         private readonly ILogger logger;
+        private readonly UdpClient server;
 
         private volatile bool stopReceiving;
 
@@ -22,11 +23,11 @@ namespace RpcNet.Internal
             Action<ReceivedCall> receivedCallDispatcher,
             ILogger logger)
         {
-            var server = new UdpClient(new IPEndPoint(ipAddress, port));
+            this.server = new UdpClient(new IPEndPoint(ipAddress, port));
 
-            this.reader = new UdpReader(server, logger);
+            this.reader = new UdpReader(this.server, logger);
             this.reader.Completed += this.ReadingCompleted;
-            this.writer = new UdpWriter(server, logger);
+            this.writer = new UdpWriter(this.server, logger);
             this.writer.Completed += this.WritingCompleted;
 
             this.receivedCall = new ReceivedCall(program, versions, this.reader, this.writer, receivedCallDispatcher);
@@ -35,11 +36,11 @@ namespace RpcNet.Internal
 
             if (port == 0)
             {
-                port = ((IPEndPoint)server.Client.LocalEndPoint).Port;
+                port = ((IPEndPoint)this.server.Client.LocalEndPoint).Port;
                 PortMapperUtilities.UnsetAndSetPort(ProtocolKind.Udp, port, program, versions.Last());
             }
 
-            this.logger?.Trace($"UDP Server listening on {server.Client.LocalEndPoint}...");
+            this.logger?.Trace($"UDP Server listening on {this.server.Client.LocalEndPoint}...");
 
             this.reader.BeginReadingAsync();
         }
@@ -47,6 +48,7 @@ namespace RpcNet.Internal
         public void Dispose()
         {
             this.stopReceiving = true;
+            this.server.Dispose();
             this.reader.Dispose();
             this.writer.Dispose();
         }
