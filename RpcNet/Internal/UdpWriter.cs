@@ -1,4 +1,4 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------
 // <copyright company="dSPACE GmbH" file="UdpWriter.cs">
 //   Copyright dSPACE GmbH. All rights reserved.
 // </copyright>
@@ -20,35 +20,35 @@ namespace RpcNet.Internal
         private readonly byte[] buffer;
         private readonly ILogger logger;
         private readonly IPEndPoint remoteIpEndPoint;
-        private readonly Socket socket;
+        private readonly UdpClient udpClient;
         private readonly SocketAsyncEventArgs socketAsyncEventArgs = new SocketAsyncEventArgs();
 
         private int writeIndex;
 
-        public UdpWriter(Socket socket, ILogger logger) : this(socket, null, 65536, logger)
+        public UdpWriter(UdpClient udpClient, ILogger logger) : this(udpClient, null, 65536, logger)
         {
         }
 
-        public UdpWriter(Socket socket, int bufferSize, ILogger logger) : this(socket, null, bufferSize, logger)
+        public UdpWriter(UdpClient udpClient, int bufferSize, ILogger logger) : this(udpClient, null, bufferSize, logger)
         {
         }
 
-        public UdpWriter(Socket socket, IPEndPoint remoteIpEndPoint, ILogger logger) : this(
-            socket,
+        public UdpWriter(UdpClient udpClient, IPEndPoint remoteIpEndPoint, ILogger logger) : this(
+            udpClient,
             remoteIpEndPoint,
             65536,
             logger)
         {
         }
 
-        public UdpWriter(Socket socket, IPEndPoint remoteIpEndPoint, int bufferSize, ILogger logger)
+        public UdpWriter(UdpClient udpClient, IPEndPoint remoteIpEndPoint, int bufferSize, ILogger logger)
         {
             if (bufferSize < sizeof(int) || bufferSize % 4 != 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(bufferSize));
             }
 
-            this.socket = socket;
+            this.udpClient = udpClient;
             this.remoteIpEndPoint = remoteIpEndPoint;
             this.buffer = new byte[bufferSize];
             this.socketAsyncEventArgs.Completed += this.OnCompleted;
@@ -64,7 +64,7 @@ namespace RpcNet.Internal
             this.socketAsyncEventArgs.RemoteEndPoint = remoteEndPoint;
             this.socketAsyncEventArgs.SetBuffer(this.buffer, 0, this.writeIndex);
 
-            bool willRaiseEvent = this.socket.SendToAsync(this.socketAsyncEventArgs);
+            bool willRaiseEvent = this.udpClient.Client.SendToAsync(this.socketAsyncEventArgs);
             if (!willRaiseEvent)
             {
                 this.OnCompleted(this, this.socketAsyncEventArgs);
@@ -77,7 +77,7 @@ namespace RpcNet.Internal
         {
             try
             {
-                this.socket.SendTo(this.buffer, this.writeIndex, SocketFlags.None, remoteEndPoint);
+                this.udpClient.Client.SendTo(this.buffer, this.writeIndex, SocketFlags.None, remoteEndPoint);
                 return new NetworkWriteResult(SocketError.Success);
             }
             catch (SocketException exception)

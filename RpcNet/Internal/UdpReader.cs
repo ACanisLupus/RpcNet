@@ -1,4 +1,4 @@
-﻿namespace RpcNet.Internal
+namespace RpcNet.Internal
 {
     using System;
     using System.Net;
@@ -12,25 +12,25 @@
     public class UdpReader : INetworkReader, IDisposable
     {
         private readonly byte[] buffer;
-        private readonly Socket socket;
+        private readonly UdpClient udpClient;
         private readonly SocketAsyncEventArgs socketAsyncEventArgs = new SocketAsyncEventArgs();
         private readonly ILogger logger;
 
         private int readIndex;
         private int totalLength;
 
-        public UdpReader(Socket socket, ILogger logger) : this(socket, 65536, logger)
+        public UdpReader(UdpClient udpClient, ILogger logger) : this(udpClient, 65536, logger)
         {
         }
 
-        public UdpReader(Socket socket, int bufferSize, ILogger logger)
+        public UdpReader(UdpClient udpClient, int bufferSize, ILogger logger)
         {
             if (bufferSize < sizeof(int) || bufferSize % 4 != 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(bufferSize));
             }
 
-            this.socket = socket;
+            this.udpClient = udpClient;
             this.buffer = new byte[bufferSize];
             this.socketAsyncEventArgs.Completed += this.OnCompleted;
             this.socketAsyncEventArgs.SetBuffer(this.buffer, 0, bufferSize);
@@ -46,7 +46,7 @@
             try
             {
                 EndPoint endPoint = new IPEndPoint(IPAddress.Loopback, 0);
-                this.totalLength = this.socket.ReceiveFrom(this.buffer, ref endPoint);
+                this.totalLength = this.udpClient.Client.ReceiveFrom(this.buffer, ref endPoint);
                 return NetworkReadResult.CreateSuccess((IPEndPoint)endPoint);
             }
             catch (SocketException exception)
@@ -58,7 +58,7 @@
         public void BeginReadingAsync()
         {
             this.readIndex = 0;
-            bool willRaiseEvent = this.socket.ReceiveFromAsync(this.socketAsyncEventArgs);
+            bool willRaiseEvent = this.udpClient.Client.ReceiveFromAsync(this.socketAsyncEventArgs);
             if (!willRaiseEvent)
             {
                 this.OnCompleted(this, this.socketAsyncEventArgs);

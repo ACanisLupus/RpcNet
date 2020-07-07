@@ -1,4 +1,4 @@
-﻿namespace RpcNet.Internal
+namespace RpcNet.Internal
 {
     using System.Net;
     using System.Net.Sockets;
@@ -19,8 +19,8 @@
 
             var remoteIpEndPoint = new IPEndPoint(ipAddress, port);
             this.client = new UdpClient();
-            this.reader = new UdpReader(this.client.Client, logger);
-            this.writer = new UdpWriter(this.client.Client, remoteIpEndPoint, logger);
+            this.reader = new UdpReader(this.client, logger);
+            this.writer = new UdpWriter(this.client, remoteIpEndPoint, logger);
             this.call = new Call(program, remoteIpEndPoint, this.reader, this.writer, null, logger);
             this.TimeoutInMilliseconds = 10000;
         }

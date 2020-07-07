@@ -24,9 +24,9 @@ namespace RpcNet.Internal
         {
             var server = new UdpClient(new IPEndPoint(ipAddress, port));
 
-            this.reader = new UdpReader(server.Client, logger);
+            this.reader = new UdpReader(server, logger);
             this.reader.Completed += this.ReadingCompleted;
-            this.writer = new UdpWriter(server.Client, logger);
+            this.writer = new UdpWriter(server, logger);
             this.writer.Completed += this.WritingCompleted;
 
             this.receivedCall = new ReceivedCall(program, versions, this.reader, this.writer, receivedCallDispatcher);

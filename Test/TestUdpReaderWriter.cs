@@ -28,10 +28,10 @@ namespace RpcNet.Test
 
             this.client = new UdpClient();
 
-            this.reader = new UdpReader(this.server.Client, 100, TestLogger.Instance);
+            this.reader = new UdpReader(this.server, 100, TestLogger.Instance);
             this.reader.Completed += udpResult => this.readChannel.Send(udpResult);
 
-            this.writer = new UdpWriter(this.client.Client, 100, TestLogger.Instance);
+            this.writer = new UdpWriter(this.client, 100, TestLogger.Instance);
             this.writer.Completed += udpResult => this.writeChannel.Send(udpResult);
 
             this.readChannel = new Channel<NetworkReadResult>();
