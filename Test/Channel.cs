@@ -3,7 +3,7 @@ namespace RpcNet.Test
     using System;
     using System.Collections.Concurrent;
 
-    public class Channel<T>
+    internal class Channel<T>
     {
         private readonly BlockingCollection<T> buffer;
 

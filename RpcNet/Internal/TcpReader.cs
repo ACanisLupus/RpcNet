@@ -24,7 +24,7 @@ namespace RpcNet.Internal
 
         public TcpReader(TcpClient tcpClient, int bufferSize, ILogger logger)
         {
-            if (bufferSize < TcpHeaderLength + sizeof(int) || bufferSize % 4 != 0)
+            if ((bufferSize < (TcpHeaderLength + sizeof(int))) || ((bufferSize % 4) != 0))
             {
                 throw new ArgumentOutOfRangeException(nameof(bufferSize));
             }
@@ -34,7 +34,10 @@ namespace RpcNet.Internal
             this.logger = logger;
         }
 
-        public void Reset(TcpClient tcpClient) => this.tcpClient = tcpClient;
+        public void Reset(TcpClient tcpClient)
+        {
+            this.tcpClient = tcpClient;
+        }
 
         public NetworkReadResult BeginReading()
         {
@@ -50,7 +53,7 @@ namespace RpcNet.Internal
 
         public void EndReading()
         {
-            if (this.packetState != PacketState.Complete || this.readIndex != this.writeIndex)
+            if ((this.packetState != PacketState.Complete) || (this.readIndex != this.writeIndex))
             {
                 const string ErrorMessage = "Not all data was read.";
                 this.logger?.Error(ErrorMessage);
@@ -63,7 +66,8 @@ namespace RpcNet.Internal
             NetworkReadResult networkReadResult = this.FillBuffer();
             if (networkReadResult.HasError)
             {
-                string errorMessage = $"Could not receive from TCP stream. Socket error code: {networkReadResult.SocketError}.";
+                string errorMessage =
+                    $"Could not receive from TCP stream. Socket error code: {networkReadResult.SocketError}.";
                 this.logger?.Error(errorMessage);
                 throw new RpcException(errorMessage);
             }
@@ -130,7 +134,7 @@ namespace RpcNet.Internal
 
         private void ShiftData()
         {
-            if (this.readIndex == this.writeIndex && this.writeIndex > 0)
+            if ((this.readIndex == this.writeIndex) && (this.writeIndex > 0))
             {
                 this.bodyIndex -= this.writeIndex;
                 this.headerIndex -= this.writeIndex;
@@ -141,7 +145,7 @@ namespace RpcNet.Internal
 
         private bool ReadBody(ref bool readFromNetwork)
         {
-            if (this.writeIndex == this.headerIndex && this.lastPacket)
+            if ((this.writeIndex == this.headerIndex) && this.lastPacket)
             {
                 this.packetState = PacketState.Complete;
                 return true;
@@ -149,7 +153,7 @@ namespace RpcNet.Internal
 
             if (this.readIndex < this.headerIndex)
             {
-                if (this.writeIndex < this.headerIndex && this.writeIndex < this.buffer.Length)
+                if ((this.writeIndex < this.headerIndex) && (this.writeIndex < this.buffer.Length))
                 {
                     readFromNetwork = true;
                 }
@@ -191,7 +195,7 @@ namespace RpcNet.Internal
 
         private void ReadHeader(ref bool readFromNetwork)
         {
-            if (this.writeIndex >= this.headerIndex + TcpHeaderLength)
+            if (this.writeIndex >= (this.headerIndex + TcpHeaderLength))
             {
                 int packetLength = Utilities.ToInt32BigEndian(this.buffer.AsSpan(this.headerIndex, TcpHeaderLength));
                 if (packetLength < 0)
@@ -200,7 +204,7 @@ namespace RpcNet.Internal
                     packetLength &= 0x0fffffff;
                 }
 
-                if (packetLength % 4 != 0 || packetLength == 0)
+                if (((packetLength % 4) != 0) || (packetLength == 0))
                 {
                     const string ErrorMessage = "This is not an XDR stream.";
                     this.logger?.Error(ErrorMessage);

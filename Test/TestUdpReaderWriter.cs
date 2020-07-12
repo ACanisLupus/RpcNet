@@ -48,7 +48,10 @@ namespace RpcNet.Test
         }
 
         [Test]
-        public void SendAndReceiveData([Values(0, 10, 100)] int length, [Values(true, false)] bool syncWriting, [Values(true, false)] bool syncReading)
+        public void SendAndReceiveData(
+            [Values(0, 10, 100)] int length,
+            [Values(true, false)] bool syncWriting,
+            [Values(true, false)] bool syncReading)
         {
             this.writer.BeginWriting();
             Span<byte> writeSpan = this.writer.Reserve(length);

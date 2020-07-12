@@ -7,13 +7,13 @@ namespace RpcNet.Internal
 
     public class RpcTcpConnection : IDisposable
     {
-        private readonly TcpClient tcpClient;
-        private readonly IPEndPoint remoteIpEndPoint;
+        private readonly ILogger logger;
         private readonly TcpReader reader;
-        private readonly TcpWriter writer;
         private readonly ReceivedCall receivedCall;
         private readonly Thread receivingThread;
-        private readonly ILogger logger;
+        private readonly IPEndPoint remoteIpEndPoint;
+        private readonly TcpClient tcpClient;
+        private readonly TcpWriter writer;
 
         private volatile bool stopReceiving;
 
@@ -30,12 +30,7 @@ namespace RpcNet.Internal
             this.writer = new TcpWriter(tcpClient);
             this.logger = logger;
 
-            this.receivedCall = new ReceivedCall(
-                program,
-                versions,
-                this.reader,
-                this.writer,
-                receivedCallDispatcher);
+            this.receivedCall = new ReceivedCall(program, versions, this.reader, this.writer, receivedCallDispatcher);
 
             this.receivingThread = new Thread(this.Receiving) { IsBackground = true };
             this.receivingThread.Start();
@@ -59,7 +54,9 @@ namespace RpcNet.Internal
                     NetworkReadResult readResult = this.reader.BeginReading();
                     if (readResult.HasError)
                     {
-                        this.logger?.Trace($"Could not read data from {this.remoteIpEndPoint}. Socket error: {readResult.SocketError}.");
+                        this.logger?.Trace(
+                            $"Could not read data from {this.remoteIpEndPoint}. " +
+                            $"Socket error: {readResult.SocketError}.");
                         this.IsFinished = true;
                         return;
                     }
@@ -78,7 +75,9 @@ namespace RpcNet.Internal
                     NetworkWriteResult writeResult = this.writer.EndWriting();
                     if (writeResult.HasError)
                     {
-                        this.logger?.Trace($"Could not write data to {this.remoteIpEndPoint}. Socket error: {writeResult.SocketError}.");
+                        this.logger?.Trace(
+                            $"Could not write data to {this.remoteIpEndPoint}. " +
+                            $"Socket error: {writeResult.SocketError}.");
                         this.IsFinished = true;
                         return;
                     }

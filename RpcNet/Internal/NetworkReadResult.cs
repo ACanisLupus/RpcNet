@@ -17,8 +17,12 @@ namespace RpcNet.Internal
         public bool IsDisconnected { get; }
         public bool HasError => this.SocketError != SocketError.Success;
 
-        public static NetworkReadResult CreateError(SocketError socketError) => new NetworkReadResult(null, socketError, false);
-        public static NetworkReadResult CreateSuccess(IPEndPoint remoteIpEndPoint = null) => new NetworkReadResult(remoteIpEndPoint, SocketError.Success, false);
+        public static NetworkReadResult CreateError(SocketError socketError)
+            => new NetworkReadResult(null, socketError, false);
+
+        public static NetworkReadResult CreateSuccess(IPEndPoint remoteIpEndPoint = null)
+            => new NetworkReadResult(remoteIpEndPoint, SocketError.Success, false);
+
         public static NetworkReadResult CreateDisconnected() => new NetworkReadResult(null, SocketError.Success, true);
     }
 }

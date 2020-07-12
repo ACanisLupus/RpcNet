@@ -17,9 +17,12 @@ namespace RpcNet.Test
             const int Program = 12;
             const int Version = 13;
 
-            RpcException exception = Assert.Throws<RpcException>(() => _ = new RpcTcpClient(this.ipAddress, Port, Program, Version, TestLogger.Instance));
+            RpcException exception = Assert.Throws<RpcException>(
+                () => _ = new RpcTcpClient(this.ipAddress, Port, Program, Version, TestLogger.Instance));
 
-            Assert.That(exception.Message, Is.EqualTo($"Could not connect to {this.ipAddress}:{Port}. Socket error: ConnectionRefused."));
+            Assert.That(
+                exception.Message,
+                Is.EqualTo($"Could not connect to {this.ipAddress}:{Port}. Socket error: ConnectionRefused."));
         }
 
         [Test]
@@ -28,7 +31,13 @@ namespace RpcNet.Test
             const int Program = 12;
             const int Version = 13;
 
-            var server = new RpcTcpServer(this.ipAddress, Port, Program, new[] { Version }, call => { }, TestLogger.Instance);
+            var server = new RpcTcpServer(
+                this.ipAddress,
+                Port,
+                Program,
+                new[] { Version },
+                call => { },
+                TestLogger.Instance);
             Assert.DoesNotThrow(() => server.Dispose());
         }
 

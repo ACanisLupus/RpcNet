@@ -1,9 +1,3 @@
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright company="dSPACE GmbH" file="PortMapperServer.cs">
-//   Copyright dSPACE GmbH. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
-
 namespace RpcNet
 {
     using System;
@@ -21,19 +15,28 @@ namespace RpcNet
             this.server = new PortMapperServerImpl(ipAddress, logger);
         }
 
-        public void Dispose() => this.server?.Dispose();
+        public void Dispose()
+        {
+            this.server?.Dispose();
+        }
 
         private class PortMapperServerImpl : PortMapperServerStub
         {
             private readonly ILogger logger;
             private readonly List<Mapping> mappings = new List<Mapping>();
 
-            public PortMapperServerImpl(IPAddress ipAddress, ILogger logger) : base(ipAddress, PortMapperConstants.PortMapperPort, logger)
+            public PortMapperServerImpl(IPAddress ipAddress, ILogger logger) : base(
+                ipAddress,
+                PortMapperConstants.PortMapperPort,
+                logger)
             {
                 this.logger = logger;
             }
 
-            public override void Ping_2(IPEndPoint remoteIpEndPoint) => this.logger?.Info($"Received PING from {remoteIpEndPoint}.");
+            public override void Ping_2(IPEndPoint remoteIpEndPoint)
+            {
+                this.logger?.Info($"Received PING from {remoteIpEndPoint}.");
+            }
 
             public override bool Set_2(IPEndPoint remoteIpEndPoint, Mapping mapping)
             {
@@ -119,13 +122,17 @@ namespace RpcNet
                 return new CallResult();
             }
 
-            private static bool IsEqual(Mapping mapping1, Mapping mapping2) => IsEqualExceptPort(mapping1, mapping2) && (mapping1.Port == mapping2.Port);
+            private static bool IsEqual(Mapping mapping1, Mapping mapping2)
+                => IsEqualExceptPort(mapping1, mapping2) && (mapping1.Port == mapping2.Port);
 
             private static bool IsEqualExceptPort(Mapping mapping1, Mapping mapping2)
-                => (mapping1.Program == mapping2.Program) && (mapping1.Protocol == mapping2.Protocol) && (mapping1.Version == mapping2.Version);
+                => (mapping1.Program == mapping2.Program) &&
+                    (mapping1.Protocol == mapping2.Protocol) &&
+                    (mapping1.Version == mapping2.Version);
 
             private static string ToLogString(Mapping mapping)
-                => $"(Port: {mapping.Port}, Program: {mapping.Program}, Protocol: {mapping.Protocol}, Version: {mapping.Version})";
+                => $"(Port: {mapping.Port}, Program: {mapping.Program}, " +
+                    $"Protocol: {mapping.Protocol}, Version: {mapping.Version})";
         }
     }
 }

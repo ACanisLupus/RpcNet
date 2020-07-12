@@ -1,4 +1,4 @@
-﻿namespace RpcNet
+namespace RpcNet
 {
     using System;
     using System.Linq;
@@ -87,8 +87,8 @@
             this.receivedCallDispatcher(this);
         }
 
-        private RpcMessage GenerateReply(ReplyBody replyBody) =>
-            new RpcMessage
+        private RpcMessage GenerateReply(ReplyBody replyBody)
+            => new RpcMessage
             {
                 Xid = this.xid,
                 Body = new Body
@@ -98,16 +98,16 @@
                 }
             };
 
-        private RpcMessage GenerateReply(RejectedReply rejectedReply) =>
-            this.GenerateReply(
+        private RpcMessage GenerateReply(RejectedReply rejectedReply)
+            => this.GenerateReply(
                 new ReplyBody
                 {
                     ReplyStatus = ReplyStatus.Denied,
                     RejectedReply = rejectedReply
                 });
 
-        private RpcMessage GenerateRpcVersionMismatch(uint low, uint high) =>
-            this.GenerateReply(
+        private RpcMessage GenerateRpcVersionMismatch(uint low, uint high)
+            => this.GenerateReply(
                 new RejectedReply
                 {
                     RejectStatus = RejectStatus.RpcVersionMismatch,
@@ -118,8 +118,8 @@
                     }
                 });
 
-        private RpcMessage GenerateReply(ReplyData replyData) =>
-            this.GenerateReply(
+        private RpcMessage GenerateReply(ReplyData replyData)
+            => this.GenerateReply(
                 new ReplyBody
                 {
                     ReplyStatus = ReplyStatus.Accepted,
@@ -134,11 +134,11 @@
                     }
                 });
 
-        private RpcMessage GenerateReply(AcceptStatus acceptStatus) =>
-            this.GenerateReply(new ReplyData { AcceptStatus = acceptStatus });
+        private RpcMessage GenerateReply(AcceptStatus acceptStatus)
+            => this.GenerateReply(new ReplyData { AcceptStatus = acceptStatus });
 
-        private RpcMessage GenerateProgramMismatch(uint low, uint high) =>
-            this.GenerateReply(
+        private RpcMessage GenerateProgramMismatch(uint low, uint high)
+            => this.GenerateReply(
                 new ReplyData
                 {
                     AcceptStatus = AcceptStatus.ProgramMismatch,

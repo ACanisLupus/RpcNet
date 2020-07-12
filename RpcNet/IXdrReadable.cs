@@ -1,4 +1,4 @@
-﻿namespace RpcNet
+namespace RpcNet
 {
     public interface IXdrReadable
     {

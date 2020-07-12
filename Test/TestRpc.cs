@@ -58,14 +58,20 @@ namespace RpcNet.Test
                 this.name = name;
             }
 
-            /// <inheritdoc />
-            public void Trace(string entry) => Console.WriteLine(this.name + " TRACE " + entry);
+            public void Trace(string entry)
+            {
+                Console.WriteLine(this.name + " TRACE " + entry);
+            }
 
-            /// <inheritdoc />
-            public void Info(string entry) => Console.WriteLine(this.name + " INFO  " + entry);
+            public void Info(string entry)
+            {
+                Console.WriteLine(this.name + " INFO  " + entry);
+            }
 
-            /// <inheritdoc />
-            public void Error(string entry) => Console.WriteLine(this.name + " ERROR " + entry);
+            public void Error(string entry)
+            {
+                Console.WriteLine(this.name + " ERROR " + entry);
+            }
         }
     }
 }

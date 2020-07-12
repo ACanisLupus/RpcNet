@@ -7,11 +7,11 @@ namespace RpcNet.Internal
 
     public class RpcUdpServer : IDisposable
     {
+        private readonly ILogger logger;
         private readonly UdpReader reader;
         private readonly ReceivedCall receivedCall;
-        private readonly UdpWriter writer;
-        private readonly ILogger logger;
         private readonly UdpClient server;
+        private readonly UdpWriter writer;
 
         private volatile bool stopReceiving;
 
@@ -69,7 +69,8 @@ namespace RpcNet.Internal
             }
             catch (RpcException rpcException)
             {
-                string errorMessage = $"Unexpected exception during UDP call from {udpResult.RemoteIpEndPoint}: {rpcException}";
+                string errorMessage =
+                    $"Unexpected exception during UDP call from {udpResult.RemoteIpEndPoint}: {rpcException}";
                 this.logger?.Error(errorMessage);
             }
         }

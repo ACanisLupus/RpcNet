@@ -9,11 +9,11 @@ namespace RpcNet.Internal
     public class RpcTcpServer : IDisposable
     {
         private readonly List<RpcTcpConnection> connections = new List<RpcTcpConnection>();
+        private readonly ILogger logger;
         private readonly int program;
         private readonly Action<ReceivedCall> receivedCallDispatcher;
         private readonly TcpListener server;
         private readonly int[] versions;
-        private readonly ILogger logger;
 
         private volatile bool stopAccepting;
 
@@ -68,7 +68,12 @@ namespace RpcNet.Internal
             lock (this.connections)
             {
                 this.connections.Add(
-                    new RpcTcpConnection(tcpClient, this.program, this.versions, this.receivedCallDispatcher, this.logger));
+                    new RpcTcpConnection(
+                        tcpClient,
+                        this.program,
+                        this.versions,
+                        this.receivedCallDispatcher,
+                        this.logger));
 
                 for (int i = this.connections.Count - 1; i >= 0; i--)
                 {

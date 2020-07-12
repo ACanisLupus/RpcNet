@@ -5,8 +5,8 @@ namespace RpcNet.Internal
 
     public class RpcTcpClient : INetworkClient
     {
-        private readonly ILogger logger;
         private readonly Call call;
+        private readonly ILogger logger;
         private readonly IPEndPoint remoteIpEndPoint;
         private readonly TcpReader tcpReader;
         private readonly TcpWriter tcpWriter;
@@ -26,7 +26,13 @@ namespace RpcNet.Internal
             this.EstablishConnection();
             this.tcpReader = new TcpReader(this.client, logger);
             this.tcpWriter = new TcpWriter(this.client);
-            this.call = new Call(program, this.remoteIpEndPoint, this.tcpReader, this.tcpWriter, this.ReestablishConnection, logger);
+            this.call = new Call(
+                program,
+                this.remoteIpEndPoint,
+                this.tcpReader,
+                this.tcpWriter,
+                this.ReestablishConnection,
+                logger);
             this.TimeoutInMilliseconds = 10000;
         }
 
@@ -36,10 +42,15 @@ namespace RpcNet.Internal
             set => this.client.Client.ReceiveTimeout = value;
         }
 
-        public void Call(int procedure, int version, IXdrWritable argument, IXdrReadable result) =>
+        public void Call(int procedure, int version, IXdrWritable argument, IXdrReadable result)
+        {
             this.call.SendCall(procedure, version, argument, result);
+        }
 
-        public void Dispose() => this.client.Dispose();
+        public void Dispose()
+        {
+            this.client.Dispose();
+        }
 
         private void EstablishConnection()
         {

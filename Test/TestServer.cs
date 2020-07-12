@@ -9,10 +9,7 @@ namespace RpcNet.Test
         {
         }
 
-        /// <inheritdoc />
         public override PingStruct Ping_1(IPEndPoint remoteIpEndPoint, PingStruct arg1) => arg1;
-
-        /// <inheritdoc />
         public override MyStruct TestMyStruct_1(IPEndPoint remoteIpEndPoint, MyStruct arg1) => arg1;
     }
 }

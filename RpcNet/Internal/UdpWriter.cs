@@ -1,9 +1,3 @@
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright company="dSPACE GmbH" file="UdpWriter.cs">
-//   Copyright dSPACE GmbH. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
-
 namespace RpcNet.Internal
 {
     using System;
@@ -20,8 +14,8 @@ namespace RpcNet.Internal
         private readonly byte[] buffer;
         private readonly ILogger logger;
         private readonly IPEndPoint remoteIpEndPoint;
-        private readonly UdpClient udpClient;
         private readonly SocketAsyncEventArgs socketAsyncEventArgs = new SocketAsyncEventArgs();
+        private readonly UdpClient udpClient;
 
         private int writeIndex;
 
@@ -29,7 +23,11 @@ namespace RpcNet.Internal
         {
         }
 
-        public UdpWriter(UdpClient udpClient, int bufferSize, ILogger logger) : this(udpClient, null, bufferSize, logger)
+        public UdpWriter(UdpClient udpClient, int bufferSize, ILogger logger) : this(
+            udpClient,
+            null,
+            bufferSize,
+            logger)
         {
         }
 
@@ -43,7 +41,7 @@ namespace RpcNet.Internal
 
         public UdpWriter(UdpClient udpClient, IPEndPoint remoteIpEndPoint, int bufferSize, ILogger logger)
         {
-            if (bufferSize < sizeof(int) || bufferSize % 4 != 0)
+            if ((bufferSize < sizeof(int)) || ((bufferSize % 4) != 0))
             {
                 throw new ArgumentOutOfRangeException(nameof(bufferSize));
             }
@@ -57,7 +55,10 @@ namespace RpcNet.Internal
 
         public Action<NetworkWriteResult> Completed { get; set; }
 
-        public void BeginWriting() => this.writeIndex = 0;
+        public void BeginWriting()
+        {
+            this.writeIndex = 0;
+        }
 
         public void EndWritingAsync(IPEndPoint remoteEndPoint)
         {
@@ -88,7 +89,7 @@ namespace RpcNet.Internal
 
         public Span<byte> Reserve(int length)
         {
-            if (this.writeIndex + length > this.buffer.Length)
+            if ((this.writeIndex + length) > this.buffer.Length)
             {
                 const string ErrorMessage = "Buffer overflow.";
                 this.logger?.Error(ErrorMessage);
@@ -100,9 +101,14 @@ namespace RpcNet.Internal
             return span;
         }
 
-        public void Dispose() => this.socketAsyncEventArgs.Dispose();
+        public void Dispose()
+        {
+            this.socketAsyncEventArgs.Dispose();
+        }
 
-        private void OnCompleted(object sender, SocketAsyncEventArgs e) =>
+        private void OnCompleted(object sender, SocketAsyncEventArgs e)
+        {
             this.Completed?.Invoke(new NetworkWriteResult(e.SocketError));
+        }
     }
 }

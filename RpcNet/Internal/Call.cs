@@ -1,19 +1,19 @@
-﻿namespace RpcNet.Internal
+namespace RpcNet.Internal
 {
     using System;
     using System.Net;
 
     internal class Call
     {
-        private readonly IPEndPoint remoteIpEndPoint;
+        private readonly ILogger logger;
         private readonly INetworkReader networkReader;
         private readonly INetworkWriter networkWriter;
+        private readonly Random random = new Random();
+        private readonly Action reestablishConnection;
+        private readonly IPEndPoint remoteIpEndPoint;
+        private readonly RpcMessage rpcMessage;
         private readonly IXdrReader xdrReader;
         private readonly IXdrWriter xdrWriter;
-        private readonly Random random = new Random();
-        private readonly RpcMessage rpcMessage;
-        private readonly ILogger logger;
-        private readonly Action reestablishConnection;
 
         public Call(
             int program,
@@ -39,15 +39,9 @@
                         RpcVersion = 2,
                         Program = (uint)program,
                         Credential = new OpaqueAuthentication
-                        {
-                            AuthenticationFlavor = AuthenticationFlavor.None,
-                            Body = new byte[0]
-                        },
+                            { AuthenticationFlavor = AuthenticationFlavor.None, Body = new byte[0] },
                         Verifier = new OpaqueAuthentication
-                        {
-                            AuthenticationFlavor = AuthenticationFlavor.None,
-                            Body = new byte[0]
-                        }
+                            { AuthenticationFlavor = AuthenticationFlavor.None, Body = new byte[0] }
                     }
                 }
             };
@@ -132,8 +126,7 @@
 
             if (reply.Body.MessageType != MessageType.Reply)
             {
-                errorMessage =
-                    $"Wrong message type. Expected {MessageType.Reply}, but was {reply.Body.MessageType}.";
+                errorMessage = $"Wrong message type. Expected {MessageType.Reply}, but was {reply.Body.MessageType}.";
                 return false;
             }
 
@@ -145,8 +138,7 @@
 
             if (reply.Body.ReplyBody.AcceptedReply.ReplyData.AcceptStatus != AcceptStatus.Success)
             {
-                errorMessage =
-                    $"Call was unsuccessful: {reply.Body.ReplyBody.AcceptedReply.ReplyData.AcceptStatus}.";
+                errorMessage = $"Call was unsuccessful: {reply.Body.ReplyBody.AcceptedReply.ReplyData.AcceptStatus}.";
                 return false;
             }
 

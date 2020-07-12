@@ -1,4 +1,4 @@
-﻿namespace RpcNet.Internal
+namespace RpcNet.Internal
 {
     using System;
 

@@ -12,9 +12,9 @@ namespace RpcNet.Internal
     public class UdpReader : INetworkReader, IDisposable
     {
         private readonly byte[] buffer;
-        private readonly UdpClient udpClient;
-        private readonly SocketAsyncEventArgs socketAsyncEventArgs = new SocketAsyncEventArgs();
         private readonly ILogger logger;
+        private readonly SocketAsyncEventArgs socketAsyncEventArgs = new SocketAsyncEventArgs();
+        private readonly UdpClient udpClient;
 
         private int readIndex;
         private int totalLength;
@@ -25,7 +25,7 @@ namespace RpcNet.Internal
 
         public UdpReader(UdpClient udpClient, int bufferSize, ILogger logger)
         {
-            if (bufferSize < sizeof(int) || bufferSize % 4 != 0)
+            if ((bufferSize < sizeof(int)) || ((bufferSize % 4) != 0))
             {
                 throw new ArgumentOutOfRangeException(nameof(bufferSize));
             }
@@ -75,11 +75,14 @@ namespace RpcNet.Internal
             }
         }
 
-        public void Dispose() => this.socketAsyncEventArgs.Dispose();
+        public void Dispose()
+        {
+            this.socketAsyncEventArgs.Dispose();
+        }
 
         public ReadOnlySpan<byte> Read(int length)
         {
-            if (this.readIndex + length > this.totalLength)
+            if ((this.readIndex + length) > this.totalLength)
             {
                 const string ErrorMessage = "Buffer underflow.";
                 this.logger?.Error(ErrorMessage);

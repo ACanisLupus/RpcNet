@@ -1,4 +1,4 @@
-﻿namespace RpcNet.Internal
+namespace RpcNet.Internal
 {
     using System;
     using System.Text;
@@ -8,7 +8,10 @@
         private readonly Encoding encoding = Encoding.UTF8;
         private readonly INetworkWriter networkWriter;
 
-        public XdrWriter(INetworkWriter networkWriter) => this.networkWriter = networkWriter;
+        public XdrWriter(INetworkWriter networkWriter)
+        {
+            this.networkWriter = networkWriter;
+        }
 
         public void Write(long value)
         {
@@ -16,18 +19,55 @@
             this.Write((int)(value & 0xffffffff));
         }
 
-        public void Write(ulong value) => this.Write((long)value);
+        public void Write(ulong value)
+        {
+            this.Write((long)value);
+        }
 
-        public void Write(int value) => Utilities.WriteBytesBigEndian(this.networkWriter.Reserve(sizeof(int)), value);
+        public void Write(int value)
+        {
+            Utilities.WriteBytesBigEndian(this.networkWriter.Reserve(sizeof(int)), value);
+        }
 
-        public void Write(uint value) => this.Write((int)value);
-        public void Write(short value) => this.Write((int)value);
-        public void Write(ushort value) => this.Write((int)value);
-        public void Write(sbyte value) => this.Write((int)value);
-        public void Write(byte value) => this.Write((int)value);
-        public void Write(bool value) => this.Write(value ? 1 : 0);
-        public void Write(float value) => this.Write(Utilities.SingleToInt32Bits(value));
-        public void Write(double value) => this.Write(BitConverter.DoubleToInt64Bits(value));
+        public void Write(uint value)
+        {
+            this.Write((int)value);
+        }
+
+        public void Write(short value)
+        {
+            this.Write((int)value);
+        }
+
+        public void Write(ushort value)
+        {
+            this.Write((int)value);
+        }
+
+        public void Write(sbyte value)
+        {
+            this.Write((int)value);
+        }
+
+        public void Write(byte value)
+        {
+            this.Write((int)value);
+        }
+
+        public void Write(bool value)
+        {
+            this.Write(value ? 1 : 0);
+        }
+
+        public void Write(float value)
+        {
+            this.Write(Utilities.SingleToInt32Bits(value));
+        }
+
+        public void Write(double value)
+        {
+            this.Write(BitConverter.DoubleToInt64Bits(value));
+        }
 
         public void WriteFixedLengthOpaque(ReadOnlySpan<byte> value)
         {
@@ -43,7 +83,7 @@
                 length -= span.Length;
             }
 
-            this.FillWithZeros(this.networkWriter.Reserve(padding));
+            FillWithZeros(this.networkWriter.Reserve(padding));
         }
 
         public void WriteVariableLengthOpaque(ReadOnlySpan<byte> value)
@@ -55,7 +95,7 @@
         public void Write(string value)
         {
             int length = value?.Length ?? 0;
-            if (value == null || length == 0)
+            if ((value == null) || (length == 0))
             {
                 this.Write(length);
                 return;
@@ -218,7 +258,7 @@
             this.WriteFixedLengthArray(array);
         }
 
-        private void FillWithZeros(Span<byte> buffer)
+        private static void FillWithZeros(Span<byte> buffer)
         {
             for (int i = 0; i < buffer.Length; i++)
             {

@@ -1,4 +1,4 @@
-﻿namespace RpcNet.Internal
+namespace RpcNet.Internal
 {
     using System;
     using System.Text;
@@ -8,9 +8,12 @@
         private readonly Encoding encoding = Encoding.UTF8;
         private readonly INetworkReader networkReader;
 
-        public XdrReader(INetworkReader networkReader) => this.networkReader = networkReader;
+        public XdrReader(INetworkReader networkReader)
+        {
+            this.networkReader = networkReader;
+        }
 
-        public long ReadLong() => (long)this.ReadInt() << 32 | this.ReadInt() & 0xffffffff;
+        public long ReadLong() => ((long)this.ReadInt() << 32) | (this.ReadInt() & 0xffffffff);
         public ulong ReadULong() => (ulong)this.ReadLong();
         public int ReadInt() => Utilities.ToInt32BigEndian(this.networkReader.Read(sizeof(int)));
         public uint ReadUInt() => (uint)this.ReadInt();

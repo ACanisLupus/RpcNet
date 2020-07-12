@@ -5,21 +5,30 @@ namespace TestPortMapper
     using System.Threading;
     using RpcNet;
 
-    class Program
+    internal class Program
     {
-        static void Main()
+        private static void Main()
         {
-            using (var portMapperServer = new PortMapperServer(IPAddress.Any, new Logger()))
-            {
-                Thread.Sleep(-1);
-            }
+            using var portMapperServer = new PortMapperServer(IPAddress.Any, new Logger());
+            Thread.Sleep(-1);
         }
 
-        class Logger : ILogger
+        private class Logger : ILogger
         {
-            public void Error(string entry) => Console.WriteLine("ERROR " + entry);
-            public void Info(string entry) => Console.WriteLine("INFO  " + entry);
-            public void Trace(string entry) => Console.WriteLine("TRACE " + entry);
+            public void Error(string entry)
+            {
+                Console.WriteLine("ERROR " + entry);
+            }
+
+            public void Info(string entry)
+            {
+                Console.WriteLine("INFO  " + entry);
+            }
+
+            public void Trace(string entry)
+            {
+                Console.WriteLine("TRACE " + entry);
+            }
         }
     }
 }

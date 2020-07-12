@@ -5,9 +5,9 @@ namespace TestClient
     using RpcNet;
     using TestService;
 
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main()
         {
             using (var testClient = new TestServiceClient(Protocol.Tcp, IPAddress.Loopback))
             {
@@ -17,7 +17,7 @@ namespace TestClient
                     {
                         Value = i
                     };
-                    var result = testClient.Ping_1(arg);
+                    PingStruct result = testClient.Ping_1(arg);
                     Console.WriteLine($"Sent: {i}, Received: {result.Value}");
                 }
             }
@@ -30,7 +30,7 @@ namespace TestClient
                     {
                         Value = i
                     };
-                    var result = testClient.Ping_1(arg);
+                    PingStruct result = testClient.Ping_1(arg);
                     Console.WriteLine($"Sent: {i}, Received: {result.Value}");
                 }
             }
