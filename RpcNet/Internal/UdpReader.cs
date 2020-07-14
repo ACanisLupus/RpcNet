@@ -4,16 +4,14 @@ namespace RpcNet.Internal
     using System.Net;
     using System.Net.Sockets;
     using System.Runtime.InteropServices;
-    using System.Threading.Tasks;
 
     public class UdpReader : INetworkReader
     {
-        private readonly ArraySegment<byte> arraySegment;
         private readonly byte[] buffer;
         private readonly UdpClient udpClient;
 
         private int readIndex;
-        private readonly EndPoint remoteEndPoint = new IPEndPoint(IPAddress.Loopback, 0);
+        private EndPoint remoteEndPoint = new IPEndPoint(IPAddress.Loopback, 0);
         private int totalLength;
 
         public UdpReader(UdpClient udpClient) : this(udpClient, 65536)
@@ -40,7 +38,6 @@ namespace RpcNet.Internal
             }
 
             this.buffer = new byte[bufferSize];
-            this.arraySegment = new ArraySegment<byte>(this.buffer);
         }
 
         public NetworkReadResult BeginReading()
@@ -48,35 +45,15 @@ namespace RpcNet.Internal
             this.readIndex = 0;
             try
             {
-                EndPoint endPoint = new IPEndPoint(IPAddress.Loopback, 0);
-                this.totalLength = this.udpClient.Client.ReceiveFrom(this.buffer, SocketFlags.None, ref endPoint);
-                return NetworkReadResult.CreateSuccess((IPEndPoint)endPoint);
+                this.totalLength = this.udpClient.Client.ReceiveFrom(
+                    this.buffer,
+                    SocketFlags.None,
+                    ref this.remoteEndPoint);
+                return NetworkReadResult.CreateSuccess((IPEndPoint)this.remoteEndPoint);
             }
             catch (SocketException exception)
             {
                 return NetworkReadResult.CreateError(exception.SocketErrorCode);
-            }
-        }
-
-        public async Task<NetworkReadResult> BeginReadingAsync()
-        {
-            this.readIndex = 0;
-            try
-            {
-                SocketReceiveFromResult result = await this.udpClient.Client.ReceiveFromAsync(
-                    this.arraySegment,
-                    SocketFlags.None,
-                    this.remoteEndPoint);
-                this.totalLength = result.ReceivedBytes;
-                return NetworkReadResult.CreateSuccess((IPEndPoint)result.RemoteEndPoint);
-            }
-            catch (SocketException e)
-            {
-                return NetworkReadResult.CreateError(e.SocketErrorCode);
-            }
-            catch (ObjectDisposedException)
-            {
-                return NetworkReadResult.CreateError(SocketError.Interrupted);
             }
         }
 

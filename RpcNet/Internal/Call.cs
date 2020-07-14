@@ -40,9 +40,9 @@ namespace RpcNet.Internal
                         RpcVersion = 2,
                         Program = (uint)program,
                         Credential = new OpaqueAuthentication
-                        { AuthenticationFlavor = AuthenticationFlavor.None, Body = new byte[0] },
+                            { AuthenticationFlavor = AuthenticationFlavor.None, Body = new byte[0] },
                         Verifier = new OpaqueAuthentication
-                        { AuthenticationFlavor = AuthenticationFlavor.None, Body = new byte[0] }
+                            { AuthenticationFlavor = AuthenticationFlavor.None, Body = new byte[0] }
                     }
                 }
             };

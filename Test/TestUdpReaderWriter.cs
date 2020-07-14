@@ -38,9 +38,7 @@ namespace RpcNet.Test
         }
 
         [Test]
-        public void SendAndReceiveData(
-            [Values(0, 10, 100)] int length,
-            [Values(true, false)] bool syncReading)
+        public void SendAndReceiveData([Values(0, 10, 100)] int length)
         {
             this.writer.BeginWriting();
             Span<byte> writeSpan = this.writer.Reserve(length);
@@ -54,9 +52,7 @@ namespace RpcNet.Test
 
             Assert.That(writeResult.SocketError, Is.EqualTo(SocketError.Success));
 
-            NetworkReadResult readResult = syncReading
-                ? this.reader.BeginReading()
-                : this.reader.BeginReadingAsync().GetAwaiter().GetResult();
+            NetworkReadResult readResult = this.reader.BeginReading();
 
             Assert.That(readResult.SocketError, Is.EqualTo(SocketError.Success));
             Assert.That(readResult.RemoteIpEndPoint.Address, Is.EqualTo(this.remoteIpEndPoint.Address));
@@ -71,9 +67,7 @@ namespace RpcNet.Test
         }
 
         [Test]
-        public void SendCompleteAndReceiveFragmentedData(
-            [Values(2, 10, 100)] int length,
-            [Values(true, false)] bool syncReading)
+        public void SendCompleteAndReceiveFragmentedData([Values(2, 10, 100)] int length)
         {
             this.writer.BeginWriting();
             Span<byte> writeSpan = this.writer.Reserve(100);
@@ -87,9 +81,7 @@ namespace RpcNet.Test
 
             Assert.That(writeResult.SocketError, Is.EqualTo(SocketError.Success));
 
-            NetworkReadResult readResult = syncReading
-                ? this.reader.BeginReading()
-                : this.reader.BeginReadingAsync().GetAwaiter().GetResult();
+            NetworkReadResult readResult = this.reader.BeginReading();
 
             Assert.That(readResult.SocketError, Is.EqualTo(SocketError.Success));
 
@@ -144,12 +136,9 @@ namespace RpcNet.Test
         }
 
         [Test]
-        public void AbortReading([Values(true, false)] bool syncReading)
+        public void AbortReading()
         {
-            Task<NetworkReadResult> task = Task.Run(
-                () => syncReading
-                    ? this.reader.BeginReading()
-                    : this.reader.BeginReadingAsync().GetAwaiter().GetResult());
+            Task<NetworkReadResult> task = Task.Run(() => this.reader.BeginReading());
             Thread.Sleep(100);
             this.server.Dispose();
             NetworkReadResult readResult = task.GetAwaiter().GetResult();

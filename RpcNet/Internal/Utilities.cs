@@ -1,4 +1,4 @@
-﻿namespace RpcNet.Internal
+namespace RpcNet.Internal
 {
     using System;
     using System.Runtime.CompilerServices;
@@ -6,8 +6,8 @@
     internal static class Utilities
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int ToInt32BigEndian(ReadOnlySpan<byte> value)
-            => (value[0] << 24) | (value[1] << 16) | (value[2] << 8) | value[3];
+        public static int ToInt32BigEndian(ReadOnlySpan<byte> value) =>
+            (value[0] << 24) | (value[1] << 16) | (value[2] << 8) | value[3];
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void WriteBytesBigEndian(Span<byte> destination, int value)

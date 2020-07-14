@@ -10,7 +10,7 @@ namespace RpcNet.Internal
         private readonly ILogger logger;
         private readonly TcpReader reader;
         private readonly ReceivedCall receivedCall;
-        private readonly Thread connectionThread;
+        private readonly Thread receivingThread;
         private readonly IPEndPoint remoteIpEndPoint;
         private readonly TcpClient tcpClient;
         private readonly TcpWriter writer;
@@ -32,8 +32,8 @@ namespace RpcNet.Internal
 
             this.receivedCall = new ReceivedCall(program, versions, this.reader, this.writer, receivedCallDispatcher);
 
-            this.connectionThread = new Thread(this.Receiving) { IsBackground = true };
-            this.connectionThread.Start();
+            this.receivingThread = new Thread(this.Receiving) { IsBackground = true };
+            this.receivingThread.Start();
         }
 
         public bool IsFinished { get; private set; }
@@ -42,7 +42,7 @@ namespace RpcNet.Internal
         {
             this.stopReceiving = true;
             this.tcpClient.Dispose();
-            this.connectionThread.Join();
+            this.receivingThread.Join();
         }
 
         private void Receiving()

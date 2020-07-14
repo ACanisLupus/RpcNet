@@ -16,17 +16,11 @@ namespace RpcNet.Internal
         {
         }
 
-        public UdpWriter(UdpClient udpClient, int bufferSize) : this(
-            udpClient,
-            null,
-            bufferSize)
+        public UdpWriter(UdpClient udpClient, int bufferSize) : this(udpClient, null, bufferSize)
         {
         }
 
-        public UdpWriter(UdpClient udpClient, IPEndPoint remoteIpEndPoint) : this(
-            udpClient,
-            remoteIpEndPoint,
-            65536)
+        public UdpWriter(UdpClient udpClient, IPEndPoint remoteIpEndPoint) : this(udpClient, remoteIpEndPoint, 65536)
         {
         }
 

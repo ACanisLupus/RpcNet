@@ -128,17 +128,17 @@ namespace RpcNet
                 return new CallResult();
             }
 
-            private static bool IsEqual(Mapping mapping1, Mapping mapping2)
-                => IsEqualExceptPort(mapping1, mapping2) && (mapping1.Port == mapping2.Port);
+            private static bool IsEqual(Mapping mapping1, Mapping mapping2) =>
+                IsEqualExceptPort(mapping1, mapping2) && (mapping1.Port == mapping2.Port);
 
-            private static bool IsEqualExceptPort(Mapping mapping1, Mapping mapping2)
-                => (mapping1.Program == mapping2.Program) &&
-                    (mapping1.Protocol == mapping2.Protocol) &&
-                    (mapping1.Version == mapping2.Version);
+            private static bool IsEqualExceptPort(Mapping mapping1, Mapping mapping2) =>
+                (mapping1.Program == mapping2.Program) &&
+                (mapping1.Protocol == mapping2.Protocol) &&
+                (mapping1.Version == mapping2.Version);
 
-            private static string ToLogString(Mapping mapping)
-                => $"(Port: {mapping.Port}, Program: {mapping.Program}, " +
-                    $"Protocol: {mapping.Protocol}, Version: {mapping.Version})";
+            private static string ToLogString(Mapping mapping) =>
+                $"(Port: {mapping.Port}, Program: {mapping.Program}, " +
+                $"Protocol: {mapping.Protocol}, Version: {mapping.Version})";
         }
     }
 }

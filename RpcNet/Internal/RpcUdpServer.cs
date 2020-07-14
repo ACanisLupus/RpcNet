@@ -3,13 +3,14 @@ namespace RpcNet.Internal
     using System;
     using System.Net;
     using System.Net.Sockets;
-    using System.Threading.Tasks;
+    using System.Threading;
 
     public class RpcUdpServer : IDisposable
     {
         private readonly ILogger logger;
         private readonly UdpReader reader;
         private readonly ReceivedCall receivedCall;
+        private readonly Thread receivingThread;
         private readonly UdpClient server;
         private readonly UdpWriter writer;
 
@@ -42,26 +43,28 @@ namespace RpcNet.Internal
             }
 
             this.logger?.Trace($"UDP Server listening on {this.server.Client.LocalEndPoint}...");
+            this.receivingThread = new Thread(this.HandlingUdpCalls) { IsBackground = true };
         }
 
         public void Start()
         {
-            Task.Run(this.HandlingUdpCallsAsync);
+            this.receivingThread.Start();
         }
 
         public void Dispose()
         {
             this.stopReceiving = true;
             this.server.Dispose();
+            this.receivingThread.Join();
         }
 
-        private async Task HandlingUdpCallsAsync()
+        private void HandlingUdpCalls()
         {
             while (!this.stopReceiving)
             {
                 try
                 {
-                    NetworkReadResult result = await this.reader.BeginReadingAsync();
+                    NetworkReadResult result = this.reader.BeginReading();
                     if (result.HasError)
                     {
                         this.logger?.Trace(
@@ -76,7 +79,7 @@ namespace RpcNet.Internal
                 }
                 catch (Exception e)
                 {
-                    this.logger?.Error($"The following error occurred while processing UDP calls: {e}");
+                    this.logger?.Error($"The following error occurred while processing UDP call: {e}");
                 }
             }
         }

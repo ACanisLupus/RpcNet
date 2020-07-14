@@ -28,7 +28,13 @@ namespace RpcNet.Test
                 call.Reply(pingStruct);
             }
 
-            using (var server = new RpcUdpServer(ipAddress, Port, Program, new[] { Version }, Dispatcher, TestLogger.Instance))
+            using (var server = new RpcUdpServer(
+                ipAddress,
+                Port,
+                Program,
+                new[] { Version },
+                Dispatcher,
+                TestLogger.Instance))
             {
                 server.Start();
                 using (var client = new RpcUdpClient(ipAddress, Port, Program, Version, TestLogger.Instance))
