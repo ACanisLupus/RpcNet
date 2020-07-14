@@ -7,11 +7,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcNet", "RpcNet\RpcNet.csp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test", "Test\Test.csproj", "{F1BBDB74-575A-42F3-8ABA-72A14341259C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestServer", "TestServer\TestServer.csproj", "{6F719603-1BF5-4095-8884-DE8E81D6D85D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestServer", "TestServer\TestServer.csproj", "{6F719603-1BF5-4095-8884-DE8E81D6D85D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestClient", "TestClient\TestClient.csproj", "{AEF9971B-300F-4B66-B12A-57E1B5AEBBCB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestClient", "TestClient\TestClient.csproj", "{AEF9971B-300F-4B66-B12A-57E1B5AEBBCB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestPortMapper", "TestPortMapper\TestPortMapper.csproj", "{3B65382E-C5F0-4427-9E9C-F380788633F5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PortMapper", "TestPortMapper\PortMapper.csproj", "{3B65382E-C5F0-4427-9E9C-F380788633F5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

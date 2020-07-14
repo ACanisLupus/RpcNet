@@ -1,4 +1,4 @@
-namespace TestPortMapper
+namespace PortMapper
 {
     using System;
     using System.Net;

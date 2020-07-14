@@ -3,6 +3,7 @@ namespace RpcNet.Internal
     using System;
     using System.Net;
     using System.Net.Sockets;
+    using System.Runtime.InteropServices;
 
     // This service reader for UDP is asynchronous, because there is
     // no synchronous method to call ReceiveFrom without a SocketException.
@@ -31,6 +32,17 @@ namespace RpcNet.Internal
             }
 
             this.udpClient = udpClient;
+
+            // See
+            // https://stackoverflow.com/questions/7201862/an-existing-connection-was-forcibly-closed-by-the-remote-host
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                const uint IOC_IN = 0x80000000;
+                const uint IOC_VENDOR = 0x18000000;
+                uint SIO_UDP_CONNRESET = IOC_IN | IOC_VENDOR | 12;
+                this.udpClient.Client.IOControl((int)SIO_UDP_CONNRESET, new[] { Convert.ToByte(false) }, null);
+            }
+
             this.buffer = new byte[bufferSize];
             this.socketAsyncEventArgs.Completed += this.OnCompleted;
             this.socketAsyncEventArgs.SetBuffer(this.buffer, 0, bufferSize);
@@ -46,7 +58,8 @@ namespace RpcNet.Internal
             try
             {
                 EndPoint endPoint = new IPEndPoint(IPAddress.Loopback, 0);
-                this.totalLength = this.udpClient.Client.ReceiveFrom(this.buffer, ref endPoint);
+                //this.totalLength = this.udpClient.Client.ReceiveFrom(this.buffer, SocketFlags.Peek, ref endPoint);
+                this.totalLength = this.udpClient.Client.ReceiveFrom(this.buffer, SocketFlags.None, ref endPoint);
                 return NetworkReadResult.CreateSuccess((IPEndPoint)endPoint);
             }
             catch (SocketException exception)
