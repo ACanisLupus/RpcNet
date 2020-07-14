@@ -8,12 +8,13 @@ namespace RpcNet.Internal
         private readonly ILogger logger;
         private readonly INetworkReader networkReader;
         private readonly INetworkWriter networkWriter;
-        private readonly Random random = new Random();
         private readonly Action reestablishConnection;
         private readonly IPEndPoint remoteIpEndPoint;
         private readonly RpcMessage rpcMessage;
         private readonly IXdrReader xdrReader;
         private readonly IXdrWriter xdrWriter;
+
+        private uint nextXid = (uint)new Random().Next();
 
         public Call(
             int program,
@@ -30,7 +31,7 @@ namespace RpcNet.Internal
             this.xdrWriter = new XdrWriter(networkWriter);
             this.rpcMessage = new RpcMessage
             {
-                Xid = (uint)this.random.Next(),
+                Xid = this.nextXid++,
                 Body = new Body
                 {
                     MessageType = MessageType.Call,
@@ -39,9 +40,9 @@ namespace RpcNet.Internal
                         RpcVersion = 2,
                         Program = (uint)program,
                         Credential = new OpaqueAuthentication
-                            { AuthenticationFlavor = AuthenticationFlavor.None, Body = new byte[0] },
+                        { AuthenticationFlavor = AuthenticationFlavor.None, Body = new byte[0] },
                         Verifier = new OpaqueAuthentication
-                            { AuthenticationFlavor = AuthenticationFlavor.None, Body = new byte[0] }
+                        { AuthenticationFlavor = AuthenticationFlavor.None, Body = new byte[0] }
                     }
                 }
             };
@@ -87,7 +88,7 @@ namespace RpcNet.Internal
         {
             this.networkWriter.BeginWriting();
 
-            this.rpcMessage.Xid = (uint)this.random.Next();
+            this.rpcMessage.Xid = this.nextXid++;
             this.rpcMessage.Body.CallBody.Procedure = (uint)procedure;
             this.rpcMessage.Body.CallBody.Version = (uint)version;
             this.rpcMessage.WriteTo(this.xdrWriter);

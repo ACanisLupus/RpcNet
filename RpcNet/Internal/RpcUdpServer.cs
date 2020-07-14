@@ -1,10 +1,9 @@
 namespace RpcNet.Internal
 {
     using System;
-    using System.Linq;
     using System.Net;
     using System.Net.Sockets;
-    using System.Threading;
+    using System.Threading.Tasks;
 
     public class RpcUdpServer : IDisposable
     {
@@ -13,7 +12,6 @@ namespace RpcNet.Internal
         private readonly ReceivedCall receivedCall;
         private readonly UdpClient server;
         private readonly UdpWriter writer;
-        private readonly Thread udpThread;
 
         private volatile bool stopReceiving;
 
@@ -27,8 +25,8 @@ namespace RpcNet.Internal
         {
             this.server = new UdpClient(new IPEndPoint(ipAddress, port));
 
-            this.reader = new UdpReader(this.server, logger);
-            this.writer = new UdpWriter(this.server, logger);
+            this.reader = new UdpReader(this.server);
+            this.writer = new UdpWriter(this.server);
 
             this.receivedCall = new ReceivedCall(program, versions, this.reader, this.writer, receivedCallDispatcher);
 
@@ -37,58 +35,49 @@ namespace RpcNet.Internal
             if (port == 0)
             {
                 port = ((IPEndPoint)this.server.Client.LocalEndPoint).Port;
-                PortMapperUtilities.UnsetAndSetPort(ProtocolKind.Udp, port, program, versions.Last());
+                foreach (int version in versions)
+                {
+                    PortMapperUtilities.UnsetAndSetPort(ProtocolKind.Udp, port, program, version);
+                }
             }
 
             this.logger?.Trace($"UDP Server listening on {this.server.Client.LocalEndPoint}...");
+        }
 
-            this.udpThread = new Thread(this.HandlingUdpCalls) { IsBackground = true };
-            this.udpThread.Start();
+        public void Start()
+        {
+            Task.Run(this.HandlingUdpCallsAsync);
         }
 
         public void Dispose()
         {
             this.stopReceiving = true;
             this.server.Dispose();
-            this.reader.Dispose();
-            this.writer.Dispose();
-            this.udpThread.Join();
         }
 
-        private void HandlingUdpCalls()
+        private async Task HandlingUdpCallsAsync()
         {
-            try
+            while (!this.stopReceiving)
             {
-                while (!this.stopReceiving)
+                try
                 {
-                    NetworkReadResult udpResult = default;
-                    try
+                    NetworkReadResult result = await this.reader.BeginReadingAsync();
+                    if (result.HasError)
                     {
-                        udpResult = this.reader.BeginReading();
-                        if (udpResult.HasError)
-                        {
-                            continue;
-                        }
-
-                        this.writer.BeginWriting();
-                        this.receivedCall.HandleCall(udpResult.RemoteIpEndPoint);
-                        this.reader.EndReading();
-                        this.writer.EndWriting(udpResult.RemoteIpEndPoint);
-
+                        this.logger?.Trace(
+                            $"Could not read data from {result.RemoteIpEndPoint}. " +
+                            $"Socket error: {result.SocketError}.");
+                        continue;
                     }
-                    catch (RpcException rpcException)
-                    {
-                        string errorMessage =
-                            $"Unexpected exception during UDP call from {udpResult.RemoteIpEndPoint}: {rpcException}";
-                        this.logger?.Error(errorMessage);
-                    }
+                    this.writer.BeginWriting();
+                    this.receivedCall.HandleCall(result.RemoteIpEndPoint);
+                    this.reader.EndReading();
+                    this.writer.EndWriting(result.RemoteIpEndPoint);
                 }
-            }
-            catch (Exception exception)
-            {
-                string errorMessage =
-                    $"Unexpected exception in UDP thread: {exception}";
-                this.logger?.Error(errorMessage);
+                catch (Exception e)
+                {
+                    this.logger?.Error($"The following error occurred while processing UDP calls: {e}");
+                }
             }
         }
     }

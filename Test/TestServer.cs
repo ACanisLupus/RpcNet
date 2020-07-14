@@ -5,7 +5,11 @@ namespace RpcNet.Test
 
     internal class TestServer : TestServiceServerStub
     {
-        public TestServer(IPAddress ipAddress, int port = 0, ILogger logger = null) : base(ipAddress, port, logger)
+        public TestServer(Protocols protocols, IPAddress ipAddress, int port = 0, ILogger logger = null) : base(
+            protocols,
+            ipAddress,
+            port,
+            logger)
         {
         }
 

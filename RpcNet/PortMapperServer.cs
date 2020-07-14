@@ -15,6 +15,11 @@ namespace RpcNet
             this.server = new PortMapperServerImpl(ipAddress, logger);
         }
 
+        public void Start()
+        {
+            this.server.Start();
+        }
+
         public void Dispose()
         {
             this.server?.Dispose();
@@ -26,6 +31,7 @@ namespace RpcNet
             private readonly List<Mapping> mappings = new List<Mapping>();
 
             public PortMapperServerImpl(IPAddress ipAddress, ILogger logger) : base(
+                Protocols.TcpAndUdp,
                 ipAddress,
                 PortMapperConstants.PortMapperPort,
                 logger)

@@ -7,8 +7,6 @@ namespace RpcNet.Internal
     {
         private readonly Call call;
         private readonly UdpClient client;
-        private readonly UdpReader reader;
-        private readonly UdpWriter writer;
 
         public RpcUdpClient(IPAddress ipAddress, int port, int program, int version, ILogger logger)
         {
@@ -19,9 +17,9 @@ namespace RpcNet.Internal
 
             var remoteIpEndPoint = new IPEndPoint(ipAddress, port);
             this.client = new UdpClient();
-            this.reader = new UdpReader(this.client, logger);
-            this.writer = new UdpWriter(this.client, remoteIpEndPoint, logger);
-            this.call = new Call(program, remoteIpEndPoint, this.reader, this.writer, null, logger);
+            var reader = new UdpReader(this.client);
+            var writer = new UdpWriter(this.client, remoteIpEndPoint);
+            this.call = new Call(program, remoteIpEndPoint, reader, writer, null, logger);
             this.TimeoutInMilliseconds = 10000;
         }
 
@@ -39,8 +37,6 @@ namespace RpcNet.Internal
         public void Dispose()
         {
             this.client.Dispose();
-            this.reader.Dispose();
-            this.writer.Dispose();
         }
     }
 }

@@ -24,7 +24,7 @@ namespace RpcNet.Test
             Task task = Task.Run(() => this.writerTcpClient = this.listener.AcceptTcpClient());
             this.readerTcpClient.Connect(IPAddress.Loopback, port);
             task.GetAwaiter().GetResult();
-            this.reader = new TcpReader(this.readerTcpClient, TestLogger.Instance);
+            this.reader = new TcpReader(this.readerTcpClient);
             this.writer = new TcpWriter(this.writerTcpClient);
             this.listener.Stop();
         }
@@ -45,7 +45,7 @@ namespace RpcNet.Test
         [TestCase(8, 12)]
         public void ReadAndWriteMultipleFragments(int maxReadLength, int maxReserveLength)
         {
-            this.reader = new TcpReader(this.readerTcpClient, maxReadLength, TestLogger.Instance);
+            this.reader = new TcpReader(this.readerTcpClient, maxReadLength);
             this.writer = new TcpWriter(this.writerTcpClient, maxReserveLength);
 
             var xdrReader = new XdrReader(this.reader);
@@ -75,7 +75,7 @@ namespace RpcNet.Test
         [TestCase(8, 12)]
         public void ReadAndWriteMultipleFragmentsThreaded(int maxReadLength, int maxReserveLength)
         {
-            this.reader = new TcpReader(this.readerTcpClient, maxReadLength, TestLogger.Instance);
+            this.reader = new TcpReader(this.readerTcpClient, maxReadLength);
             this.writer = new TcpWriter(this.writerTcpClient, maxReserveLength);
 
             this.writerTcpClient.Client.SendBufferSize = 1;
@@ -85,7 +85,7 @@ namespace RpcNet.Test
 
             byte[] value = TestXdr.GenerateByteTestData(17);
 
-            var task = Task.Run(
+            Task task = Task.Run(
                 () =>
                 {
                     NetworkReadResult readResult = this.reader.BeginReading();

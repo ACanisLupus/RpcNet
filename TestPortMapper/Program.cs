@@ -10,6 +10,7 @@ namespace PortMapper
         private static void Main()
         {
             using var portMapperServer = new PortMapperServer(IPAddress.Any, new Logger());
+            portMapperServer.Start();
             Thread.Sleep(-1);
         }
 

@@ -4,27 +4,23 @@ namespace RpcNet.Internal
     using System.Net;
     using System.Net.Sockets;
     using System.Runtime.InteropServices;
+    using System.Threading.Tasks;
 
-    // This service reader for UDP is asynchronous, because there is
-    // no synchronous method to call ReceiveFrom without a SocketException.
-    // SocketExceptions on server side are ugly!
-    // Making ReceiveFromAsync synchronous using a reset event would block two threads instead of one,
-    // therefore the implementation is fully asynchronous (not async/await).
-    public class UdpReader : INetworkReader, IDisposable
+    public class UdpReader : INetworkReader
     {
+        private readonly ArraySegment<byte> arraySegment;
         private readonly byte[] buffer;
-        private readonly ILogger logger;
-        private readonly SocketAsyncEventArgs socketAsyncEventArgs = new SocketAsyncEventArgs();
         private readonly UdpClient udpClient;
 
         private int readIndex;
+        private readonly EndPoint remoteEndPoint = new IPEndPoint(IPAddress.Loopback, 0);
         private int totalLength;
 
-        public UdpReader(UdpClient udpClient, ILogger logger) : this(udpClient, 65536, logger)
+        public UdpReader(UdpClient udpClient) : this(udpClient, 65536)
         {
         }
 
-        public UdpReader(UdpClient udpClient, int bufferSize, ILogger logger)
+        public UdpReader(UdpClient udpClient, int bufferSize)
         {
             if ((bufferSize < sizeof(int)) || ((bufferSize % 4) != 0))
             {
@@ -44,13 +40,8 @@ namespace RpcNet.Internal
             }
 
             this.buffer = new byte[bufferSize];
-            this.socketAsyncEventArgs.Completed += this.OnCompleted;
-            this.socketAsyncEventArgs.SetBuffer(this.buffer, 0, bufferSize);
-            this.socketAsyncEventArgs.RemoteEndPoint = new IPEndPoint(IPAddress.Loopback, 0);
-            this.logger = logger;
+            this.arraySegment = new ArraySegment<byte>(this.buffer);
         }
-
-        public Action<NetworkReadResult> Completed { get; set; }
 
         public NetworkReadResult BeginReading()
         {
@@ -58,7 +49,6 @@ namespace RpcNet.Internal
             try
             {
                 EndPoint endPoint = new IPEndPoint(IPAddress.Loopback, 0);
-                //this.totalLength = this.udpClient.Client.ReceiveFrom(this.buffer, SocketFlags.Peek, ref endPoint);
                 this.totalLength = this.udpClient.Client.ReceiveFrom(this.buffer, SocketFlags.None, ref endPoint);
                 return NetworkReadResult.CreateSuccess((IPEndPoint)endPoint);
             }
@@ -68,13 +58,25 @@ namespace RpcNet.Internal
             }
         }
 
-        public void BeginReadingAsync()
+        public async Task<NetworkReadResult> BeginReadingAsync()
         {
             this.readIndex = 0;
-            bool willRaiseEvent = this.udpClient.Client.ReceiveFromAsync(this.socketAsyncEventArgs);
-            if (!willRaiseEvent)
+            try
             {
-                this.OnCompleted(this, this.socketAsyncEventArgs);
+                SocketReceiveFromResult result = await this.udpClient.Client.ReceiveFromAsync(
+                    this.arraySegment,
+                    SocketFlags.None,
+                    this.remoteEndPoint);
+                this.totalLength = result.ReceivedBytes;
+                return NetworkReadResult.CreateSuccess((IPEndPoint)result.RemoteEndPoint);
+            }
+            catch (SocketException e)
+            {
+                return NetworkReadResult.CreateError(e.SocketErrorCode);
+            }
+            catch (ObjectDisposedException)
+            {
+                return NetworkReadResult.CreateError(SocketError.Interrupted);
             }
         }
 
@@ -83,14 +85,8 @@ namespace RpcNet.Internal
             if (this.readIndex != this.totalLength)
             {
                 const string ErrorMessage = "Not all data was read.";
-                this.logger?.Error(ErrorMessage);
                 throw new RpcException(ErrorMessage);
             }
-        }
-
-        public void Dispose()
-        {
-            this.socketAsyncEventArgs.Dispose();
         }
 
         public ReadOnlySpan<byte> Read(int length)
@@ -98,25 +94,12 @@ namespace RpcNet.Internal
             if ((this.readIndex + length) > this.totalLength)
             {
                 const string ErrorMessage = "Buffer underflow.";
-                this.logger?.Error(ErrorMessage);
                 throw new RpcException(ErrorMessage);
             }
 
             Span<byte> span = this.buffer.AsSpan(this.readIndex, length);
             this.readIndex += length;
             return span;
-        }
-
-        private void OnCompleted(object sender, SocketAsyncEventArgs e)
-        {
-            if (this.socketAsyncEventArgs.SocketError != SocketError.Success)
-            {
-                this.Completed?.Invoke(NetworkReadResult.CreateError(e.SocketError));
-            }
-
-            this.totalLength = this.socketAsyncEventArgs.BytesTransferred;
-            this.Completed?.Invoke(
-                NetworkReadResult.CreateSuccess((IPEndPoint)this.socketAsyncEventArgs.RemoteEndPoint));
         }
     }
 }

@@ -14,6 +14,7 @@ namespace RpcNet.Test
         public void OneTimeSetUp()
         {
             this.portMapperServer = new PortMapperServer(IPAddress.Loopback, new MyLogger("PMAP"));
+            this.portMapperServer.Start();
         }
 
         [OneTimeTearDown]
@@ -25,7 +26,8 @@ namespace RpcNet.Test
         [SetUp]
         public void SetUp()
         {
-            this.testServer = new TestServer(IPAddress.Loopback, 0, new MyLogger("TEST"));
+            this.testServer = new TestServer(Protocols.TcpAndUdp, IPAddress.Loopback, 0, new MyLogger("TEST"));
+            this.testServer.Start();
         }
 
         [TearDown]

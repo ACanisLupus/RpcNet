@@ -6,7 +6,6 @@ namespace RpcNet.Internal
     public class RpcTcpClient : INetworkClient
     {
         private readonly Call call;
-        private readonly ILogger logger;
         private readonly IPEndPoint remoteIpEndPoint;
         private readonly TcpReader tcpReader;
         private readonly TcpWriter tcpWriter;
@@ -20,11 +19,10 @@ namespace RpcNet.Internal
                 port = PortMapperUtilities.GetPort(ProtocolKind.Tcp, ipAddress, program, version);
             }
 
-            this.logger = logger;
             this.remoteIpEndPoint = new IPEndPoint(ipAddress, port);
             this.client = new TcpClient();
             this.EstablishConnection();
-            this.tcpReader = new TcpReader(this.client, logger);
+            this.tcpReader = new TcpReader(this.client);
             this.tcpWriter = new TcpWriter(this.client);
             this.call = new Call(
                 program,
@@ -62,7 +60,6 @@ namespace RpcNet.Internal
             {
                 string errorMessage =
                     $"Could not connect to {this.remoteIpEndPoint}. Socket error: {exception.SocketErrorCode}.";
-                this.logger?.Error(errorMessage);
                 throw new RpcException(errorMessage);
             }
         }

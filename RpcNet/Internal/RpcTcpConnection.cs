@@ -26,7 +26,7 @@ namespace RpcNet.Internal
         {
             this.tcpClient = tcpClient;
             this.remoteIpEndPoint = (IPEndPoint)tcpClient.Client.RemoteEndPoint;
-            this.reader = new TcpReader(tcpClient, logger);
+            this.reader = new TcpReader(tcpClient);
             this.writer = new TcpWriter(tcpClient);
             this.logger = logger;
 

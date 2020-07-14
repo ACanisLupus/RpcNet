@@ -2,9 +2,9 @@ namespace RpcNet.Internal
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Net;
     using System.Net.Sockets;
+    using System.Threading.Tasks;
 
     public class RpcTcpServer : IDisposable
     {
@@ -30,23 +30,45 @@ namespace RpcNet.Internal
             this.receivedCallDispatcher = receivedCallDispatcher;
             this.logger = logger;
             this.server = new TcpListener(ipAddress, port);
-            this.server.Start();
+
+            try
+            {
+                this.server.Start();
+            }
+            catch (SocketException e)
+            {
+                throw new RpcException($"Could not start TCP listener. Socket error code: {e.SocketErrorCode}.");
+            }
 
             if (port == 0)
             {
                 port = ((IPEndPoint)this.server.Server.LocalEndPoint).Port;
-                PortMapperUtilities.UnsetAndSetPort(ProtocolKind.Tcp, port, program, versions.Last());
+                foreach (int version in versions)
+                {
+                    PortMapperUtilities.UnsetAndSetPort(ProtocolKind.Tcp, port, program, version);
+                }
             }
 
             logger?.Trace($"TCP Server listening on {this.server.Server.LocalEndPoint}...");
+        }
 
-            this.server.BeginAcceptTcpClient(this.OnAccepted, null);
+        public void Start()
+        {
+            Task.Run(this.AcceptingAsync);
         }
 
         public void Dispose()
         {
             this.stopAccepting = true;
-            this.server.Stop();
+
+            try
+            {
+                this.server.Stop();
+            }
+            catch (SocketException e)
+            {
+                this.logger?.Error($"Could not stop TCP listener. Socket error code: {e.SocketErrorCode}.");
+            }
 
             lock (this.connections)
             {
@@ -57,36 +79,39 @@ namespace RpcNet.Internal
             }
         }
 
-        private void OnAccepted(IAsyncResult asyncResult)
+        private async Task AcceptingAsync()
         {
-            if (this.stopAccepting)
+            while (!this.stopAccepting)
             {
-                return;
-            }
-
-            TcpClient tcpClient = this.server.EndAcceptTcpClient(asyncResult);
-            lock (this.connections)
-            {
-                this.connections.Add(
-                    new RpcTcpConnection(
-                        tcpClient,
-                        this.program,
-                        this.versions,
-                        this.receivedCallDispatcher,
-                        this.logger));
-
-                for (int i = this.connections.Count - 1; i >= 0; i--)
+                try
                 {
-                    RpcTcpConnection connection = this.connections[i];
-                    if (connection.IsFinished)
+                    TcpClient tcpClient = await this.server.AcceptTcpClientAsync();
+                    lock (this.connections)
                     {
-                        connection.Dispose();
-                        this.connections.RemoveAt(i);
+                        this.connections.Add(
+                            new RpcTcpConnection(
+                                tcpClient,
+                                this.program,
+                                this.versions,
+                                this.receivedCallDispatcher,
+                                this.logger));
+
+                        for (int i = this.connections.Count - 1; i >= 0; i--)
+                        {
+                            RpcTcpConnection connection = this.connections[i];
+                            if (connection.IsFinished)
+                            {
+                                connection.Dispose();
+                                this.connections.RemoveAt(i);
+                            }
+                        }
                     }
                 }
+                catch (Exception e)
+                {
+                    this.logger?.Error($"The following error occurred while accepting TCP clients: {e}");
+                }
             }
-
-            this.server.BeginAcceptTcpClient(this.OnAccepted, null);
         }
     }
 }

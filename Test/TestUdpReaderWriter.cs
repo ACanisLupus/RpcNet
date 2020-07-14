@@ -11,11 +11,9 @@ namespace RpcNet.Test
     internal class TestUdpReaderWriter
     {
         private UdpClient client;
-        private Channel<NetworkReadResult> readChannel;
         private UdpReader reader;
         private IPEndPoint remoteIpEndPoint;
         private UdpClient server;
-        private Channel<NetworkWriteResult> writeChannel;
         private UdpWriter writer;
 
         [SetUp]
@@ -28,14 +26,8 @@ namespace RpcNet.Test
 
             this.client = new UdpClient();
 
-            this.reader = new UdpReader(this.server, 100, TestLogger.Instance);
-            this.reader.Completed += udpResult => this.readChannel.Send(udpResult);
-
-            this.writer = new UdpWriter(this.client, 100, TestLogger.Instance);
-            this.writer.Completed += udpResult => this.writeChannel.Send(udpResult);
-
-            this.readChannel = new Channel<NetworkReadResult>();
-            this.writeChannel = new Channel<NetworkWriteResult>();
+            this.reader = new UdpReader(this.server, 100);
+            this.writer = new UdpWriter(this.client, 100);
         }
 
         [TearDown]
@@ -43,14 +35,11 @@ namespace RpcNet.Test
         {
             this.server.Dispose();
             this.client.Dispose();
-            this.readChannel.Close();
-            this.writeChannel.Close();
         }
 
         [Test]
         public void SendAndReceiveData(
             [Values(0, 10, 100)] int length,
-            [Values(true, false)] bool syncWriting,
             [Values(true, false)] bool syncReading)
         {
             this.writer.BeginWriting();
@@ -61,29 +50,13 @@ namespace RpcNet.Test
                 writeSpan[i] = (byte)i;
             }
 
-            NetworkWriteResult writeResult;
-            if (syncWriting)
-            {
-                writeResult = this.writer.EndWriting(this.remoteIpEndPoint);
-            }
-            else
-            {
-                this.writer.EndWritingAsync(this.remoteIpEndPoint);
-                Assert.That(this.writeChannel.Receive(out writeResult));
-            }
+            NetworkWriteResult writeResult = this.writer.EndWriting(this.remoteIpEndPoint);
 
             Assert.That(writeResult.SocketError, Is.EqualTo(SocketError.Success));
 
-            NetworkReadResult readResult;
-            if (syncReading)
-            {
-                readResult = this.reader.BeginReading();
-            }
-            else
-            {
-                this.reader.BeginReadingAsync();
-                Assert.That(this.readChannel.Receive(out readResult));
-            }
+            NetworkReadResult readResult = syncReading
+                ? this.reader.BeginReading()
+                : this.reader.BeginReadingAsync().GetAwaiter().GetResult();
 
             Assert.That(readResult.SocketError, Is.EqualTo(SocketError.Success));
             Assert.That(readResult.RemoteIpEndPoint.Address, Is.EqualTo(this.remoteIpEndPoint.Address));
@@ -100,7 +73,6 @@ namespace RpcNet.Test
         [Test]
         public void SendCompleteAndReceiveFragmentedData(
             [Values(2, 10, 100)] int length,
-            [Values(true, false)] bool syncWriting,
             [Values(true, false)] bool syncReading)
         {
             this.writer.BeginWriting();
@@ -111,29 +83,13 @@ namespace RpcNet.Test
                 writeSpan[i] = (byte)i;
             }
 
-            NetworkWriteResult writeResult;
-            if (syncWriting)
-            {
-                writeResult = this.writer.EndWriting(this.remoteIpEndPoint);
-            }
-            else
-            {
-                this.writer.EndWritingAsync(this.remoteIpEndPoint);
-                Assert.That(this.writeChannel.Receive(out writeResult));
-            }
+            NetworkWriteResult writeResult = this.writer.EndWriting(this.remoteIpEndPoint);
 
             Assert.That(writeResult.SocketError, Is.EqualTo(SocketError.Success));
 
-            NetworkReadResult readResult;
-            if (syncReading)
-            {
-                readResult = this.reader.BeginReading();
-            }
-            else
-            {
-                this.reader.BeginReadingAsync();
-                Assert.That(this.readChannel.Receive(out readResult));
-            }
+            NetworkReadResult readResult = syncReading
+                ? this.reader.BeginReading()
+                : this.reader.BeginReadingAsync().GetAwaiter().GetResult();
 
             Assert.That(readResult.SocketError, Is.EqualTo(SocketError.Success));
 
@@ -190,26 +146,14 @@ namespace RpcNet.Test
         [Test]
         public void AbortReading([Values(true, false)] bool syncReading)
         {
-            var task = Task.Run(
-                () =>
-                {
-                    NetworkReadResult readResult;
-                    if (syncReading)
-                    {
-                        readResult = this.reader.BeginReading();
-                        Assert.That(readResult.SocketError, Is.EqualTo(SocketError.Interrupted));
-                    }
-                    else
-                    {
-                        this.reader.BeginReadingAsync();
-                        Assert.That(this.readChannel.Receive(out readResult));
-                        Assert.That(readResult.SocketError, Is.EqualTo(SocketError.OperationAborted));
-                    }
-                });
+            Task<NetworkReadResult> task = Task.Run(
+                () => syncReading
+                    ? this.reader.BeginReading()
+                    : this.reader.BeginReadingAsync().GetAwaiter().GetResult());
             Thread.Sleep(100);
             this.server.Dispose();
-            this.reader.Dispose();
-            task.Wait();
+            NetworkReadResult readResult = task.GetAwaiter().GetResult();
+            Assert.That(readResult.SocketError, Is.EqualTo(SocketError.Interrupted));
         }
 
         private static void AssertEquals(ReadOnlySpan<byte> one, ReadOnlySpan<byte> two)

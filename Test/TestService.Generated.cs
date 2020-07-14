@@ -180,8 +180,8 @@ namespace TestService
 
     internal abstract class TestServiceServerStub : ServerStub
     {
-        public TestServiceServerStub(IPAddress ipAddress, int port = 0, ILogger logger = null) :
-            base(ipAddress, port, TestServiceConstants.TestServiceProgram, new[] { TestServiceConstants.TestServiceVersion }, logger)
+        public TestServiceServerStub(Protocols protocols, IPAddress ipAddress, int port = 0, ILogger logger = null) :
+            base(protocols, ipAddress, port, TestServiceConstants.TestServiceProgram, new[] { TestServiceConstants.TestServiceVersion }, logger)
         {
         }
 

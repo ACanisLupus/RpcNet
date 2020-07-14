@@ -268,8 +268,8 @@ namespace RpcNet.Internal
 
     internal abstract class PortMapperServerStub : ServerStub
     {
-        public PortMapperServerStub(IPAddress ipAddress, int port = 0, ILogger logger = null) :
-            base(ipAddress, port, PortMapperConstants.PortMapperProgram, new[] { PortMapperConstants.PortMapperVersion }, logger)
+        public PortMapperServerStub(Protocols protocols, IPAddress ipAddress, int port = 0, ILogger logger = null) :
+            base(protocols, ipAddress, port, PortMapperConstants.PortMapperProgram, new[] { PortMapperConstants.PortMapperVersion }, logger)
         {
         }
 

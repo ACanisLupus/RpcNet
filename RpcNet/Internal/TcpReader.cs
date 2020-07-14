@@ -8,7 +8,6 @@ namespace RpcNet.Internal
         private const int TcpHeaderLength = 4;
 
         private readonly byte[] buffer;
-        private readonly ILogger logger;
 
         private int bodyIndex;
         private int headerIndex;
@@ -18,11 +17,11 @@ namespace RpcNet.Internal
         private TcpClient tcpClient;
         private int writeIndex;
 
-        public TcpReader(TcpClient tcpClient, ILogger logger) : this(tcpClient, 65536, logger)
+        public TcpReader(TcpClient tcpClient) : this(tcpClient, 65536)
         {
         }
 
-        public TcpReader(TcpClient tcpClient, int bufferSize, ILogger logger)
+        public TcpReader(TcpClient tcpClient, int bufferSize)
         {
             if ((bufferSize < (TcpHeaderLength + sizeof(int))) || ((bufferSize % 4) != 0))
             {
@@ -31,7 +30,6 @@ namespace RpcNet.Internal
 
             this.Reset(tcpClient);
             this.buffer = new byte[bufferSize];
-            this.logger = logger;
         }
 
         public void Reset(TcpClient tcpClient)
@@ -56,7 +54,6 @@ namespace RpcNet.Internal
             if ((this.packetState != PacketState.Complete) || (this.readIndex != this.writeIndex))
             {
                 const string ErrorMessage = "Not all data was read.";
-                this.logger?.Error(ErrorMessage);
                 throw new RpcException(ErrorMessage);
             }
         }
@@ -68,14 +65,12 @@ namespace RpcNet.Internal
             {
                 string errorMessage =
                     $"Could not receive from TCP stream. Socket error code: {networkReadResult.SocketError}.";
-                this.logger?.Error(errorMessage);
                 throw new RpcException(errorMessage);
             }
 
             if (networkReadResult.IsDisconnected)
             {
                 const string ErrorMessage = "Could not receive from TCP stream. Remote end point disconnected.";
-                this.logger?.Error(ErrorMessage);
                 throw new RpcException(ErrorMessage);
             }
 
@@ -207,7 +202,6 @@ namespace RpcNet.Internal
                 if (((packetLength % 4) != 0) || (packetLength == 0))
                 {
                     const string ErrorMessage = "This is not an XDR stream.";
-                    this.logger?.Error(ErrorMessage);
                     throw new RpcException(ErrorMessage);
                 }
 

@@ -10,10 +10,41 @@ namespace RpcNet
         private readonly RpcUdpServer rpcUdpServer;
         private bool isDisposed;
 
-        protected ServerStub(IPAddress ipAddress, int port, int program, int[] versions, ILogger logger)
+        protected ServerStub(
+            Protocols protocols,
+            IPAddress ipAddress,
+            int port,
+            int program,
+            int[] versions,
+            ILogger logger)
         {
-            this.rpcUdpServer = new RpcUdpServer(ipAddress, port, program, versions, this.DispatchReceivedCall, logger);
-            this.rpcTcpServer = new RpcTcpServer(ipAddress, port, program, versions, this.DispatchReceivedCall, logger);
+            if (protocols.HasFlag(Protocols.TcpOnly))
+            {
+                this.rpcTcpServer = new RpcTcpServer(
+                    ipAddress,
+                    port,
+                    program,
+                    versions,
+                    this.DispatchReceivedCall,
+                    logger);
+            }
+
+            if (protocols.HasFlag(Protocols.UdpOnly))
+            {
+                this.rpcUdpServer = new RpcUdpServer(
+                    ipAddress,
+                    port,
+                    program,
+                    versions,
+                    this.DispatchReceivedCall,
+                    logger);
+            }
+        }
+
+        public void Start()
+        {
+            this.rpcTcpServer.Start();
+            this.rpcUdpServer.Start();
         }
 
         public void Dispose()
