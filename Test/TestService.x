@@ -42,4 +42,8 @@ program TestServiceProgram {
     PingStruct Ping(PingStruct) = 1;
     MyStruct TestMyStruct(MyStruct) = 2;
   } = 1;
+  version TestServiceVersion2 {
+    PingStruct Ping2(PingStruct) = 1;
+    MyStruct TestMyStruct2(MyStruct) = 2;
+  } = 2;
 } = 0x02004009;

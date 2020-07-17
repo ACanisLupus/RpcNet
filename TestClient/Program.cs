@@ -9,30 +9,34 @@ namespace TestClient
     {
         private static void Main()
         {
-            using (var testClient = new TestServiceClient(Protocol.Tcp, IPAddress.Loopback))
+            using (var testTcpClient = new TestServiceClient(Protocol.Tcp, IPAddress.Loopback))
             {
-                for (int i = 0; i < 100; i++)
+                for (int i = 0; i < 10; i++)
                 {
                     var arg = new PingStruct
                     {
                         Value = i
                     };
-                    PingStruct result = testClient.Ping_1(arg);
-                    Console.WriteLine($"Sent: {i}, Received: {result.Value}");
+                    PingStruct result = testTcpClient.Ping_1(arg);
+                    Console.WriteLine($"PING1 TCP - Sent: {i}, Received: {result.Value}");
+
+                    result = testTcpClient.Ping2_2(arg);
+                    Console.WriteLine($"PING2 TCP - Sent: {i}, Received: {result.Value}");
                 }
             }
 
-            using (var testClient = new TestServiceClient(Protocol.Udp, IPAddress.Loopback))
+            using var testUdpClient = new TestServiceClient(Protocol.Udp, IPAddress.Loopback);
+            for (int i = 0; i < 10; i++)
             {
-                for (int i = 0; i < 100; i++)
+                var arg = new PingStruct
                 {
-                    var arg = new PingStruct
-                    {
-                        Value = i
-                    };
-                    PingStruct result = testClient.Ping_1(arg);
-                    Console.WriteLine($"Sent: {i}, Received: {result.Value}");
-                }
+                    Value = i
+                };
+                PingStruct result = testUdpClient.Ping_1(arg);
+                Console.WriteLine($"PING1 UDP - Sent: {i}, Received: {result.Value}");
+
+                result = testUdpClient.Ping2_2(arg);
+                Console.WriteLine($"PING2 UDP - Sent: {i}, Received: {result.Value}");
             }
         }
     }

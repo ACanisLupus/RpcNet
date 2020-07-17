@@ -60,32 +60,28 @@ namespace RpcNet.Test
                 call.Reply(pingStruct);
             }
 
-            using (var server = new RpcTcpServer(
+            using var server = new RpcTcpServer(
                 this.ipAddress,
                 Port,
                 Program,
                 new[] { Version },
                 Dispatcher,
-                TestLogger.Instance))
+                TestLogger.Instance);
+            server.Start();
+
+            for (int i = 0; i < 10; i++)
             {
-                server.Start();
+                using var client = new RpcTcpClient(this.ipAddress, Port, Program, Version, TestLogger.Instance);
+                var argument = new PingStruct { Value = i };
+                var result = new PingStruct();
 
-                for (int i = 0; i < 10; i++)
-                {
-                    using (var client = new RpcTcpClient(this.ipAddress, Port, Program, Version, TestLogger.Instance))
-                    {
-                        var argument = new PingStruct { Value = i };
-                        var result = new PingStruct();
+                client.Call(Procedure, Version, argument, result);
 
-                        client.Call(Procedure, Version, argument, result);
+                Assert.That(receivedCallChannel.Receive(out ReceivedCall receivedCall));
+                Assert.That(receivedCall.Procedure, Is.EqualTo(Procedure));
+                Assert.That(receivedCall.Version, Is.EqualTo(Version));
 
-                        Assert.That(receivedCallChannel.Receive(out ReceivedCall receivedCall));
-                        Assert.That(receivedCall.Procedure, Is.EqualTo(Procedure));
-                        Assert.That(receivedCall.Version, Is.EqualTo(Version));
-
-                        Assert.That(argument.Value, Is.EqualTo(result.Value));
-                    }
-                }
+                Assert.That(argument.Value, Is.EqualTo(result.Value));
             }
         }
     }

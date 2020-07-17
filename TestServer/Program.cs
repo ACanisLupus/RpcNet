@@ -26,13 +26,25 @@ namespace TestServer
 
             public override PingStruct Ping_1(IPEndPoint remoteIpEndPoint, PingStruct arg1)
             {
-                TheLogger.Info($"{remoteIpEndPoint} PING({arg1.Value})");
+                TheLogger.Info($"{remoteIpEndPoint} PING1({arg1.Value})");
                 return arg1;
             }
 
             public override MyStruct TestMyStruct_1(IPEndPoint remoteIpEndPoint, MyStruct arg1)
             {
                 TheLogger.Info($"{remoteIpEndPoint} TESTMYSTRUCT");
+                return arg1;
+            }
+
+            public override PingStruct Ping2_2(IPEndPoint remoteIpEndPoint, PingStruct arg1)
+            {
+                TheLogger.Info($"{remoteIpEndPoint} PING2({arg1.Value})");
+                return arg1;
+            }
+
+            public override MyStruct TestMyStruct2_2(IPEndPoint remoteIpEndPoint, MyStruct arg1)
+            {
+                TheLogger.Info($"{remoteIpEndPoint} TESTMYSTRUCT2");
                 return arg1;
             }
         }

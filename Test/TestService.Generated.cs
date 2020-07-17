@@ -18,6 +18,9 @@ namespace TestService
         public const int TestServiceVersion = 1;
         public const int Ping_1 = 1;
         public const int TestMyStruct_1 = 2;
+        public const int TestServiceVersion2 = 2;
+        public const int Ping2_2 = 1;
+        public const int TestMyStruct2_2 = 2;
         public const int TestServiceProgram = 0x02004009;
     }
 
@@ -159,7 +162,7 @@ namespace TestService
     internal class TestServiceClient : ClientStub
     {
         public TestServiceClient(Protocol protocol, IPAddress ipAddress, int port = 0, ILogger logger = null) :
-            base(protocol, ipAddress, port, TestServiceConstants.TestServiceProgram, TestServiceConstants.TestServiceVersion, logger)
+            base(protocol, ipAddress, port, TestServiceConstants.TestServiceProgram, TestServiceConstants.TestServiceVersion2, logger)
         {
         }
 
@@ -176,12 +179,26 @@ namespace TestService
             Call(TestServiceConstants.TestMyStruct_1, TestServiceConstants.TestServiceVersion, arg1, result);
             return result;
         }
+
+        public PingStruct Ping2_2(PingStruct arg1)
+        {
+            var result = new PingStruct();
+            Call(TestServiceConstants.Ping2_2, TestServiceConstants.TestServiceVersion2, arg1, result);
+            return result;
+        }
+
+        public MyStruct TestMyStruct2_2(MyStruct arg1)
+        {
+            var result = new MyStruct();
+            Call(TestServiceConstants.TestMyStruct2_2, TestServiceConstants.TestServiceVersion2, arg1, result);
+            return result;
+        }
     }
 
     internal abstract class TestServiceServerStub : ServerStub
     {
         public TestServiceServerStub(Protocols protocols, IPAddress ipAddress, int port = 0, ILogger logger = null) :
-            base(protocols, ipAddress, port, TestServiceConstants.TestServiceProgram, new[] { TestServiceConstants.TestServiceVersion }, logger)
+            base(protocols, ipAddress, port, TestServiceConstants.TestServiceProgram, new[] { TestServiceConstants.TestServiceVersion, TestServiceConstants.TestServiceVersion2 }, logger)
         {
         }
 
@@ -212,6 +229,31 @@ namespace TestService
                         break;
                 }
             }
+            else if (call.Version == TestServiceConstants.TestServiceVersion2)
+            {
+                switch (call.Procedure)
+                {
+                    case TestServiceConstants.Ping2_2:
+                    {
+                        var args = new PingStruct();
+                        call.RetrieveCall(args);
+                        var result = Ping2_2(call.RemoteIpEndPoint, args);
+                        call.Reply(result);
+                        break;
+                    }
+                    case TestServiceConstants.TestMyStruct2_2:
+                    {
+                        var args = new MyStruct();
+                        call.RetrieveCall(args);
+                        var result = TestMyStruct2_2(call.RemoteIpEndPoint, args);
+                        call.Reply(result);
+                        break;
+                    }
+                    default:
+                        call.ProcedureUnavailable();
+                        break;
+                }
+            }
             else
             {
                 call.ProgramMismatch();
@@ -220,5 +262,7 @@ namespace TestService
 
         public abstract PingStruct Ping_1(IPEndPoint remoteIpEndPoint, PingStruct arg1);
         public abstract MyStruct TestMyStruct_1(IPEndPoint remoteIpEndPoint, MyStruct arg1);
+        public abstract PingStruct Ping2_2(IPEndPoint remoteIpEndPoint, PingStruct arg1);
+        public abstract MyStruct TestMyStruct2_2(IPEndPoint remoteIpEndPoint, MyStruct arg1);
     }
 }
