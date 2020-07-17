@@ -94,7 +94,7 @@ namespace RpcNet.Internal
             this.rpcMessage.WriteTo(this.xdrWriter);
             argument.WriteTo(this.xdrWriter);
 
-            NetworkWriteResult writeResult = this.networkWriter.EndWriting();
+            NetworkWriteResult writeResult = this.networkWriter.EndWriting(this.remoteIpEndPoint);
             if (writeResult.HasError)
             {
                 errorMessage =

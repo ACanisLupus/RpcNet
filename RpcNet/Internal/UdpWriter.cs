@@ -7,24 +7,15 @@ namespace RpcNet.Internal
     public class UdpWriter : INetworkWriter
     {
         private readonly byte[] buffer;
-        private readonly IPEndPoint remoteIpEndPoint;
         private readonly Socket udpClient;
 
         private int writeIndex;
 
-        public UdpWriter(Socket udpClient) : this(udpClient, null, 65536)
+        public UdpWriter(Socket udpClient) : this(udpClient, 65536)
         {
         }
 
-        public UdpWriter(Socket udpClient, int bufferSize) : this(udpClient, null, bufferSize)
-        {
-        }
-
-        public UdpWriter(Socket udpClient, IPEndPoint remoteIpEndPoint) : this(udpClient, remoteIpEndPoint, 65536)
-        {
-        }
-
-        public UdpWriter(Socket udpClient, IPEndPoint remoteIpEndPoint, int bufferSize)
+        public UdpWriter(Socket udpClient, int bufferSize)
         {
             if ((bufferSize < sizeof(int)) || ((bufferSize % 4) != 0))
             {
@@ -32,7 +23,6 @@ namespace RpcNet.Internal
             }
 
             this.udpClient = udpClient;
-            this.remoteIpEndPoint = remoteIpEndPoint;
             this.buffer = new byte[bufferSize];
         }
 
@@ -40,8 +30,6 @@ namespace RpcNet.Internal
         {
             this.writeIndex = 0;
         }
-
-        public NetworkWriteResult EndWriting() => this.EndWriting(this.remoteIpEndPoint);
 
         public NetworkWriteResult EndWriting(IPEndPoint remoteEndPoint)
         {

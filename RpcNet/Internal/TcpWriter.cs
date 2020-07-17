@@ -1,6 +1,7 @@
 namespace RpcNet.Internal
 {
     using System;
+    using System.Net;
     using System.Net.Sockets;
 
     public class TcpWriter : INetworkWriter
@@ -37,7 +38,7 @@ namespace RpcNet.Internal
             this.writeIndex = TcpHeaderLength;
         }
 
-        public NetworkWriteResult EndWriting() => this.FlushPacket(true);
+        public NetworkWriteResult EndWriting(IPEndPoint remoteEndPoint) => this.FlushPacket(true);
 
         public Span<byte> Reserve(int length)
         {

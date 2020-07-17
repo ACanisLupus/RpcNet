@@ -18,7 +18,7 @@ namespace RpcNet.Internal
             var remoteIpEndPoint = new IPEndPoint(ipAddress, port);
             this.client = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             var reader = new UdpReader(this.client);
-            var writer = new UdpWriter(this.client, remoteIpEndPoint);
+            var writer = new UdpWriter(this.client);
             this.call = new Call(program, remoteIpEndPoint, reader, writer, null, logger);
             this.TimeoutInMilliseconds = 10000;
         }

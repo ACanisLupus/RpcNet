@@ -56,7 +56,7 @@ namespace RpcNet.Test
             this.writer.BeginWriting();
             xdrWriter.WriteVariableLengthOpaque(value);
             xdrWriter.Write(42);
-            NetworkWriteResult writeResult = this.writer.EndWriting();
+            NetworkWriteResult writeResult = this.writer.EndWriting(null);
             Assert.That(writeResult.SocketError, Is.EqualTo(SocketError.Success));
 
             NetworkReadResult readResult = this.reader.BeginReading();
@@ -98,7 +98,7 @@ namespace RpcNet.Test
             this.writer.BeginWriting();
             xdrWriter.WriteVariableLengthOpaque(value);
             xdrWriter.Write(42);
-            this.writer.EndWriting();
+            this.writer.EndWriting(null);
 
             task.Wait();
         }

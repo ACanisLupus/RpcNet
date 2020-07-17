@@ -72,7 +72,7 @@ namespace RpcNet.Internal
                     this.receivedCall.HandleCall(this.remoteIpEndPoint);
                     this.reader.EndReading();
 
-                    NetworkWriteResult writeResult = this.writer.EndWriting();
+                    NetworkWriteResult writeResult = this.writer.EndWriting(this.remoteIpEndPoint);
                     if (writeResult.HasError)
                     {
                         this.logger?.Trace(

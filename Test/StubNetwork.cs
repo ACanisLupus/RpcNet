@@ -1,6 +1,7 @@
 namespace RpcNet.Test
 {
     using System;
+    using System.Net;
     using RpcNet.Internal;
 
     internal class StubNetwork : INetworkReader, INetworkWriter
@@ -28,7 +29,7 @@ namespace RpcNet.Test
         {
         }
 
-        public NetworkWriteResult EndWriting() => new NetworkWriteResult();
+        public NetworkWriteResult EndWriting(IPEndPoint remoteIpEndPoint) => new NetworkWriteResult();
 
         public void Reset()
         {
