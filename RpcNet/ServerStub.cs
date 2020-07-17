@@ -61,8 +61,8 @@ namespace RpcNet
             {
                 if (disposing)
                 {
-                    this.rpcUdpServer.Dispose();
-                    this.rpcTcpServer.Dispose();
+                    this.rpcUdpServer?.Dispose();
+                    this.rpcTcpServer?.Dispose();
                 }
 
                 this.isDisposed = true;
