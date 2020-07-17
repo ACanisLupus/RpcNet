@@ -56,10 +56,10 @@ namespace RpcNet.Internal
             {
                 this.client.Connect(this.remoteIpEndPoint);
             }
-            catch (SocketException exception)
+            catch (SocketException e)
             {
                 string errorMessage =
-                    $"Could not connect to {this.remoteIpEndPoint}. Socket error: {exception.SocketErrorCode}.";
+                    $"Could not connect to {this.remoteIpEndPoint}. Socket error: {e.SocketErrorCode}.";
                 throw new RpcException(errorMessage);
             }
         }

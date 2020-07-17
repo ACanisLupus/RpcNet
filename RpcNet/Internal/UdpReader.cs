@@ -51,9 +51,9 @@ namespace RpcNet.Internal
                     ref this.remoteEndPoint);
                 return NetworkReadResult.CreateSuccess((IPEndPoint)this.remoteEndPoint);
             }
-            catch (SocketException exception)
+            catch (SocketException e)
             {
-                return NetworkReadResult.CreateError(exception.SocketErrorCode);
+                return NetworkReadResult.CreateError(e.SocketErrorCode);
             }
         }
 

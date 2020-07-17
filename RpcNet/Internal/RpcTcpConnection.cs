@@ -83,9 +83,9 @@ namespace RpcNet.Internal
                     }
                 }
             }
-            catch (Exception exception)
+            catch (Exception e)
             {
-                this.logger?.Error($"Unexpected exception during call: {exception}");
+                this.logger?.Error($"Unexpected exception during call: {e}");
             }
         }
     }

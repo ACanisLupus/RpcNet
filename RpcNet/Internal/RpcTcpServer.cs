@@ -120,46 +120,15 @@ namespace RpcNet.Internal
                         }
                     }
                 }
+                catch (SocketException e)
+                {
+                    this.logger?.Error($"Could not accept TCP client. Socket error code: {e.SocketErrorCode}");
+                }
                 catch (Exception e)
                 {
                     this.logger?.Error($"The following error occurred while accepting TCP clients: {e}");
                 }
             }
         }
-
-        //private async Task AcceptingAsync()
-        //{
-        //    while (!this.stopAccepting)
-        //    {
-        //        try
-        //        {
-        //            TcpClient tcpClient = await this.server.AcceptTcpClientAsync();
-        //            lock (this.connections)
-        //            {
-        //                this.connections.Add(
-        //                    new RpcTcpConnection(
-        //                        tcpClient.Client,
-        //                        this.program,
-        //                        this.versions,
-        //                        this.receivedCallDispatcher,
-        //                        this.logger));
-
-        //                for (int i = this.connections.Count - 1; i >= 0; i--)
-        //                {
-        //                    RpcTcpConnection connection = this.connections[i];
-        //                    if (connection.IsFinished)
-        //                    {
-        //                        connection.Dispose();
-        //                        this.connections.RemoveAt(i);
-        //                    }
-        //                }
-        //            }
-        //        }
-        //        catch (Exception e)
-        //        {
-        //            this.logger?.Error($"The following error occurred while accepting TCP clients: {e}");
-        //        }
-        //    }
-        //}
     }
 }

@@ -50,9 +50,9 @@ namespace RpcNet.Internal
                 this.udpClient.SendTo(this.buffer, this.writeIndex, SocketFlags.None, remoteEndPoint);
                 return new NetworkWriteResult(SocketError.Success);
             }
-            catch (SocketException exception)
+            catch (SocketException e)
             {
-                return new NetworkWriteResult(exception.SocketErrorCode);
+                return new NetworkWriteResult(e.SocketErrorCode);
             }
         }
 
