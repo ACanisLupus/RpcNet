@@ -43,8 +43,8 @@ namespace RpcNet
 
         public void Start()
         {
-            this.rpcTcpServer.Start();
-            this.rpcUdpServer.Start();
+            this.rpcTcpServer?.Start();
+            this.rpcUdpServer?.Start();
         }
 
         public void Dispose()

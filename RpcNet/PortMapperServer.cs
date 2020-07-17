@@ -92,33 +92,33 @@ namespace RpcNet
                 }
             }
 
-            public override MappingList Dump_2(IPEndPoint remoteIpEndPoint)
+            public override MappingNode Dump_2(IPEndPoint remoteIpEndPoint)
             {
                 this.logger?.Info($"{remoteIpEndPoint} DUMP.");
                 lock (this.mappings)
                 {
-                    MappingList firstItem = null;
+                    MappingNode firstNode = null;
 
-                    MappingList currentItem = null;
+                    MappingNode currentNode = null;
                     foreach (Mapping mapping in this.mappings)
                     {
-                        var newItem = new MappingList { Mapping = mapping };
-                        if (currentItem == null)
+                        var newNode = new MappingNode { Mapping = mapping };
+                        if (currentNode == null)
                         {
-                            currentItem = newItem;
+                            currentNode = newNode;
                         }
                         else
                         {
-                            currentItem.Next = newItem;
+                            currentNode.Next = newNode;
                         }
 
-                        if (firstItem == null)
+                        if (firstNode == null)
                         {
-                            firstItem = newItem;
+                            firstNode = newNode;
                         }
                     }
 
-                    return firstItem;
+                    return firstNode;
                 }
             }
 

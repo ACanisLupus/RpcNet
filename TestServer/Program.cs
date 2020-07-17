@@ -12,6 +12,7 @@ namespace TestServer
         {
             using var testServer = new TestServer(IPAddress.Any);
             testServer.Start();
+
             Thread.Sleep(-1);
         }
 
@@ -19,7 +20,7 @@ namespace TestServer
         {
             private static readonly ILogger TheLogger = new Logger();
 
-            public TestServer(IPAddress ipAddress) : base(Protocols.TcpOnly, ipAddress, 0, TheLogger)
+            public TestServer(IPAddress ipAddress) : base(Protocols.TcpAndUdp, ipAddress, 0, TheLogger)
             {
             }
 

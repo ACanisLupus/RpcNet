@@ -1,4 +1,4 @@
-﻿const PortMapperPort = 111;
+const PortMapperPort = 111;
 
 enum ProtocolKind {
   Tcp = 6,
@@ -12,9 +12,9 @@ struct Mapping {
   int Port;
 };
 
-struct MappingList {
+struct MappingNode {
   Mapping Mapping;
-  MappingList* Next;
+  MappingNode* Next;
 };
 
 struct CallArguments {
@@ -35,7 +35,7 @@ program PortMapperProgram {
     bool Set(Mapping) = 1;
     bool Unset(Mapping) = 2;
     int GetPort(Mapping) = 3;
-    MappingList Dump(void) = 4;
+    MappingNode Dump(void) = 4;
     CallResult Call(CallArguments) = 5;
   } = 2;
 } = 100000;

@@ -119,16 +119,16 @@ namespace RpcNet.Internal
         }
     }
 
-    internal partial class MappingList : IXdrReadable, IXdrWritable
+    internal partial class MappingNode : IXdrReadable, IXdrWritable
     {
         public Mapping Mapping { get; set; }
-        public MappingList Next { get; set; }
+        public MappingNode Next { get; set; }
 
-        public MappingList()
+        public MappingNode()
         {
         }
 
-        public MappingList(IXdrReader reader)
+        public MappingNode(IXdrReader reader)
         {
             ReadFrom(reader);
         }
@@ -147,11 +147,11 @@ namespace RpcNet.Internal
         public void ReadFrom(IXdrReader reader)
         {
             var current = this;
-            MappingList next;
+            MappingNode next;
             do
             {
                 current.Mapping = new Mapping(reader);
-                next = reader.ReadBool() ? new MappingList() : null;
+                next = reader.ReadBool() ? new MappingNode() : null;
                 current.Next = next;
                 current = next;
             } while (current != null);
@@ -250,10 +250,10 @@ namespace RpcNet.Internal
             }
         }
 
-        public MappingList Dump_2()
+        public MappingNode Dump_2()
         {
             var args = new Arguments_4();
-            var result = new MappingList();
+            var result = new MappingNode();
             Call(PortMapperConstants.Dump_2, PortMapperConstants.PortMapperVersion, args, result);
             return result;
         }
@@ -396,7 +396,7 @@ namespace RpcNet.Internal
         public abstract bool Set_2(IPEndPoint remoteIpEndPoint, Mapping arg1);
         public abstract bool Unset_2(IPEndPoint remoteIpEndPoint, Mapping arg1);
         public abstract int GetPort_2(IPEndPoint remoteIpEndPoint, Mapping arg1);
-        public abstract MappingList Dump_2(IPEndPoint remoteIpEndPoint);
+        public abstract MappingNode Dump_2(IPEndPoint remoteIpEndPoint);
         public abstract CallResult Call_2(IPEndPoint remoteIpEndPoint, CallArguments arg1);
     }
 }
