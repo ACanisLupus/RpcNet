@@ -8,23 +8,23 @@ namespace RpcNet.Internal
     {
         private readonly byte[] buffer;
         private readonly IPEndPoint remoteIpEndPoint;
-        private readonly UdpClient udpClient;
+        private readonly Socket udpClient;
 
         private int writeIndex;
 
-        public UdpWriter(UdpClient udpClient) : this(udpClient, null, 65536)
+        public UdpWriter(Socket udpClient) : this(udpClient, null, 65536)
         {
         }
 
-        public UdpWriter(UdpClient udpClient, int bufferSize) : this(udpClient, null, bufferSize)
+        public UdpWriter(Socket udpClient, int bufferSize) : this(udpClient, null, bufferSize)
         {
         }
 
-        public UdpWriter(UdpClient udpClient, IPEndPoint remoteIpEndPoint) : this(udpClient, remoteIpEndPoint, 65536)
+        public UdpWriter(Socket udpClient, IPEndPoint remoteIpEndPoint) : this(udpClient, remoteIpEndPoint, 65536)
         {
         }
 
-        public UdpWriter(UdpClient udpClient, IPEndPoint remoteIpEndPoint, int bufferSize)
+        public UdpWriter(Socket udpClient, IPEndPoint remoteIpEndPoint, int bufferSize)
         {
             if ((bufferSize < sizeof(int)) || ((bufferSize % 4) != 0))
             {
@@ -47,7 +47,7 @@ namespace RpcNet.Internal
         {
             try
             {
-                this.udpClient.Client.SendTo(this.buffer, this.writeIndex, SocketFlags.None, remoteEndPoint);
+                this.udpClient.SendTo(this.buffer, this.writeIndex, SocketFlags.None, remoteEndPoint);
                 return new NetworkWriteResult(SocketError.Success);
             }
             catch (SocketException exception)

@@ -14,14 +14,14 @@ namespace RpcNet.Internal
         private bool lastPacket;
         private PacketState packetState = PacketState.Header;
         private int readIndex;
-        private TcpClient tcpClient;
+        private Socket tcpClient;
         private int writeIndex;
 
-        public TcpReader(TcpClient tcpClient) : this(tcpClient, 65536)
+        public TcpReader(Socket tcpClient) : this(tcpClient, 65536)
         {
         }
 
-        public TcpReader(TcpClient tcpClient, int bufferSize)
+        public TcpReader(Socket tcpClient, int bufferSize)
         {
             if ((bufferSize < (TcpHeaderLength + sizeof(int))) || ((bufferSize % 4) != 0))
             {
@@ -32,7 +32,7 @@ namespace RpcNet.Internal
             this.buffer = new byte[bufferSize];
         }
 
-        public void Reset(TcpClient tcpClient)
+        public void Reset(Socket tcpClient)
         {
             this.tcpClient = tcpClient;
         }
@@ -167,7 +167,7 @@ namespace RpcNet.Internal
 
         private NetworkReadResult ReadFromNetwork(ref bool readFromNetwork)
         {
-            int receivedLength = this.tcpClient.Client.Receive(
+            int receivedLength = this.tcpClient.Receive(
                 this.buffer,
                 this.writeIndex,
                 this.buffer.Length - this.writeIndex,

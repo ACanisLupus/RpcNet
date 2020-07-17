@@ -26,8 +26,8 @@ namespace RpcNet.Test
 
             this.client = new UdpClient();
 
-            this.reader = new UdpReader(this.server, 100);
-            this.writer = new UdpWriter(this.client, 100);
+            this.reader = new UdpReader(this.server.Client, 100);
+            this.writer = new UdpWriter(this.client.Client, 100);
         }
 
         [TearDown]

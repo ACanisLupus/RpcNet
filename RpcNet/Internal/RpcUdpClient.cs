@@ -6,7 +6,7 @@ namespace RpcNet.Internal
     public class RpcUdpClient : INetworkClient
     {
         private readonly Call call;
-        private readonly UdpClient client;
+        private readonly Socket client;
 
         public RpcUdpClient(IPAddress ipAddress, int port, int program, int version, ILogger logger)
         {
@@ -16,7 +16,7 @@ namespace RpcNet.Internal
             }
 
             var remoteIpEndPoint = new IPEndPoint(ipAddress, port);
-            this.client = new UdpClient();
+            this.client = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             var reader = new UdpReader(this.client);
             var writer = new UdpWriter(this.client, remoteIpEndPoint);
             this.call = new Call(program, remoteIpEndPoint, reader, writer, null, logger);
@@ -25,8 +25,8 @@ namespace RpcNet.Internal
 
         public int TimeoutInMilliseconds
         {
-            get => this.client.Client.ReceiveTimeout;
-            set => this.client.Client.ReceiveTimeout = value;
+            get => this.client.ReceiveTimeout;
+            set => this.client.ReceiveTimeout = value;
         }
 
         public void Call(int procedure, int version, IXdrWritable argument, IXdrReadable result)

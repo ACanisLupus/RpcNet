@@ -2,16 +2,19 @@ namespace PortMapper
 {
     using System;
     using System.Net;
-    using System.Threading;
     using RpcNet;
 
     internal class Program
     {
         private static void Main()
         {
-            using var portMapperServer = new PortMapperServer(IPAddress.Any, new Logger());
-            portMapperServer.Start();
-            Thread.Sleep(-1);
+            {
+                using var portMapperServer = new PortMapperServer(IPAddress.Any, new Logger());
+                portMapperServer.Start();
+                Console.ReadKey(true);
+            }
+
+            Console.ReadKey(true);
         }
 
         private class Logger : ILogger

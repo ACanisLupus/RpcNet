@@ -9,14 +9,14 @@ namespace RpcNet.Internal
 
         private readonly byte[] buffer;
 
-        private TcpClient tcpClient;
+        private Socket tcpClient;
         private int writeIndex;
 
-        public TcpWriter(TcpClient tcpClient) : this(tcpClient, 65536)
+        public TcpWriter(Socket tcpClient) : this(tcpClient, 65536)
         {
         }
 
-        public TcpWriter(TcpClient tcpClient, int bufferSize)
+        public TcpWriter(Socket tcpClient, int bufferSize)
         {
             if ((bufferSize < (TcpHeaderLength + sizeof(int))) || ((bufferSize % 4) != 0))
             {
@@ -27,7 +27,7 @@ namespace RpcNet.Internal
             this.buffer = new byte[bufferSize];
         }
 
-        public void Reset(TcpClient tcpClient)
+        public void Reset(Socket tcpClient)
         {
             this.tcpClient = tcpClient;
         }
@@ -65,7 +65,7 @@ namespace RpcNet.Internal
             int lengthToDecode = lastPacket ? length | unchecked((int)0x80000000) : length;
 
             Utilities.WriteBytesBigEndian(this.buffer.AsSpan(), lengthToDecode);
-            this.tcpClient.Client.Send(
+            this.tcpClient.Send(
                 this.buffer,
                 0,
                 length + TcpHeaderLength,

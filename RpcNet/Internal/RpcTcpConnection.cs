@@ -12,20 +12,20 @@ namespace RpcNet.Internal
         private readonly ReceivedCall receivedCall;
         private readonly Thread receivingThread;
         private readonly IPEndPoint remoteIpEndPoint;
-        private readonly TcpClient tcpClient;
+        private readonly Socket tcpClient;
         private readonly TcpWriter writer;
 
         private volatile bool stopReceiving;
 
         public RpcTcpConnection(
-            TcpClient tcpClient,
+            Socket tcpClient,
             int program,
             int[] versions,
             Action<ReceivedCall> receivedCallDispatcher,
             ILogger logger)
         {
             this.tcpClient = tcpClient;
-            this.remoteIpEndPoint = (IPEndPoint)tcpClient.Client.RemoteEndPoint;
+            this.remoteIpEndPoint = (IPEndPoint)tcpClient.RemoteEndPoint;
             this.reader = new TcpReader(tcpClient);
             this.writer = new TcpWriter(tcpClient);
             this.logger = logger;

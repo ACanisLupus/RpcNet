@@ -13,8 +13,10 @@ namespace RpcNet.Internal
         private readonly int port;
         private readonly int program;
         private readonly Action<ReceivedCall> receivedCallDispatcher;
-        private readonly TcpListener server;
+        private readonly Socket server;
         private readonly int[] versions;
+        private readonly IPAddress ipAddress;
+
         private Thread acceptingThread;
 
         private volatile bool stopAccepting;
@@ -31,8 +33,9 @@ namespace RpcNet.Internal
             this.versions = versions;
             this.receivedCallDispatcher = receivedCallDispatcher;
             this.logger = logger;
+            this.ipAddress = ipAddress;
             this.port = port;
-            this.server = new TcpListener(ipAddress, port);
+            this.server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         }
 
         public void Start()
@@ -44,7 +47,8 @@ namespace RpcNet.Internal
 
             try
             {
-                this.server.Start();
+                this.server.Bind(new IPEndPoint(this.ipAddress, this.port));
+                this.server.Listen(int.MaxValue);
             }
             catch (SocketException e)
             {
@@ -53,14 +57,17 @@ namespace RpcNet.Internal
 
             if (this.port == 0)
             {
-                int realPort = ((IPEndPoint)this.server.Server.LocalEndPoint).Port;
-                foreach (int version in this.versions)
+                int realPort = ((IPEndPoint)this.server.LocalEndPoint).Port;
+                lock (this.connections)
                 {
-                    PortMapperUtilities.UnsetAndSetPort(ProtocolKind.Tcp, realPort, this.program, version);
+                    foreach (int version in this.versions)
+                    {
+                        PortMapperUtilities.UnsetAndSetPort(ProtocolKind.Tcp, realPort, this.program, version);
+                    }
                 }
             }
 
-            this.logger?.Trace($"TCP Server listening on {this.server.Server.LocalEndPoint}...");
+            this.logger?.Trace($"TCP Server listening on {this.server.LocalEndPoint}...");
 
             this.acceptingThread = new Thread(this.Accepting);
             this.acceptingThread.Start();
@@ -70,14 +77,7 @@ namespace RpcNet.Internal
         {
             this.stopAccepting = true;
 
-            try
-            {
-                this.server.Stop();
-            }
-            catch (SocketException e)
-            {
-                this.logger?.Error($"Could not stop TCP listener. Socket error code: {e.SocketErrorCode}.");
-            }
+            this.server.Dispose();
 
             lock (this.connections)
             {
@@ -85,9 +85,11 @@ namespace RpcNet.Internal
                 {
                     connection.Dispose();
                 }
+
+                this.connections.Clear();
             }
 
-            this.acceptingThread?.Join();
+            Interlocked.Exchange(ref this.acceptingThread, null)?.Join();
         }
 
         private void Accepting()
@@ -96,7 +98,7 @@ namespace RpcNet.Internal
             {
                 try
                 {
-                    TcpClient tcpClient = this.server.AcceptTcpClient();
+                    Socket tcpClient = this.server.Accept();
                     lock (this.connections)
                     {
                         this.connections.Add(
@@ -124,5 +126,40 @@ namespace RpcNet.Internal
                 }
             }
         }
+
+        //private async Task AcceptingAsync()
+        //{
+        //    while (!this.stopAccepting)
+        //    {
+        //        try
+        //        {
+        //            TcpClient tcpClient = await this.server.AcceptTcpClientAsync();
+        //            lock (this.connections)
+        //            {
+        //                this.connections.Add(
+        //                    new RpcTcpConnection(
+        //                        tcpClient.Client,
+        //                        this.program,
+        //                        this.versions,
+        //                        this.receivedCallDispatcher,
+        //                        this.logger));
+
+        //                for (int i = this.connections.Count - 1; i >= 0; i--)
+        //                {
+        //                    RpcTcpConnection connection = this.connections[i];
+        //                    if (connection.IsFinished)
+        //                    {
+        //                        connection.Dispose();
+        //                        this.connections.RemoveAt(i);
+        //                    }
+        //                }
+        //            }
+        //        }
+        //        catch (Exception e)
+        //        {
+        //            this.logger?.Error($"The following error occurred while accepting TCP clients: {e}");
+        //        }
+        //    }
+        //}
     }
 }

@@ -11,7 +11,7 @@ namespace RpcNet.Internal
         private readonly UdpReader reader;
         private readonly ReceivedCall receivedCall;
         private readonly Thread receivingThread;
-        private readonly UdpClient server;
+        private readonly Socket server;
         private readonly UdpWriter writer;
 
         private volatile bool stopReceiving;
@@ -24,7 +24,8 @@ namespace RpcNet.Internal
             Action<ReceivedCall> receivedCallDispatcher,
             ILogger logger)
         {
-            this.server = new UdpClient(new IPEndPoint(ipAddress, port));
+            this.server = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            this.server.Bind(new IPEndPoint(ipAddress, port));
 
             this.reader = new UdpReader(this.server);
             this.writer = new UdpWriter(this.server);
@@ -35,14 +36,14 @@ namespace RpcNet.Internal
 
             if (port == 0)
             {
-                port = ((IPEndPoint)this.server.Client.LocalEndPoint).Port;
+                port = ((IPEndPoint)this.server.LocalEndPoint).Port;
                 foreach (int version in versions)
                 {
                     PortMapperUtilities.UnsetAndSetPort(ProtocolKind.Udp, port, program, version);
                 }
             }
 
-            this.logger?.Trace($"UDP Server listening on {this.server.Client.LocalEndPoint}...");
+            this.logger?.Trace($"UDP Server listening on {this.server.LocalEndPoint}...");
             this.receivingThread = new Thread(this.HandlingUdpCalls) { IsBackground = true };
         }
 

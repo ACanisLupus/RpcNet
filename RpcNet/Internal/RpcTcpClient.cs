@@ -10,7 +10,7 @@ namespace RpcNet.Internal
         private readonly TcpReader tcpReader;
         private readonly TcpWriter tcpWriter;
 
-        private TcpClient client;
+        private Socket client;
 
         public RpcTcpClient(IPAddress ipAddress, int port, int program, int version, ILogger logger)
         {
@@ -20,7 +20,7 @@ namespace RpcNet.Internal
             }
 
             this.remoteIpEndPoint = new IPEndPoint(ipAddress, port);
-            this.client = new TcpClient();
+            this.client = new Socket(SocketType.Stream, ProtocolType.Tcp);
             this.EstablishConnection();
             this.tcpReader = new TcpReader(this.client);
             this.tcpWriter = new TcpWriter(this.client);
@@ -36,8 +36,8 @@ namespace RpcNet.Internal
 
         public int TimeoutInMilliseconds
         {
-            get => this.client.Client.ReceiveTimeout;
-            set => this.client.Client.ReceiveTimeout = value;
+            get => this.client.ReceiveTimeout;
+            set => this.client.ReceiveTimeout = value;
         }
 
         public void Call(int procedure, int version, IXdrWritable argument, IXdrReadable result)
@@ -67,7 +67,7 @@ namespace RpcNet.Internal
         private void ReestablishConnection()
         {
             this.client.Close();
-            this.client = new TcpClient();
+            this.client = new Socket(SocketType.Stream, ProtocolType.Tcp);
             this.EstablishConnection();
             this.tcpReader.Reset(this.client);
             this.tcpWriter.Reset(this.client);
