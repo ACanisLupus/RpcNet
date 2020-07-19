@@ -7,7 +7,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace RpcNet.Internal
+namespace RpcNet
 {
     using System;
     using System.Net;

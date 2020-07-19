@@ -7,13 +7,13 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace RpcNet.Internal
+namespace RpcNet
 {
     using System;
     using System.Net;
     using RpcNet;
 
-    internal static class PortMapperConstants
+    public static class PortMapperConstants
     {
         public const int PortMapperPort = 111;
         public const int PortMapperVersion = 2;
@@ -26,7 +26,7 @@ namespace RpcNet.Internal
         public const int PortMapperProgram = 100000;
     }
 
-    internal partial class CallArguments : IXdrReadable, IXdrWritable
+    public partial class CallArguments : IXdrReadable, IXdrWritable
     {
         public int Program { get; set; }
         public int Version { get; set; }
@@ -59,7 +59,7 @@ namespace RpcNet.Internal
         }
     }
 
-    internal partial class CallResult : IXdrReadable, IXdrWritable
+    public partial class CallResult : IXdrReadable, IXdrWritable
     {
         public int Port { get; set; }
         public byte[] Result { get; set; }
@@ -86,7 +86,7 @@ namespace RpcNet.Internal
         }
     }
 
-    internal partial class Mapping : IXdrReadable, IXdrWritable
+    public partial class Mapping : IXdrReadable, IXdrWritable
     {
         public int Program { get; set; }
         public int Version { get; set; }
@@ -119,7 +119,7 @@ namespace RpcNet.Internal
         }
     }
 
-    internal partial class MappingNode : IXdrReadable, IXdrWritable
+    public partial class MappingNode : IXdrReadable, IXdrWritable
     {
         public Mapping Mapping { get; set; }
         public MappingNode Next { get; set; }
@@ -158,13 +158,13 @@ namespace RpcNet.Internal
         }
     }
 
-    internal enum ProtocolKind
+    public enum ProtocolKind
     {
         Tcp = 6,
         Udp = 17,
     }
 
-    internal class PortMapperClient : ClientStub
+    public class PortMapperClient : ClientStub
     {
         public PortMapperClient(Protocol protocol, IPAddress ipAddress, int port = 0, ILogger logger = null) :
             base(protocol, ipAddress, port, PortMapperConstants.PortMapperProgram, PortMapperConstants.PortMapperVersion, logger)
@@ -266,7 +266,7 @@ namespace RpcNet.Internal
         }
     }
 
-    internal abstract class PortMapperServerStub : ServerStub
+    public abstract class PortMapperServerStub : ServerStub
     {
         public PortMapperServerStub(Protocols protocols, IPAddress ipAddress, int port = 0, ILogger logger = null) :
             base(protocols, ipAddress, port, PortMapperConstants.PortMapperProgram, new[] { PortMapperConstants.PortMapperVersion }, logger)

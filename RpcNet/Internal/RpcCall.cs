@@ -3,7 +3,7 @@ namespace RpcNet.Internal
     using System;
     using System.Net;
 
-    internal class Call
+    internal class RpcCall
     {
         private readonly ILogger logger;
         private readonly INetworkReader networkReader;
@@ -16,7 +16,7 @@ namespace RpcNet.Internal
 
         private uint nextXid = (uint)new Random().Next();
 
-        public Call(
+        public RpcCall(
             int program,
             IPEndPoint remoteIpEndPoint,
             INetworkReader networkReader,

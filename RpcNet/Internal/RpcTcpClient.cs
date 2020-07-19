@@ -5,7 +5,7 @@ namespace RpcNet.Internal
 
     public class RpcTcpClient : INetworkClient
     {
-        private readonly Call call;
+        private readonly RpcCall call;
         private readonly IPEndPoint remoteIpEndPoint;
         private readonly TcpReader tcpReader;
         private readonly TcpWriter tcpWriter;
@@ -24,7 +24,7 @@ namespace RpcNet.Internal
             this.EstablishConnection();
             this.tcpReader = new TcpReader(this.client);
             this.tcpWriter = new TcpWriter(this.client);
-            this.call = new Call(
+            this.call = new RpcCall(
                 program,
                 this.remoteIpEndPoint,
                 this.tcpReader,
