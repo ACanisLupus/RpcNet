@@ -2,6 +2,7 @@ namespace RpcNet.Internal
 {
     using System.Net.Sockets;
 
+    // Public for tests
     public readonly struct NetworkWriteResult
     {
         public NetworkWriteResult(SocketError socketError)

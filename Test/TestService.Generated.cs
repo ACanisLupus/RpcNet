@@ -197,12 +197,12 @@ namespace TestService
 
     internal abstract class TestServiceServerStub : ServerStub
     {
-        public TestServiceServerStub(Protocols protocols, IPAddress ipAddress, int port = 0, ILogger logger = null) :
-            base(protocols, ipAddress, port, TestServiceConstants.TestServiceProgram, new[] { TestServiceConstants.TestServiceVersion, TestServiceConstants.TestServiceVersion2 }, logger)
+        public TestServiceServerStub(Protocol protocol, IPAddress ipAddress, int port = 0, ILogger logger = null) :
+            base(protocol, ipAddress, port, TestServiceConstants.TestServiceProgram, new[] { TestServiceConstants.TestServiceVersion, TestServiceConstants.TestServiceVersion2 }, logger)
         {
         }
 
-        protected override void DispatchReceivedCall(ReceivedCall call)
+        protected override void DispatchReceivedCall(ReceivedRpcCall call)
         {
             if (call.Version == TestServiceConstants.TestServiceVersion)
             {
@@ -212,7 +212,7 @@ namespace TestService
                     {
                         var args = new PingStruct();
                         call.RetrieveCall(args);
-                        var result = Ping_1(call.RemoteIpEndPoint, args);
+                        var result = Ping_1(call.Caller, args);
                         call.Reply(result);
                         break;
                     }
@@ -220,7 +220,7 @@ namespace TestService
                     {
                         var args = new MyStruct();
                         call.RetrieveCall(args);
-                        var result = TestMyStruct_1(call.RemoteIpEndPoint, args);
+                        var result = TestMyStruct_1(call.Caller, args);
                         call.Reply(result);
                         break;
                     }
@@ -237,7 +237,7 @@ namespace TestService
                     {
                         var args = new PingStruct();
                         call.RetrieveCall(args);
-                        var result = Ping2_2(call.RemoteIpEndPoint, args);
+                        var result = Ping2_2(call.Caller, args);
                         call.Reply(result);
                         break;
                     }
@@ -245,7 +245,7 @@ namespace TestService
                     {
                         var args = new MyStruct();
                         call.RetrieveCall(args);
-                        var result = TestMyStruct2_2(call.RemoteIpEndPoint, args);
+                        var result = TestMyStruct2_2(call.Caller, args);
                         call.Reply(result);
                         break;
                     }
@@ -260,9 +260,9 @@ namespace TestService
             }
         }
 
-        public abstract PingStruct Ping_1(IPEndPoint remoteIpEndPoint, PingStruct arg1);
-        public abstract MyStruct TestMyStruct_1(IPEndPoint remoteIpEndPoint, MyStruct arg1);
-        public abstract PingStruct Ping2_2(IPEndPoint remoteIpEndPoint, PingStruct arg1);
-        public abstract MyStruct TestMyStruct2_2(IPEndPoint remoteIpEndPoint, MyStruct arg1);
+        public abstract PingStruct Ping_1(Caller caller, PingStruct arg1);
+        public abstract MyStruct TestMyStruct_1(Caller caller, MyStruct arg1);
+        public abstract PingStruct Ping2_2(Caller caller, PingStruct arg1);
+        public abstract MyStruct TestMyStruct2_2(Caller caller, MyStruct arg1);
     }
 }

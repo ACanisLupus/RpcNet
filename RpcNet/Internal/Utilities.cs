@@ -28,5 +28,20 @@ namespace RpcNet.Internal
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int CalculateXdrPadding(int length) => (4 - (length & 3)) & 3;
+
+        public static string ConvertToString(Protocol protocol)
+        {
+            switch (protocol)
+            {
+                case Protocol.Tcp:
+                    return "TCP";
+                case Protocol.Udp:
+                    return "UDP";
+                case Protocol.TcpAndUdp:
+                    return "TCP and UDP";
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(protocol), protocol, null);
+            }
+        }
     }
 }

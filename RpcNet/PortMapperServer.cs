@@ -30,7 +30,7 @@ namespace RpcNet
             private readonly List<Mapping> mappings = new List<Mapping>();
 
             public PortMapperServerImpl(IPAddress ipAddress, ILogger logger) : base(
-                Protocols.TcpAndUdp,
+                Protocol.TcpAndUdp,
                 ipAddress,
                 PortMapperConstants.PortMapperPort,
                 logger)
@@ -38,14 +38,14 @@ namespace RpcNet
                 this.logger = logger;
             }
 
-            public override void Ping_2(IPEndPoint remoteIpEndPoint)
+            public override void Ping_2(Caller caller)
             {
-                this.logger?.Info($"Received PING from {remoteIpEndPoint}.");
+                this.logger?.Info($"Received PING from {caller}.");
             }
 
-            public override bool Set_2(IPEndPoint remoteIpEndPoint, Mapping mapping)
+            public override bool Set_2(Caller caller, Mapping mapping)
             {
-                this.logger?.Info($"{remoteIpEndPoint} SET     {ToLogString(mapping)}.");
+                this.logger?.Info($"{caller} SET     {ToLogString(mapping)}.");
                 lock (this.mappings)
                 {
                     if (this.mappings.Any(m => IsEqual(m, mapping)))
@@ -58,9 +58,9 @@ namespace RpcNet
                 }
             }
 
-            public override bool Unset_2(IPEndPoint remoteIpEndPoint, Mapping mapping)
+            public override bool Unset_2(Caller caller, Mapping mapping)
             {
-                this.logger?.Info($"{remoteIpEndPoint} UNSET   {ToLogString(mapping)}.");
+                this.logger?.Info($"{caller} UNSET   {ToLogString(mapping)}.");
                 lock (this.mappings)
                 {
                     for (int i = this.mappings.Count - 1; i >= 0; i--)
@@ -76,9 +76,9 @@ namespace RpcNet
                 }
             }
 
-            public override int GetPort_2(IPEndPoint remoteIpEndPoint, Mapping mapping)
+            public override int GetPort_2(Caller caller, Mapping mapping)
             {
-                this.logger?.Info($"{remoteIpEndPoint} GETPORT {ToLogString(mapping)}.");
+                this.logger?.Info($"{caller} GETPORT {ToLogString(mapping)}.");
                 lock (this.mappings)
                 {
                     Mapping found = this.mappings.FirstOrDefault(m => IsEqualExceptPort(m, mapping));
@@ -91,9 +91,9 @@ namespace RpcNet
                 }
             }
 
-            public override MappingNode Dump_2(IPEndPoint remoteIpEndPoint)
+            public override MappingNode Dump_2(Caller caller)
             {
-                this.logger?.Info($"{remoteIpEndPoint} DUMP.");
+                this.logger?.Info($"{caller} DUMP.");
                 lock (this.mappings)
                 {
                     MappingNode firstNode = null;
@@ -121,9 +121,9 @@ namespace RpcNet
                 }
             }
 
-            public override CallResult Call_2(IPEndPoint remoteIpEndPoint, CallArguments arg1)
+            public override CallResult Call_2(Caller caller, CallArguments arg1)
             {
-                this.logger?.Info($"{remoteIpEndPoint} CALLIT.");
+                this.logger?.Info($"{caller} CALLIT.");
                 return new CallResult();
             }
 

@@ -109,7 +109,7 @@ namespace RpcNet.Test
                 this.writer.Reserve(arguments[i]);
             }
 
-            Assert.Throws<RpcException>(() => this.writer.Reserve(arguments[arguments.Length - 1]));
+            Assert.Throws<RpcException>(() => this.writer.Reserve(arguments[^1]));
         }
 
         [Test]
@@ -132,7 +132,7 @@ namespace RpcNet.Test
                 this.reader.Read(arguments[i]);
             }
 
-            Assert.Throws<RpcException>(() => this.reader.Read(arguments[arguments.Length - 1]));
+            Assert.Throws<RpcException>(() => this.reader.Read(arguments[^1]));
         }
 
         [Test]

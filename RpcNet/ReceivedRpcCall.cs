@@ -2,26 +2,25 @@ namespace RpcNet
 {
     using System;
     using System.Linq;
-    using System.Net;
     using RpcNet.Internal;
 
-    public class ReceivedCall
+    public class ReceivedRpcCall
     {
         private readonly uint highVersion;
         private readonly uint lowVersion;
         private readonly int program;
-        private readonly Action<ReceivedCall> receivedCallDispatcher;
+        private readonly Action<ReceivedRpcCall> receivedCallDispatcher;
         private readonly IXdrReader xdrReader;
         private readonly IXdrWriter xdrWriter;
 
         private uint xid;
 
-        public ReceivedCall(
+        public ReceivedRpcCall(
             int program,
             int[] versions,
             INetworkReader networkReader,
             INetworkWriter networkWriter,
-            Action<ReceivedCall> receivedCallDispatcher)
+            Action<ReceivedRpcCall> receivedCallDispatcher)
         {
             this.program = program;
             this.receivedCallDispatcher = receivedCallDispatcher;
@@ -33,7 +32,7 @@ namespace RpcNet
 
         public uint Version { get; private set; }
         public uint Procedure { get; private set; }
-        public IPEndPoint RemoteIpEndPoint { get; private set; }
+        public Caller Caller { get; private set; }
 
         public void RetrieveCall(IXdrReadable argument) => argument.ReadFrom(this.xdrReader);
 
@@ -56,7 +55,7 @@ namespace RpcNet
             reply.WriteTo(this.xdrWriter);
         }
 
-        internal void HandleCall(IPEndPoint remoteIpEndPoint)
+        internal void HandleCall(Caller clientInfo)
         {
             var rpcMessage = new RpcMessage(this.xdrReader);
             this.xid = rpcMessage.Xid;
@@ -82,7 +81,7 @@ namespace RpcNet
 
             this.Version = rpcMessage.Body.CallBody.Version;
             this.Procedure = rpcMessage.Body.CallBody.Procedure;
-            this.RemoteIpEndPoint = remoteIpEndPoint;
+            this.Caller = clientInfo;
 
             this.receivedCallDispatcher(this);
         }

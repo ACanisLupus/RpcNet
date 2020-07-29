@@ -46,7 +46,5 @@ namespace RpcNet.Test
 
             return true;
         }
-
-        public void Close() => this.buffer.CompleteAdding();
     }
 }

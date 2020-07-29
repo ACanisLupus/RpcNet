@@ -13,7 +13,7 @@ namespace RpcNet.Test
         [OneTimeSetUp]
         public void OneTimeSetUp()
         {
-            this.portMapperServer = new PortMapperServer(IPAddress.Loopback, new MyLogger("PMAP"));
+            this.portMapperServer = new PortMapperServer(IPAddress.Loopback, new MyLogger("Port Mapper"));
             this.portMapperServer.Start();
         }
 
@@ -26,7 +26,7 @@ namespace RpcNet.Test
         [SetUp]
         public void SetUp()
         {
-            this.testServer = new TestServer(Protocols.TcpAndUdp, IPAddress.Loopback, 0, new MyLogger("TEST"));
+            this.testServer = new TestServer(Protocol.TcpAndUdp, IPAddress.Loopback, 0, new MyLogger("TEST"));
             this.testServer.Start();
         }
 
@@ -41,13 +41,11 @@ namespace RpcNet.Test
         [TestCase(Protocol.Udp)]
         public void OneClient(Protocol protocol)
         {
-            using (var client = new TestServiceClient(protocol, IPAddress.Loopback))
+            using var client = new TestServiceClient(protocol, IPAddress.Loopback);
+            for (int i = 0; i < 100; i++)
             {
-                for (int i = 0; i < 100; i++)
-                {
-                    PingStruct result = client.Ping_1(new PingStruct { Value = i });
-                    Assert.That(result.Value, Is.EqualTo(i));
-                }
+                PingStruct result = client.Ping_1(new PingStruct { Value = i });
+                Assert.That(result.Value, Is.EqualTo(i));
             }
         }
 

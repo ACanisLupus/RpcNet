@@ -20,31 +20,31 @@ namespace TestServer
         {
             private static readonly ILogger TheLogger = new Logger();
 
-            public TestServer(IPAddress ipAddress) : base(Protocols.TcpAndUdp, ipAddress, 0, TheLogger)
+            public TestServer(IPAddress ipAddress) : base(Protocol.TcpAndUdp, ipAddress, 0, TheLogger)
             {
             }
 
-            public override PingStruct Ping_1(IPEndPoint remoteIpEndPoint, PingStruct arg1)
+            public override PingStruct Ping_1(Caller caller, PingStruct arg1)
             {
-                TheLogger.Info($"{remoteIpEndPoint} PING1({arg1.Value})");
+                TheLogger.Info($"{caller} PING1({arg1.Value})");
                 return arg1;
             }
 
-            public override MyStruct TestMyStruct_1(IPEndPoint remoteIpEndPoint, MyStruct arg1)
+            public override MyStruct TestMyStruct_1(Caller caller, MyStruct arg1)
             {
-                TheLogger.Info($"{remoteIpEndPoint} TESTMYSTRUCT");
+                TheLogger.Info($"{caller} TESTMYSTRUCT");
                 return arg1;
             }
 
-            public override PingStruct Ping2_2(IPEndPoint remoteIpEndPoint, PingStruct arg1)
+            public override PingStruct Ping2_2(Caller caller, PingStruct arg1)
             {
-                TheLogger.Info($"{remoteIpEndPoint} PING2({arg1.Value})");
+                TheLogger.Info($"{caller} PING2({arg1.Value})");
                 return arg1;
             }
 
-            public override MyStruct TestMyStruct2_2(IPEndPoint remoteIpEndPoint, MyStruct arg1)
+            public override MyStruct TestMyStruct2_2(Caller caller, MyStruct arg1)
             {
-                TheLogger.Info($"{remoteIpEndPoint} TESTMYSTRUCT2");
+                TheLogger.Info($"{caller} TESTMYSTRUCT2");
                 return arg1;
             }
         }

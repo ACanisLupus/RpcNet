@@ -11,14 +11,14 @@ namespace RpcNet
         private bool isDisposed;
 
         protected ServerStub(
-            Protocols protocols,
+            Protocol protocol,
             IPAddress ipAddress,
             int port,
             int program,
             int[] versions,
             ILogger logger)
         {
-            if (protocols.HasFlag(Protocols.TcpOnly))
+            if (protocol.HasFlag(Protocol.Tcp))
             {
                 this.rpcTcpServer = new RpcTcpServer(
                     ipAddress,
@@ -29,7 +29,7 @@ namespace RpcNet
                     logger);
             }
 
-            if (protocols.HasFlag(Protocols.UdpOnly))
+            if (protocol.HasFlag(Protocol.Udp))
             {
                 this.rpcUdpServer = new RpcUdpServer(
                     ipAddress,
@@ -53,7 +53,7 @@ namespace RpcNet
             GC.SuppressFinalize(this);
         }
 
-        protected abstract void DispatchReceivedCall(ReceivedCall call);
+        protected abstract void DispatchReceivedCall(ReceivedRpcCall call);
 
         protected virtual void Dispose(bool disposing)
         {

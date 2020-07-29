@@ -244,7 +244,7 @@ namespace RpcNet.Test
         [TestCase("a", 8)]
         [TestCase("ab", 8)]
         [TestCase("abc", 8)]
-        [TestCase("abcd", 8)]
+        [TestCase("text", 8)]
         public void ReadAndWriteString(string value, int expectedWriteIndex)
         {
             this.writer.Write(value);

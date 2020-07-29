@@ -2,6 +2,7 @@ namespace RpcNet.Internal
 {
     using System;
 
+    // Public for tests
     public interface INetworkClient : IDisposable
     {
         int TimeoutInMilliseconds { get; set; }

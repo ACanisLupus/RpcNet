@@ -268,8 +268,8 @@ namespace RpcNet
 
     public abstract class PortMapperServerStub : ServerStub
     {
-        public PortMapperServerStub(Protocols protocols, IPAddress ipAddress, int port = 0, ILogger logger = null) :
-            base(protocols, ipAddress, port, PortMapperConstants.PortMapperProgram, new[] { PortMapperConstants.PortMapperVersion }, logger)
+        public PortMapperServerStub(Protocol protocol, IPAddress ipAddress, int port = 0, ILogger logger = null) :
+            base(protocol, ipAddress, port, PortMapperConstants.PortMapperProgram, new[] { PortMapperConstants.PortMapperVersion }, logger)
         {
         }
 
@@ -324,7 +324,7 @@ namespace RpcNet
             }
         }
 
-        protected override void DispatchReceivedCall(ReceivedCall call)
+        protected override void DispatchReceivedCall(ReceivedRpcCall call)
         {
             if (call.Version == PortMapperConstants.PortMapperVersion)
             {
@@ -334,7 +334,7 @@ namespace RpcNet
                     {
                         var args = new Arguments_0();
                         call.RetrieveCall(args);
-                        Ping_2(call.RemoteIpEndPoint);
+                        Ping_2(call.Caller);
                         call.Reply(new Result_0());
                         break;
                     }
@@ -343,7 +343,7 @@ namespace RpcNet
                         var args = new Mapping();
                         call.RetrieveCall(args);
                         var result = new Result_1();
-                        result.Value = Set_2(call.RemoteIpEndPoint, args);
+                        result.Value = Set_2(call.Caller, args);
                         call.Reply(result);
                         break;
                     }
@@ -352,7 +352,7 @@ namespace RpcNet
                         var args = new Mapping();
                         call.RetrieveCall(args);
                         var result = new Result_2();
-                        result.Value = Unset_2(call.RemoteIpEndPoint, args);
+                        result.Value = Unset_2(call.Caller, args);
                         call.Reply(result);
                         break;
                     }
@@ -361,7 +361,7 @@ namespace RpcNet
                         var args = new Mapping();
                         call.RetrieveCall(args);
                         var result = new Result_3();
-                        result.Value = GetPort_2(call.RemoteIpEndPoint, args);
+                        result.Value = GetPort_2(call.Caller, args);
                         call.Reply(result);
                         break;
                     }
@@ -369,7 +369,7 @@ namespace RpcNet
                     {
                         var args = new Arguments_4();
                         call.RetrieveCall(args);
-                        var result = Dump_2(call.RemoteIpEndPoint);
+                        var result = Dump_2(call.Caller);
                         call.Reply(result);
                         break;
                     }
@@ -377,7 +377,7 @@ namespace RpcNet
                     {
                         var args = new CallArguments();
                         call.RetrieveCall(args);
-                        var result = Call_2(call.RemoteIpEndPoint, args);
+                        var result = Call_2(call.Caller, args);
                         call.Reply(result);
                         break;
                     }
@@ -392,11 +392,11 @@ namespace RpcNet
             }
         }
 
-        public abstract void Ping_2(IPEndPoint remoteIpEndPoint);
-        public abstract bool Set_2(IPEndPoint remoteIpEndPoint, Mapping arg1);
-        public abstract bool Unset_2(IPEndPoint remoteIpEndPoint, Mapping arg1);
-        public abstract int GetPort_2(IPEndPoint remoteIpEndPoint, Mapping arg1);
-        public abstract MappingNode Dump_2(IPEndPoint remoteIpEndPoint);
-        public abstract CallResult Call_2(IPEndPoint remoteIpEndPoint, CallArguments arg1);
+        public abstract void Ping_2(Caller caller);
+        public abstract bool Set_2(Caller caller, Mapping arg1);
+        public abstract bool Unset_2(Caller caller, Mapping arg1);
+        public abstract int GetPort_2(Caller caller, Mapping arg1);
+        public abstract MappingNode Dump_2(Caller caller);
+        public abstract CallResult Call_2(Caller caller, CallArguments arg1);
     }
 }

@@ -4,6 +4,7 @@ namespace RpcNet.Internal
     using System.Net;
     using System.Net.Sockets;
 
+    // Public for tests
     public class UdpWriter : INetworkWriter
     {
         private readonly byte[] buffer;
@@ -48,8 +49,7 @@ namespace RpcNet.Internal
         {
             if ((this.writeIndex + length) > this.buffer.Length)
             {
-                const string ErrorMessage = "Buffer overflow.";
-                throw new RpcException(ErrorMessage);
+                throw new RpcException("UDP buffer overflow.");
             }
 
             Span<byte> span = this.buffer.AsSpan(this.writeIndex, length);

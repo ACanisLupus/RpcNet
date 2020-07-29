@@ -48,9 +48,9 @@ namespace RpcNet.Test
             const int Version = 13;
             const int Procedure = 14;
 
-            var receivedCallChannel = new Channel<ReceivedCall>();
+            var receivedCallChannel = new Channel<ReceivedRpcCall>();
 
-            void Dispatcher(ReceivedCall call)
+            void Dispatcher(ReceivedRpcCall call)
             {
                 // To assert it on the main thread
                 receivedCallChannel.Send(call);
@@ -77,7 +77,7 @@ namespace RpcNet.Test
 
                 client.Call(Procedure, Version, argument, result);
 
-                Assert.That(receivedCallChannel.Receive(out ReceivedCall receivedCall));
+                Assert.That(receivedCallChannel.Receive(out ReceivedRpcCall receivedCall));
                 Assert.That(receivedCall.Procedure, Is.EqualTo(Procedure));
                 Assert.That(receivedCall.Version, Is.EqualTo(Version));
 

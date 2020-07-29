@@ -31,7 +31,6 @@ namespace RpcNet.Internal
             this.xdrWriter = new XdrWriter(networkWriter);
             this.rpcMessage = new RpcMessage
             {
-                Xid = this.nextXid++,
                 Body = new Body
                 {
                     MessageType = MessageType.Call,
@@ -63,7 +62,6 @@ namespace RpcNet.Internal
                         continue;
                     }
 
-                    this.logger?.Error(errorMessage);
                     throw new RpcException(errorMessage);
                 }
 
@@ -76,7 +74,6 @@ namespace RpcNet.Internal
                         continue;
                     }
 
-                    this.logger?.Error(errorMessage);
                     throw new RpcException(errorMessage);
                 }
 

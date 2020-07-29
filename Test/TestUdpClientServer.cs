@@ -16,9 +16,9 @@ namespace RpcNet.Test
             const int Version = 13;
             const int Procedure = 14;
 
-            var receivedCallChannel = new Channel<ReceivedCall>();
+            var receivedCallChannel = new Channel<ReceivedRpcCall>();
 
-            void Dispatcher(ReceivedCall call)
+            void Dispatcher(ReceivedRpcCall call)
             {
                 // To assert it on the main thread
                 receivedCallChannel.Send(call);
@@ -28,30 +28,26 @@ namespace RpcNet.Test
                 call.Reply(pingStruct);
             }
 
-            using (var server = new RpcUdpServer(
+            using var server = new RpcUdpServer(
                 ipAddress,
                 Port,
                 Program,
                 new[] { Version },
                 Dispatcher,
-                TestLogger.Instance))
-            {
-                server.Start();
-                using (var client = new RpcUdpClient(ipAddress, Port, Program, Version, TestLogger.Instance))
-                {
-                    var argument = new PingStruct { Value = 42 };
-                    var result = new PingStruct();
+                TestLogger.Instance);
+            server.Start();
+            using var client = new RpcUdpClient(ipAddress, Port, Program, Version, TestLogger.Instance);
+            var argument = new PingStruct { Value = 42 };
+            var result = new PingStruct();
 
-                    client.Call(Procedure, Version, argument, result);
+            client.Call(Procedure, Version, argument, result);
 
-                    Assert.That(receivedCallChannel.Receive(out ReceivedCall receivedCall));
-                    Assert.That(receivedCall.Procedure, Is.EqualTo(Procedure));
-                    Assert.That(receivedCall.Version, Is.EqualTo(Version));
-                    Assert.That(receivedCall.RemoteIpEndPoint, Is.Not.Null);
+            Assert.That(receivedCallChannel.Receive(out ReceivedRpcCall receivedCall));
+            Assert.That(receivedCall.Procedure, Is.EqualTo(Procedure));
+            Assert.That(receivedCall.Version, Is.EqualTo(Version));
+            Assert.That(receivedCall.Caller, Is.Not.Null);
 
-                    Assert.That(argument.Value, Is.EqualTo(result.Value));
-                }
-            }
+            Assert.That(argument.Value, Is.EqualTo(result.Value));
         }
     }
 }

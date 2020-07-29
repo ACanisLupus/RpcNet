@@ -6,16 +6,17 @@ namespace RpcNet.Internal
     using System.Net.Sockets;
     using System.Threading;
 
+    // Public for tests
     public class RpcTcpServer : IDisposable
     {
         private readonly List<RpcTcpConnection> connections = new List<RpcTcpConnection>();
+        private readonly IPAddress ipAddress;
         private readonly ILogger logger;
         private readonly int port;
         private readonly int program;
-        private readonly Action<ReceivedCall> receivedCallDispatcher;
+        private readonly Action<ReceivedRpcCall> receivedCallDispatcher;
         private readonly Socket server;
         private readonly int[] versions;
-        private readonly IPAddress ipAddress;
 
         private Thread acceptingThread;
 
@@ -26,7 +27,7 @@ namespace RpcNet.Internal
             int port,
             int program,
             int[] versions,
-            Action<ReceivedCall> receivedCallDispatcher,
+            Action<ReceivedRpcCall> receivedCallDispatcher,
             ILogger logger)
         {
             this.program = program;
@@ -67,7 +68,8 @@ namespace RpcNet.Internal
                 }
             }
 
-            this.logger?.Trace($"TCP Server listening on {this.server.LocalEndPoint}...");
+            this.logger?.Trace(
+                $"{Utilities.ConvertToString(Protocol.Tcp)} Server listening on {this.server.LocalEndPoint}...");
 
             this.acceptingThread = new Thread(this.Accepting);
             this.acceptingThread.Start();

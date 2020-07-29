@@ -21,6 +21,8 @@ namespace RpcNet
                 default:
                     throw new ArgumentOutOfRangeException(nameof(protocol));
             }
+
+            this.TimeoutInMilliseconds = 10000;
         }
 
         public int TimeoutInMilliseconds

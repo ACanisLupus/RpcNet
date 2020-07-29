@@ -3,6 +3,7 @@ namespace RpcNet.Internal
     using System.Net;
     using System.Net.Sockets;
 
+    // Public for tests
     public readonly struct NetworkReadResult
     {
         private NetworkReadResult(IPEndPoint remoteIpEndPoint, SocketError socketError, bool isDisconnected)

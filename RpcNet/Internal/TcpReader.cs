@@ -3,6 +3,7 @@ namespace RpcNet.Internal
     using System;
     using System.Net.Sockets;
 
+    // Public for tests
     public class TcpReader : INetworkReader
     {
         private const int TcpHeaderLength = 4;
@@ -53,8 +54,7 @@ namespace RpcNet.Internal
         {
             if ((this.packetState != PacketState.Complete) || (this.readIndex != this.writeIndex))
             {
-                const string ErrorMessage = "Not all data was read.";
-                throw new RpcException(ErrorMessage);
+                throw new RpcException("Not all TCP data was read.");
             }
         }
 
@@ -63,15 +63,13 @@ namespace RpcNet.Internal
             NetworkReadResult networkReadResult = this.FillBuffer();
             if (networkReadResult.HasError)
             {
-                string errorMessage =
-                    $"Could not receive from TCP stream. Socket error code: {networkReadResult.SocketError}.";
-                throw new RpcException(errorMessage);
+                throw new RpcException(
+                    $"Could not receive from TCP stream. Socket error code: {networkReadResult.SocketError}.");
             }
 
             if (networkReadResult.IsDisconnected)
             {
-                const string ErrorMessage = "Could not receive from TCP stream. Remote end point disconnected.";
-                throw new RpcException(ErrorMessage);
+                throw new RpcException("Could not receive from TCP stream. Remote end point disconnected.");
             }
 
             int endIndex = Math.Min(this.headerIndex, this.buffer.Length);
@@ -201,8 +199,7 @@ namespace RpcNet.Internal
 
                 if (((packetLength % 4) != 0) || (packetLength == 0))
                 {
-                    const string ErrorMessage = "This is not an XDR stream.";
-                    throw new RpcException(ErrorMessage);
+                    throw new RpcException("This is not an XDR stream.");
                 }
 
                 this.packetState = PacketState.Body;

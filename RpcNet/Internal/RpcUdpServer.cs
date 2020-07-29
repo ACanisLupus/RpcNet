@@ -5,11 +5,12 @@ namespace RpcNet.Internal
     using System.Net.Sockets;
     using System.Threading;
 
+    // Public for tests
     public class RpcUdpServer : IDisposable
     {
         private readonly ILogger logger;
         private readonly UdpReader reader;
-        private readonly ReceivedCall receivedCall;
+        private readonly ReceivedRpcCall receivedCall;
         private readonly Thread receivingThread;
         private readonly Socket server;
         private readonly UdpWriter writer;
@@ -21,7 +22,7 @@ namespace RpcNet.Internal
             int port,
             int program,
             int[] versions,
-            Action<ReceivedCall> receivedCallDispatcher,
+            Action<ReceivedRpcCall> receivedCallDispatcher,
             ILogger logger)
         {
             this.server = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
@@ -30,7 +31,12 @@ namespace RpcNet.Internal
             this.reader = new UdpReader(this.server);
             this.writer = new UdpWriter(this.server);
 
-            this.receivedCall = new ReceivedCall(program, versions, this.reader, this.writer, receivedCallDispatcher);
+            this.receivedCall = new ReceivedRpcCall(
+                program,
+                versions,
+                this.reader,
+                this.writer,
+                receivedCallDispatcher);
 
             this.logger = logger;
 
@@ -43,7 +49,8 @@ namespace RpcNet.Internal
                 }
             }
 
-            this.logger?.Trace($"UDP Server listening on {this.server.LocalEndPoint}...");
+            this.logger?.Trace(
+                $"{Utilities.ConvertToString(Protocol.Udp)} Server listening on {this.server.LocalEndPoint}...");
             this.receivingThread = new Thread(this.HandlingUdpCalls) { IsBackground = true };
         }
 
@@ -74,7 +81,7 @@ namespace RpcNet.Internal
                         continue;
                     }
                     this.writer.BeginWriting();
-                    this.receivedCall.HandleCall(result.RemoteIpEndPoint);
+                    this.receivedCall.HandleCall(new Caller(result.RemoteIpEndPoint, Protocol.Udp));
                     this.reader.EndReading();
                     this.writer.EndWriting(result.RemoteIpEndPoint);
                 }

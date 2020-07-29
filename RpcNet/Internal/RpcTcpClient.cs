@@ -3,6 +3,7 @@ namespace RpcNet.Internal
     using System.Net;
     using System.Net.Sockets;
 
+    // Public for tests
     public class RpcTcpClient : INetworkClient
     {
         private readonly RpcCall call;
@@ -31,7 +32,6 @@ namespace RpcNet.Internal
                 this.tcpWriter,
                 this.ReestablishConnection,
                 logger);
-            this.TimeoutInMilliseconds = 10000;
         }
 
         public int TimeoutInMilliseconds
@@ -58,9 +58,8 @@ namespace RpcNet.Internal
             }
             catch (SocketException e)
             {
-                string errorMessage =
-                    $"Could not connect to {this.remoteIpEndPoint}. Socket error: {e.SocketErrorCode}.";
-                throw new RpcException(errorMessage);
+                throw new RpcException(
+                    $"Could not connect to {this.remoteIpEndPoint}. Socket error: {e.SocketErrorCode}.");
             }
         }
 

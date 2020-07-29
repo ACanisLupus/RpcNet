@@ -3,6 +3,7 @@ namespace RpcNet.Internal
     using System.Net;
     using System.Net.Sockets;
 
+    // Public for tests
     public class RpcUdpClient : INetworkClient
     {
         private readonly RpcCall call;
@@ -20,7 +21,6 @@ namespace RpcNet.Internal
             var reader = new UdpReader(this.client);
             var writer = new UdpWriter(this.client);
             this.call = new RpcCall(program, remoteIpEndPoint, reader, writer, null, logger);
-            this.TimeoutInMilliseconds = 10000;
         }
 
         public int TimeoutInMilliseconds

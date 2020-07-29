@@ -5,6 +5,7 @@ namespace RpcNet.Internal
     using System.Net.Sockets;
     using System.Runtime.InteropServices;
 
+    // Public for tests
     public class UdpReader : INetworkReader
     {
         private readonly byte[] buffer;
@@ -45,10 +46,7 @@ namespace RpcNet.Internal
             this.readIndex = 0;
             try
             {
-                this.totalLength = this.udpClient.ReceiveFrom(
-                    this.buffer,
-                    SocketFlags.None,
-                    ref this.remoteEndPoint);
+                this.totalLength = this.udpClient.ReceiveFrom(this.buffer, SocketFlags.None, ref this.remoteEndPoint);
                 return NetworkReadResult.CreateSuccess((IPEndPoint)this.remoteEndPoint);
             }
             catch (SocketException e)
@@ -61,8 +59,7 @@ namespace RpcNet.Internal
         {
             if (this.readIndex != this.totalLength)
             {
-                const string ErrorMessage = "Not all data was read.";
-                throw new RpcException(ErrorMessage);
+                throw new RpcException("Not all UDP data was read.");
             }
         }
 
@@ -70,8 +67,7 @@ namespace RpcNet.Internal
         {
             if ((this.readIndex + length) > this.totalLength)
             {
-                const string ErrorMessage = "Buffer underflow.";
-                throw new RpcException(ErrorMessage);
+                throw new RpcException("UDP buffer underflow.");
             }
 
             Span<byte> span = this.buffer.AsSpan(this.readIndex, length);
