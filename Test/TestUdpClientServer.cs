@@ -1,10 +1,12 @@
 namespace RpcNet.Test
 {
+    using System;
     using System.Net;
     using NUnit.Framework;
     using RpcNet.Internal;
     using TestService;
 
+    [TestFixture]
     internal class TestUdpClientServer
     {
         private const int Port = 12345;
@@ -37,13 +39,16 @@ namespace RpcNet.Test
                 Dispatcher,
                 new TestLogger("UDP Server"));
             server.Start();
+
             using var client = new RpcUdpClient(ipAddress, Port, Program, Version, new TestLogger("UDP Client"));
             var argument = new PingStruct { Value = 42 };
             var result = new PingStruct();
 
             client.Call(Procedure, Version, argument, result);
 
-            Assert.That(receivedCallChannel.Receive(out ReceivedRpcCall receivedCall));
+            Assert.That(receivedCallChannel.TryReceive(
+                TimeSpan.FromSeconds(10),
+                out ReceivedRpcCall receivedCall));
             Assert.That(receivedCall.Procedure, Is.EqualTo(Procedure));
             Assert.That(receivedCall.Version, Is.EqualTo(Version));
             Assert.That(receivedCall.Caller, Is.Not.Null);

@@ -4,6 +4,7 @@ namespace RpcNet.Test
     using System.Threading;
     using NUnit.Framework;
 
+    [TestFixture]
     internal class TestPortMapper
     {
         private const int Port = 12345;

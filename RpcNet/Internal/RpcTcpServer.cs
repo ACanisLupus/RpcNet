@@ -78,6 +78,13 @@ namespace RpcNet.Internal
         public void Dispose()
         {
             this.stopAccepting = true;
+            try
+            {
+                this.server.Shutdown(SocketShutdown.Both);
+            }
+            catch
+            {
+            }
 
             this.server.Dispose();
 

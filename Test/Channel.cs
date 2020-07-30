@@ -2,49 +2,29 @@ namespace RpcNet.Test
 {
     using System;
     using System.Collections.Concurrent;
+    using System.Threading;
 
     internal class Channel<T>
     {
-        private readonly BlockingCollection<T> buffer;
+        private readonly AutoResetEvent itemReceived = new AutoResetEvent(false);
+        private readonly ConcurrentQueue<T> items = new ConcurrentQueue<T>();
 
-        public Channel() : this(1)
+        public void Send(T item)
         {
+            this.items.Enqueue(item);
+            this.itemReceived.Set();
         }
 
-        public Channel(int size)
+        public bool TryReceive(TimeSpan timeout, out T item)
         {
-            this.buffer = new BlockingCollection<T>(new ConcurrentQueue<T>(), size);
-        }
+            item = default;
 
-        public bool Send(T t)
-        {
-            try
+            if (!this.itemReceived.WaitOne(timeout))
             {
-                this.buffer.Add(t);
-            }
-            catch (InvalidOperationException)
-            {
-                // Will be thrown when the collection gets closed
                 return false;
             }
 
-            return true;
-        }
-
-        public bool Receive(out T val)
-        {
-            try
-            {
-                val = this.buffer.Take();
-            }
-            catch (InvalidOperationException)
-            {
-                // Will be thrown when the collection is empty and got closed
-                val = default;
-                return false;
-            }
-
-            return true;
+            return this.items.TryDequeue(out item);
         }
     }
 }

@@ -3,11 +3,13 @@ namespace RpcNet.Test
     using System;
     using System.Net;
     using System.Net.Sockets;
+    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using NUnit.Framework;
     using RpcNet.Internal;
 
+    [TestFixture]
     internal class TestUdpReaderWriter
     {
         private UdpClient client;
@@ -38,7 +40,7 @@ namespace RpcNet.Test
         }
 
         [Test]
-        public void SendAndReceiveData([Values(0, 10, 100)] int length)
+        public void SendAndReceiveData([Values(10, 100)] int length)
         {
             this.writer.BeginWriting();
             Span<byte> writeSpan = this.writer.Reserve(length);
@@ -55,9 +57,9 @@ namespace RpcNet.Test
             NetworkReadResult readResult = this.reader.BeginReading();
 
             Assert.That(readResult.SocketError, Is.EqualTo(SocketError.Success));
+            Assert.That(readResult.IsDisconnected, Is.EqualTo(false));
             Assert.That(readResult.RemoteIpEndPoint.Address, Is.EqualTo(this.remoteIpEndPoint.Address));
             Assert.That(readResult.RemoteIpEndPoint.Port, Is.Not.EqualTo(this.remoteIpEndPoint.Port));
-            Assert.That(readResult.RemoteIpEndPoint.Port, Is.GreaterThanOrEqualTo(49152));
 
             ReadOnlySpan<byte> readSpan = this.reader.Read(length);
             this.reader.EndReading();
@@ -142,7 +144,10 @@ namespace RpcNet.Test
             Thread.Sleep(100);
             this.server.Dispose();
             NetworkReadResult readResult = task.GetAwaiter().GetResult();
-            Assert.That(readResult.SocketError, Is.EqualTo(SocketError.Interrupted));
+            SocketError expextedError = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ?
+                SocketError.Interrupted :
+                SocketError.Success;
+            Assert.That(readResult.SocketError, Is.EqualTo(expextedError));
         }
 
         private static void AssertEquals(ReadOnlySpan<byte> one, ReadOnlySpan<byte> two)

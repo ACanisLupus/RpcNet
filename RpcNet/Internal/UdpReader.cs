@@ -47,6 +47,11 @@ namespace RpcNet.Internal
             try
             {
                 this.totalLength = this.udpClient.ReceiveFrom(this.buffer, SocketFlags.None, ref this.remoteEndPoint);
+                if (this.totalLength == 0)
+                {
+                    return NetworkReadResult.CreateDisconnected();
+                }
+
                 return NetworkReadResult.CreateSuccess((IPEndPoint)this.remoteEndPoint);
             }
             catch (SocketException e)

@@ -6,6 +6,7 @@ namespace RpcNet.Test
     using NUnit.Framework;
     using RpcNet.Internal;
 
+    [TestFixture]
     internal class TestTcpReaderWriter
     {
         private TcpListener listener;

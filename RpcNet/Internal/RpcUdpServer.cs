@@ -62,6 +62,14 @@ namespace RpcNet.Internal
         public void Dispose()
         {
             this.stopReceiving = true;
+            try
+            {
+                this.server.Shutdown(SocketShutdown.Both);
+            }
+            catch
+            {
+            }
+
             this.server.Dispose();
             this.receivingThread.Join();
         }
@@ -80,6 +88,13 @@ namespace RpcNet.Internal
                             $"Socket error: {result.SocketError}.");
                         continue;
                     }
+
+                    if (result.IsDisconnected)
+                    {
+                        // Should only happen on dispose
+                        continue;
+                    }
+
                     this.writer.BeginWriting();
                     this.receivedCall.HandleCall(new Caller(result.RemoteIpEndPoint, Protocol.Udp));
                     this.reader.EndReading();

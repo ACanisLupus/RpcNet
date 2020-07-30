@@ -1,10 +1,12 @@
 namespace RpcNet.Test
 {
+    using System;
     using System.Net;
     using NUnit.Framework;
     using RpcNet.Internal;
     using TestService;
 
+    [TestFixture]
     internal class TestTcpClientServer
     {
         private const int Port = 12345;
@@ -82,7 +84,7 @@ namespace RpcNet.Test
 
                 client.Call(Procedure, Version, argument, result);
 
-                Assert.That(receivedCallChannel.Receive(out ReceivedRpcCall receivedCall));
+                Assert.That(receivedCallChannel.TryReceive(TimeSpan.FromSeconds(10), out ReceivedRpcCall receivedCall));
                 Assert.That(receivedCall.Procedure, Is.EqualTo(Procedure));
                 Assert.That(receivedCall.Version, Is.EqualTo(Version));
 

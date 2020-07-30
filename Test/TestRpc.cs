@@ -4,6 +4,7 @@ namespace RpcNet.Test
     using NUnit.Framework;
     using TestService;
 
+    [TestFixture]
     internal class TestRpc
     {
         private const int Port = 12345;
