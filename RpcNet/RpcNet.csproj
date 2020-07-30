@@ -6,9 +6,11 @@
     <BaseOutputPath>..\bin</BaseOutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>RpcNet.snk</AssemblyOriginatorKeyFile>
+
     <PackageId>RpcNet</PackageId>
     <Authors>Artur Wolf</Authors>
-    <PackageDescription>RPC implementation for .NET</PackageDescription>
     <Description>RPC implementation for .NET</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/ArtusCanisLupus/RpcNet</RepositoryUrl>
