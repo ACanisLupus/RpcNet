@@ -9,9 +9,11 @@ namespace RpcNet
     {
         private readonly PortMapperServerImpl server;
 
-        public PortMapperServer(IPAddress ipAddress, ILogger logger = null)
+        public PortMapperServer(IPAddress ipAddress, int? port = null, ILogger logger = null)
         {
-            this.server = new PortMapperServerImpl(ipAddress, logger);
+            // Port can be set for testing purposes (privileged ports on Linux)
+            int portMapperPort = port ?? PortMapperConstants.PortMapperPort;
+            this.server = new PortMapperServerImpl(ipAddress, portMapperPort, logger);
         }
 
         public void Start()
@@ -29,10 +31,10 @@ namespace RpcNet
             private readonly ILogger logger;
             private readonly List<Mapping> mappings = new List<Mapping>();
 
-            public PortMapperServerImpl(IPAddress ipAddress, ILogger logger) : base(
+            public PortMapperServerImpl(IPAddress ipAddress, int port, ILogger logger) : base(
                 Protocol.TcpAndUdp,
                 ipAddress,
-                PortMapperConstants.PortMapperPort,
+                port,
                 logger)
             {
                 this.logger = logger;

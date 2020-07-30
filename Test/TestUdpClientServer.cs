@@ -7,11 +7,12 @@ namespace RpcNet.Test
 
     internal class TestUdpClientServer
     {
+        private const int Port = 12345;
+
         [Test]
         public void SendAndReceiveData()
         {
             IPAddress ipAddress = IPAddress.Loopback;
-            const int Port = 12345;
             const int Program = 12;
             const int Version = 13;
             const int Procedure = 14;
@@ -34,9 +35,9 @@ namespace RpcNet.Test
                 Program,
                 new[] { Version },
                 Dispatcher,
-                TestLogger.Instance);
+                new TestLogger("UDP Server"));
             server.Start();
-            using var client = new RpcUdpClient(ipAddress, Port, Program, Version, TestLogger.Instance);
+            using var client = new RpcUdpClient(ipAddress, Port, Program, Version, new TestLogger("UDP Client"));
             var argument = new PingStruct { Value = 42 };
             var result = new PingStruct();
 

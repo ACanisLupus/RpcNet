@@ -15,7 +15,7 @@ namespace RpcNet
 
         private uint xid;
 
-        public ReceivedRpcCall(
+        internal ReceivedRpcCall(
             int program,
             int[] versions,
             INetworkReader networkReader,

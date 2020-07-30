@@ -18,7 +18,7 @@ namespace RpcNet.Test
             const int Version = 13;
 
             var exception = Assert.Throws<RpcException>(
-                () => _ = new RpcTcpClient(this.ipAddress, Port, Program, Version, TestLogger.Instance));
+                () => _ = new RpcTcpClient(this.ipAddress, Port, Program, Version, new TestLogger("TCP Server")));
 
             Assert.That(
                 exception.Message,
@@ -37,7 +37,7 @@ namespace RpcNet.Test
                 Program,
                 new[] { Version },
                 call => { },
-                TestLogger.Instance);
+                new TestLogger("TCP Server"));
             Assert.DoesNotThrow(() => server.Dispose());
         }
 
@@ -66,12 +66,17 @@ namespace RpcNet.Test
                 Program,
                 new[] { Version },
                 Dispatcher,
-                TestLogger.Instance);
+                new TestLogger("TCP Server"));
             server.Start();
 
             for (int i = 0; i < 10; i++)
             {
-                using var client = new RpcTcpClient(this.ipAddress, Port, Program, Version, TestLogger.Instance);
+                using var client = new RpcTcpClient(
+                    this.ipAddress,
+                    Port,
+                    Program,
+                    Version,
+                    new TestLogger("TCP Client"));
                 var argument = new PingStruct { Value = i };
                 var result = new PingStruct();
 

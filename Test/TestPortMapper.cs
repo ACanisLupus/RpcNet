@@ -6,12 +6,14 @@ namespace RpcNet.Test
 
     internal class TestPortMapper
     {
+        private const int Port = 12345;
+
         private PortMapperServer server;
 
         [SetUp]
         public void SetUp()
         {
-            this.server = new PortMapperServer(IPAddress.Any);
+            this.server = new PortMapperServer(IPAddress.Any, Port);
             this.server.Start();
         }
 
@@ -28,7 +30,10 @@ namespace RpcNet.Test
         [TestCase(4720, 4721, ProtocolKind.Udp, 4721)]
         public void TestSetAndGet(int port, int program, ProtocolKind protocol, int version)
         {
-            using var client = new PortMapperClient(Protocol.Tcp, IPAddress.Loopback, PortMapperConstants.PortMapperPort);
+            using var client = new PortMapperClient(
+                Protocol.Tcp,
+                IPAddress.Loopback,
+                Port);
             client.Set_2(
                 new Mapping
                 {
@@ -62,7 +67,10 @@ namespace RpcNet.Test
             ProtocolKind protocol2,
             int version2)
         {
-            using var client = new PortMapperClient(Protocol.Tcp, IPAddress.Loopback, PortMapperConstants.PortMapperPort);
+            using var client = new PortMapperClient(
+                Protocol.Tcp,
+                IPAddress.Loopback,
+                Port);
             client.Set_2(
                 new Mapping
                 {

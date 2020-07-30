@@ -1,9 +1,9 @@
 namespace TestServer
 {
-    using System;
     using System.Net;
     using System.Threading;
     using RpcNet;
+    using RpcNet.Test;
     using TestService;
 
     internal class Program
@@ -18,7 +18,7 @@ namespace TestServer
 
         private class TestServer : TestServiceServerStub
         {
-            private static readonly ILogger TheLogger = new Logger();
+            private static readonly ILogger TheLogger = new TestLogger("Test Server");
 
             public TestServer(IPAddress ipAddress) : base(Protocol.TcpAndUdp, ipAddress, 0, TheLogger)
             {
@@ -46,24 +46,6 @@ namespace TestServer
             {
                 TheLogger.Info($"{caller} TESTMYSTRUCT2");
                 return arg1;
-            }
-        }
-
-        private class Logger : ILogger
-        {
-            public void Error(string entry)
-            {
-                Console.WriteLine("ERROR " + entry);
-            }
-
-            public void Info(string entry)
-            {
-                Console.WriteLine("INFO  " + entry);
-            }
-
-            public void Trace(string entry)
-            {
-                Console.WriteLine("TRACE " + entry);
             }
         }
     }

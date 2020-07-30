@@ -6,6 +6,7 @@
     <RootNamespace>RpcNet.Test</RootNamespace>
     <AssemblyName>RpcNet.Test</AssemblyName>
     <BaseOutputPath>..\bin</BaseOutputPath>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>

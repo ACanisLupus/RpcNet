@@ -1,5 +1,6 @@
 namespace RpcNet.Internal
 {
+    using System;
     using System.Net;
     using System.Net.Sockets;
 
@@ -25,8 +26,30 @@ namespace RpcNet.Internal
 
         public int TimeoutInMilliseconds
         {
-            get => this.client.ReceiveTimeout;
-            set => this.client.ReceiveTimeout = value;
+            get
+            {
+                try
+                {
+                    return this.client.ReceiveTimeout;
+                }
+                catch (SocketException e)
+                {
+                    throw new RpcException($"Could not get receive timeout. Socket error code: {e.SocketErrorCode}.");
+                }
+            }
+
+            set
+            {
+                try
+                {
+                    this.client.ReceiveTimeout = value;
+                }
+                catch (SocketException e)
+                {
+                    throw new RpcException(
+                        $"Could not set receive timeout to {value} ms. Socket error code: {e.SocketErrorCode}.");
+                }
+            }
         }
 
         public void Call(int procedure, int version, IXdrWritable argument, IXdrReadable result)

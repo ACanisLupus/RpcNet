@@ -6,10 +6,17 @@ namespace RpcNet
 
     public abstract class ClientStub : IDisposable
     {
+        private const int DefaultTimeoutInMilliseconds = 10000;
+
         private readonly INetworkClient networkClient;
 
         protected ClientStub(Protocol protocol, IPAddress ipAddress, int port, int program, int version, ILogger logger)
         {
+            if (ipAddress == null)
+            {
+                throw new ArgumentNullException(nameof(ipAddress));
+            }
+
             switch (protocol)
             {
                 case Protocol.Tcp:
@@ -22,7 +29,7 @@ namespace RpcNet
                     throw new ArgumentOutOfRangeException(nameof(protocol));
             }
 
-            this.TimeoutInMilliseconds = 10000;
+            this.TimeoutInMilliseconds = DefaultTimeoutInMilliseconds;
         }
 
         public int TimeoutInMilliseconds

@@ -7,7 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\Test\TestService.Generated.cs" Link="TestService.Generated.cs" />
+    <Compile Include="..\Test\Generated\TestService.Generated.cs" Link="TestService.Generated.cs" />
+    <Compile Include="..\Test\TestLogger.cs" Link="TestLogger.cs" />
   </ItemGroup>
 
   <ItemGroup>

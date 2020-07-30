@@ -18,6 +18,16 @@ namespace RpcNet
             int[] versions,
             ILogger logger)
         {
+            if (ipAddress == null)
+            {
+                throw new ArgumentNullException(nameof(ipAddress));
+            }
+
+            if ((versions == null) || (versions.Length == 0))
+            {
+                throw new ArgumentNullException(nameof(versions));
+            }
+
             if (protocol.HasFlag(Protocol.Tcp))
             {
                 this.rpcTcpServer = new RpcTcpServer(
