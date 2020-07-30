@@ -9,6 +9,8 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>RpcNet.snk</AssemblyOriginatorKeyFile>
 
+    <Version>1.0.1</Version>
+
     <PackageId>RpcNet</PackageId>
     <Authors>Artur Wolf</Authors>
     <Description>RPC implementation for .NET</Description>
