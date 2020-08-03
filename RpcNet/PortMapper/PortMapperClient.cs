@@ -31,6 +31,11 @@ namespace RpcNet.PortMapper
             this.client = new Internal.PortMapperClient(protocol, ipAddress, settings);
         }
 
+        public void Ping()
+        {
+            this.client.Ping_2();
+        }
+
         public bool Unset(Mapping mapping)
         {
             if (mapping == null)
