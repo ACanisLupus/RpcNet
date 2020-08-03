@@ -1,10 +1,17 @@
 namespace RpcNet.Internal
 {
     using System;
+    using System.Net.Sockets;
     using System.Runtime.CompilerServices;
+    using System.Threading;
 
     internal static class Utilities
     {
+        public static readonly TimeSpan DefaultClientReceiveTimeout = TimeSpan.FromSeconds(10);
+        public static readonly TimeSpan DefaultClientSendTimeout = TimeSpan.FromSeconds(10);
+        public static readonly TimeSpan DefaultServerReceiveTimeout = Timeout.InfiniteTimeSpan;
+        public static readonly TimeSpan DefaultServerSendTimeout = TimeSpan.FromSeconds(10);
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int ToInt32BigEndian(ReadOnlySpan<byte> value) =>
             (value[0] << 24) | (value[1] << 16) | (value[2] << 8) | value[3];
@@ -41,6 +48,56 @@ namespace RpcNet.Internal
                     return "TCP and UDP";
                 default:
                     throw new ArgumentOutOfRangeException(nameof(protocol), protocol, null);
+            }
+        }
+
+        public static TimeSpan GetReceiveTimeout(Socket socket)
+        {
+            try
+            {
+                return TimeSpan.FromMilliseconds(socket.ReceiveTimeout);
+            }
+            catch (SocketException e)
+            {
+                throw new RpcException($"Could not get receive timeout. Socket error: {e.SocketErrorCode}.");
+            }
+        }
+
+        public static void SetReceiveTimeout(Socket socket, TimeSpan timeout)
+        {
+            try
+            {
+                socket.ReceiveTimeout = (int)timeout.TotalMilliseconds;
+            }
+            catch (SocketException e)
+            {
+                throw new RpcException(
+                    $"Could not set receive timeout to {timeout}. Socket error: {e.SocketErrorCode}.");
+            }
+        }
+
+        public static TimeSpan GetSendTimeout(Socket socket)
+        {
+            try
+            {
+                return TimeSpan.FromMilliseconds(socket.SendTimeout);
+            }
+            catch (SocketException e)
+            {
+                throw new RpcException($"Could not get send timeout. Socket error: {e.SocketErrorCode}.");
+            }
+        }
+
+        public static void SetSendTimeout(Socket socket, TimeSpan timeout)
+        {
+            try
+            {
+                socket.SendTimeout = (int)timeout.TotalMilliseconds;
+            }
+            catch (SocketException e)
+            {
+                throw new RpcException(
+                    $"Could not set send timeout to {timeout}. Socket error: {e.SocketErrorCode}.");
             }
         }
     }

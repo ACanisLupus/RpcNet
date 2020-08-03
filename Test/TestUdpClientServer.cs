@@ -31,24 +31,28 @@ namespace RpcNet.Test
                 call.Reply(pingStruct);
             }
 
-            using var server = new RpcUdpServer(
-                ipAddress,
-                Port,
-                Program,
-                new[] { Version },
-                Dispatcher,
-                new TestLogger("UDP Server"));
+            var serverSettings = new ServerSettings
+            {
+                Logger = new TestLogger("UDP Server"),
+                Port = Port
+            };
+
+            using var server = new RpcUdpServer(ipAddress, Program, new[] { Version }, Dispatcher, serverSettings);
             server.Start();
 
-            using var client = new RpcUdpClient(ipAddress, Port, Program, Version, new TestLogger("UDP Client"));
+            var clientSettings = new ClientSettings
+            {
+                Port = Port,
+                Logger = new TestLogger("UDP Client")
+            };
+
+            using var client = new RpcUdpClient(ipAddress, Program, Version, clientSettings);
             var argument = new PingStruct { Value = 42 };
             var result = new PingStruct();
 
             client.Call(Procedure, Version, argument, result);
 
-            Assert.That(receivedCallChannel.TryReceive(
-                TimeSpan.FromSeconds(10),
-                out ReceivedRpcCall receivedCall));
+            Assert.That(receivedCallChannel.TryReceive(TimeSpan.FromSeconds(10), out ReceivedRpcCall receivedCall));
             Assert.That(receivedCall.Procedure, Is.EqualTo(Procedure));
             Assert.That(receivedCall.Version, Is.EqualTo(Version));
             Assert.That(receivedCall.Caller, Is.Not.Null);

@@ -64,7 +64,7 @@ namespace RpcNet.Internal
             if (networkReadResult.HasError)
             {
                 throw new RpcException(
-                    $"Could not receive from TCP stream. Socket error code: {networkReadResult.SocketError}.");
+                    $"Could not receive from TCP stream. Socket error: {networkReadResult.SocketError}.");
             }
 
             if (networkReadResult.IsDisconnected)

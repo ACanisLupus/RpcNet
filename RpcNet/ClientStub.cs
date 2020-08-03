@@ -6,11 +6,14 @@ namespace RpcNet
 
     public abstract class ClientStub : IDisposable
     {
-        private const int DefaultTimeoutInMilliseconds = 10000;
-
         private readonly INetworkClient networkClient;
 
-        protected ClientStub(Protocol protocol, IPAddress ipAddress, int port, int program, int version, ILogger logger)
+        protected ClientStub(
+            Protocol protocol,
+            IPAddress ipAddress,
+            int program,
+            int version,
+            ClientSettings clientSettings = default)
         {
             if (ipAddress == null)
             {
@@ -20,22 +23,26 @@ namespace RpcNet
             switch (protocol)
             {
                 case Protocol.Tcp:
-                    this.networkClient = new RpcTcpClient(ipAddress, port, program, version, logger);
+                    this.networkClient = new RpcTcpClient(ipAddress, program, version, clientSettings);
                     break;
                 case Protocol.Udp:
-                    this.networkClient = new RpcUdpClient(ipAddress, port, program, version, logger);
+                    this.networkClient = new RpcUdpClient(ipAddress, program, version, clientSettings);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(protocol));
             }
-
-            this.TimeoutInMilliseconds = DefaultTimeoutInMilliseconds;
         }
 
-        public int TimeoutInMilliseconds
+        public TimeSpan ReceiveTimeout
         {
-            get => this.networkClient.TimeoutInMilliseconds;
-            set => this.networkClient.TimeoutInMilliseconds = value;
+            get => this.networkClient.ReceiveTimeout;
+            set => this.networkClient.ReceiveTimeout = value;
+        }
+
+        public TimeSpan SendTimeout
+        {
+            get => this.networkClient.SendTimeout;
+            set => this.networkClient.SendTimeout = value;
         }
 
         public void Call(int procedure, int version, IXdrWritable argument, IXdrReadable result)

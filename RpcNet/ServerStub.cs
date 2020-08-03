@@ -8,15 +8,15 @@ namespace RpcNet
     {
         private readonly RpcTcpServer rpcTcpServer;
         private readonly RpcUdpServer rpcUdpServer;
+
         private bool isDisposed;
 
         protected ServerStub(
             Protocol protocol,
             IPAddress ipAddress,
-            int port,
             int program,
             int[] versions,
-            ILogger logger)
+            ServerSettings serverSettings = default)
         {
             if (ipAddress == null)
             {
@@ -32,22 +32,20 @@ namespace RpcNet
             {
                 this.rpcTcpServer = new RpcTcpServer(
                     ipAddress,
-                    port,
                     program,
                     versions,
                     this.DispatchReceivedCall,
-                    logger);
+                    serverSettings);
             }
 
             if (protocol.HasFlag(Protocol.Udp))
             {
                 this.rpcUdpServer = new RpcUdpServer(
                     ipAddress,
-                    port,
                     program,
                     versions,
                     this.DispatchReceivedCall,
-                    logger);
+                    serverSettings);
             }
         }
 

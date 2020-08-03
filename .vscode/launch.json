@@ -5,7 +5,18 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": ".NET Core Launch (console)",
+            "name": "Launch port mapper",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/bin/Debug/PortMapper.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/bin/Debug",
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
+            "name": "Launch test client",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
@@ -16,22 +27,11 @@
             "console": "internalConsole"
         },
         {
-            "name": ".NET Core Launch (console)",
+            "name": "Launch test server",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
             "program": "${workspaceFolder}/bin/Debug/TestServer.dll",
-            "args": [],
-            "cwd": "${workspaceFolder}/bin/Debug",
-            "console": "internalConsole",
-            "stopAtEntry": false
-        },
-        {
-            "name": ".NET Core Launch (console)",
-            "type": "coreclr",
-            "request": "launch",
-            "preLaunchTask": "build",
-            "program": "${workspaceFolder}/bin/Debug/PortMapper.dll",
             "args": [],
             "cwd": "${workspaceFolder}/bin/Debug",
             "console": "internalConsole",

@@ -161,8 +161,8 @@ namespace TestService
 
     internal class TestServiceClient : ClientStub
     {
-        public TestServiceClient(Protocol protocol, IPAddress ipAddress, int port = 0, ILogger logger = null) :
-            base(protocol, ipAddress, port, TestServiceConstants.TestServiceProgram, TestServiceConstants.TestServiceVersion2, logger)
+        public TestServiceClient(Protocol protocol, IPAddress ipAddress, ClientSettings clientSettings = default) :
+            base(protocol, ipAddress, TestServiceConstants.TestServiceProgram, TestServiceConstants.TestServiceVersion2, clientSettings)
         {
         }
 
@@ -197,8 +197,8 @@ namespace TestService
 
     internal abstract class TestServiceServerStub : ServerStub
     {
-        public TestServiceServerStub(Protocol protocol, IPAddress ipAddress, int port = 0, ILogger logger = null) :
-            base(protocol, ipAddress, port, TestServiceConstants.TestServiceProgram, new[] { TestServiceConstants.TestServiceVersion, TestServiceConstants.TestServiceVersion2 }, logger)
+        public TestServiceServerStub(Protocol protocol, IPAddress ipAddress, ServerSettings serverSettings = default) :
+            base(protocol, ipAddress, TestServiceConstants.TestServiceProgram, new[] { TestServiceConstants.TestServiceVersion, TestServiceConstants.TestServiceVersion2 }, serverSettings)
         {
         }
 

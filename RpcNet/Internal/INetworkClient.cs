@@ -5,7 +5,8 @@ namespace RpcNet.Internal
     // Public for tests
     public interface INetworkClient : IDisposable
     {
-        int TimeoutInMilliseconds { get; set; }
+        TimeSpan ReceiveTimeout { get; set; }
+        TimeSpan SendTimeout { get; set; }
 
         void Call(int procedure, int version, IXdrWritable argument, IXdrReadable result);
     }

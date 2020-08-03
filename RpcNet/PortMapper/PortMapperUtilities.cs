@@ -1,17 +1,19 @@
-namespace RpcNet.Internal
+namespace RpcNet.PortMapper
 {
     using System.Net;
 
     internal static class PortMapperUtilities
     {
-        public static int GetPort(ProtocolKind protocol, IPAddress ipAddress, int program, int version)
+        public static int GetPort(
+            Protocol protocol,
+            IPAddress ipAddress,
+            int program,
+            int version,
+            PortMapperClientSettings clientSettings = default)
         {
-            using (var portMapperClient = new PortMapperClient(
-                Protocol.Tcp,
-                ipAddress,
-                PortMapperConstants.PortMapperPort))
+            using (var portMapperClient = new PortMapperClient(Protocol.Tcp, ipAddress, clientSettings))
             {
-                return portMapperClient.GetPort_2(
+                return portMapperClient.GetPort(
                     new Mapping
                     {
                         Program = program,
@@ -21,21 +23,23 @@ namespace RpcNet.Internal
             }
         }
 
-        public static void UnsetAndSetPort(ProtocolKind protocol, int port, int program, int version)
+        public static void UnsetAndSetPort(
+            Protocol protocol,
+            int port,
+            int program,
+            int version,
+            PortMapperClientSettings clientSettings = default)
         {
-            using (var portMapperClient = new PortMapperClient(
-                Protocol.Tcp,
-                IPAddress.Loopback,
-                PortMapperConstants.PortMapperPort))
+            using (var portMapperClient = new PortMapperClient(Protocol.Tcp, IPAddress.Loopback, clientSettings))
             {
-                portMapperClient.Unset_2(
+                portMapperClient.Unset(
                     new Mapping
                     {
                         Program = program,
                         Protocol = protocol,
                         Version = version
                     });
-                portMapperClient.Set_2(
+                portMapperClient.Set(
                     new Mapping
                     {
                         Port = port,

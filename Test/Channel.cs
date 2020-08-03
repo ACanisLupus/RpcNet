@@ -19,12 +19,7 @@ namespace RpcNet.Test
         {
             item = default;
 
-            if (!this.itemReceived.WaitOne(timeout))
-            {
-                return false;
-            }
-
-            return this.items.TryDequeue(out item);
+            return this.itemReceived.WaitOne(timeout) && this.items.TryDequeue(out item);
         }
     }
 }

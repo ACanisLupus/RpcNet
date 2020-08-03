@@ -4,6 +4,7 @@ namespace RpcNet.Internal
     using System.Net;
     using System.Net.Sockets;
     using System.Threading;
+    using RpcNet.PortMapper;
 
     // Public for tests
     public class RpcUdpServer : IDisposable
@@ -11,20 +12,22 @@ namespace RpcNet.Internal
         private readonly ILogger logger;
         private readonly UdpReader reader;
         private readonly ReceivedRpcCall receivedCall;
-        private readonly Thread receivingThread;
         private readonly Socket server;
         private readonly UdpWriter writer;
 
+        private bool isDisposed;
+        private int port;
+        private Thread receivingThread;
         private volatile bool stopReceiving;
 
         public RpcUdpServer(
             IPAddress ipAddress,
-            int port,
             int program,
             int[] versions,
             Action<ReceivedRpcCall> receivedCallDispatcher,
-            ILogger logger)
+            ServerSettings serverSettings = default)
         {
+            this.port = serverSettings?.Port ?? 0;
             this.server = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             this.server.Bind(new IPEndPoint(ipAddress, port));
 
@@ -38,24 +41,37 @@ namespace RpcNet.Internal
                 this.writer,
                 receivedCallDispatcher);
 
-            this.logger = logger;
+            this.logger = serverSettings?.Logger;
 
-            if (port == 0)
+            if (this.port == 0)
             {
-                port = ((IPEndPoint)this.server.LocalEndPoint).Port;
+                this.port = ((IPEndPoint)this.server.LocalEndPoint).Port;
+                var clientSettings = new PortMapperClientSettings
+                    { Port = serverSettings?.PortMapperPort ?? PortMapperConstants.PortMapperPort };
                 foreach (int version in versions)
                 {
-                    PortMapperUtilities.UnsetAndSetPort(ProtocolKind.Udp, port, program, version);
+                    PortMapperUtilities.UnsetAndSetPort(Protocol.Udp, this.port, program, version, clientSettings);
                 }
             }
 
             this.logger?.Trace(
                 $"{Utilities.ConvertToString(Protocol.Udp)} Server listening on {this.server.LocalEndPoint}...");
-            this.receivingThread = new Thread(this.HandlingUdpCalls) { IsBackground = true };
         }
 
         public void Start()
         {
+            if (this.isDisposed)
+            {
+                throw new ObjectDisposedException(nameof(RpcUdpServer));
+            }
+
+            if (this.receivingThread != null)
+            {
+                return;
+            }
+
+            this.receivingThread = new Thread(this.HandlingUdpCalls)
+                { IsBackground = true, Name = $"RpcNet UDP {this.port}" };
             this.receivingThread.Start();
         }
 
@@ -64,14 +80,17 @@ namespace RpcNet.Internal
             this.stopReceiving = true;
             try
             {
+                // Necessary for Linux. Dispose doesn't abort synchronous calls
                 this.server.Shutdown(SocketShutdown.Both);
             }
             catch
             {
+                // Ignored
             }
 
             this.server.Dispose();
-            this.receivingThread.Join();
+            Interlocked.Exchange(ref this.receivingThread, null)?.Join();
+            this.isDisposed = true;
         }
 
         private void HandlingUdpCalls()
@@ -83,9 +102,7 @@ namespace RpcNet.Internal
                     NetworkReadResult result = this.reader.BeginReading();
                     if (result.HasError)
                     {
-                        this.logger?.Trace(
-                            $"Could not read data from {result.RemoteIpEndPoint}. " +
-                            $"Socket error: {result.SocketError}.");
+                        this.logger?.Trace($"Could not read UDP data. Socket error: {result.SocketError}.");
                         continue;
                     }
 

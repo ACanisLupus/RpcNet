@@ -3,18 +3,23 @@ namespace RpcNet.Test
     using System.Net;
     using System.Threading;
     using NUnit.Framework;
+    using RpcNet.PortMapper;
 
     [TestFixture]
     internal class TestPortMapper
     {
-        private const int Port = 12345;
+        private const int PortMapperPort = 12345;
 
         private PortMapperServer server;
 
         [SetUp]
         public void SetUp()
         {
-            this.server = new PortMapperServer(IPAddress.Any, Port);
+            var settings = new PortMapperServerSettings
+            {
+                Logger = new TestLogger("Port Mapper"), Port = PortMapperPort
+            };
+            this.server = new PortMapperServer(Protocol.TcpAndUdp, IPAddress.Any, settings);
             this.server.Start();
         }
 
@@ -25,17 +30,21 @@ namespace RpcNet.Test
         }
 
         [Test]
-        [TestCase(4711, 4712, ProtocolKind.Tcp, 4713)]
-        [TestCase(4714, 4715, ProtocolKind.Udp, 4716)]
-        [TestCase(4717, 4718, ProtocolKind.Tcp, 4719)]
-        [TestCase(4720, 4721, ProtocolKind.Udp, 4721)]
-        public void TestSetAndGet(int port, int program, ProtocolKind protocol, int version)
+        [TestCase(4711, 4712, Protocol.Tcp, 4713)]
+        [TestCase(4714, 4715, Protocol.Udp, 4716)]
+        [TestCase(4717, 4718, Protocol.Tcp, 4719)]
+        [TestCase(4720, 4721, Protocol.Udp, 4721)]
+        public void TestSetAndGet(int port, int program, Protocol protocol, int version)
         {
+            var settings = new PortMapperClientSettings
+            {
+                Port = PortMapperPort
+            };
             using var client = new PortMapperClient(
                 Protocol.Tcp,
                 IPAddress.Loopback,
-                Port);
-            client.Set_2(
+                settings);
+            client.Set(
                 new Mapping
                 {
                     Port = port,
@@ -44,7 +53,7 @@ namespace RpcNet.Test
                     Version = version
                 });
 
-            int receivedPort = client.GetPort_2(
+            int receivedPort = client.GetPort(
                 new Mapping
                 {
                     Protocol = protocol,
@@ -56,35 +65,29 @@ namespace RpcNet.Test
         }
 
         [Test]
-        [TestCase(1, 2, ProtocolKind.Tcp, 3, 2, ProtocolKind.Tcp, 42)]
-        [TestCase(1, 2, ProtocolKind.Udp, 3, 2, ProtocolKind.Tcp, 3)]
-        [TestCase(1, 2, ProtocolKind.Udp, 3, 42, ProtocolKind.Tcp, 3)]
-        public void TestSetAndWrongGet(
-            int port,
-            int program,
-            ProtocolKind protocol,
-            int version,
-            int program2,
-            ProtocolKind protocol2,
-            int version2)
+        [TestCase(1, 2, 3, 2, 42)]
+        [TestCase(1, 2, 3, 42, 3)]
+        public void TestSetAndWrongGet(int port, int program, int version, int program2, int version2)
         {
+            var settings = new PortMapperClientSettings
+            {
+                Port = PortMapperPort
+            };
             using var client = new PortMapperClient(
                 Protocol.Tcp,
                 IPAddress.Loopback,
-                Port);
-            client.Set_2(
+                settings);
+            client.Set(
                 new Mapping
                 {
                     Port = port,
                     Program = program,
-                    Protocol = protocol,
                     Version = version
                 });
 
-            int receivedPort = client.GetPort_2(
+            int receivedPort = client.GetPort(
                 new Mapping
                 {
-                    Protocol = protocol2,
                     Program = program2,
                     Version = version2
                 });

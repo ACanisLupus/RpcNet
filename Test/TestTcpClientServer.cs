@@ -19,8 +19,14 @@ namespace RpcNet.Test
             const int Program = 12;
             const int Version = 13;
 
+            var clientSettings = new ClientSettings
+            {
+                Port = Port,
+                Logger = new TestLogger("TCP Client")
+            };
+
             var exception = Assert.Throws<RpcException>(
-                () => _ = new RpcTcpClient(this.ipAddress, Port, Program, Version, new TestLogger("TCP Server")));
+                () => _ = new RpcTcpClient(this.ipAddress, Program, Version, clientSettings));
 
             Assert.That(
                 exception.Message,
@@ -33,13 +39,13 @@ namespace RpcNet.Test
             const int Program = 12;
             const int Version = 13;
 
-            var server = new RpcTcpServer(
-                this.ipAddress,
-                Port,
-                Program,
-                new[] { Version },
-                call => { },
-                new TestLogger("TCP Server"));
+            var serverSettings = new ServerSettings
+            {
+                Logger = new TestLogger("TCP Server"),
+                Port = Port
+            };
+
+            var server = new RpcTcpServer(this.ipAddress, Program, new[] { Version }, call => { }, serverSettings);
             Assert.DoesNotThrow(() => server.Dispose());
         }
 
@@ -62,23 +68,24 @@ namespace RpcNet.Test
                 call.Reply(pingStruct);
             }
 
-            using var server = new RpcTcpServer(
-                this.ipAddress,
-                Port,
-                Program,
-                new[] { Version },
-                Dispatcher,
-                new TestLogger("TCP Server"));
+            var serverSettings = new ServerSettings
+            {
+                Logger = new TestLogger("TCP Server"),
+                Port = Port
+            };
+
+            using var server = new RpcTcpServer(this.ipAddress, Program, new[] { Version }, Dispatcher, serverSettings);
             server.Start();
 
             for (int i = 0; i < 10; i++)
             {
-                using var client = new RpcTcpClient(
-                    this.ipAddress,
-                    Port,
-                    Program,
-                    Version,
-                    new TestLogger("TCP Client"));
+                var clientSettings = new ClientSettings
+                {
+                    Port = Port,
+                    Logger = new TestLogger("TCP Client")
+                };
+
+                using var client = new RpcTcpClient(this.ipAddress, Program, Version, clientSettings);
                 var argument = new PingStruct { Value = i };
                 var result = new PingStruct();
 

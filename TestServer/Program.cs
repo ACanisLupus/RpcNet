@@ -20,7 +20,10 @@ namespace TestServer
         {
             private static readonly ILogger TheLogger = new TestLogger("Test Server");
 
-            public TestServer(IPAddress ipAddress) : base(Protocol.TcpAndUdp, ipAddress, 0, TheLogger)
+            public TestServer(IPAddress ipAddress) : base(
+                Protocol.TcpAndUdp,
+                ipAddress,
+                new ServerSettings { Logger = TheLogger })
             {
             }
 

@@ -1,7 +1,9 @@
 namespace RpcNet.Internal
 {
+    using System;
     using System.Net;
     using System.Net.Sockets;
+    using RpcNet.PortMapper;
 
     // Public for tests
     public class RpcTcpClient : INetworkClient
@@ -13,15 +15,26 @@ namespace RpcNet.Internal
 
         private Socket client;
 
-        public RpcTcpClient(IPAddress ipAddress, int port, int program, int version, ILogger logger)
+        public RpcTcpClient(
+            IPAddress ipAddress,
+            int program,
+            int version,
+            ClientSettings clientSettings = default)
         {
+            int port = clientSettings?.Port ?? 0;
             if (port == 0)
             {
-                port = PortMapperUtilities.GetPort(ProtocolKind.Tcp, ipAddress, program, version);
+                var portMapperClientSettings = new PortMapperClientSettings
+                {
+                    Port = clientSettings?.PortMapperPort ?? PortMapperConstants.PortMapperPort
+                };
+                port = PortMapperUtilities.GetPort(Protocol.Tcp, ipAddress, program, version, portMapperClientSettings);
             }
 
             this.remoteIpEndPoint = new IPEndPoint(ipAddress, port);
             this.client = new Socket(SocketType.Stream, ProtocolType.Tcp);
+            this.ReceiveTimeout = clientSettings?.ReceiveTimeout ?? Utilities.DefaultClientReceiveTimeout;
+            this.SendTimeout = clientSettings?.SendTimeout ?? Utilities.DefaultClientSendTimeout;
             this.EstablishConnection();
             this.tcpReader = new TcpReader(this.client);
             this.tcpWriter = new TcpWriter(this.client);
@@ -31,35 +44,19 @@ namespace RpcNet.Internal
                 this.tcpReader,
                 this.tcpWriter,
                 this.ReestablishConnection,
-                logger);
+                clientSettings?.Logger);
         }
 
-        public int TimeoutInMilliseconds
+        public TimeSpan ReceiveTimeout
         {
-            get
-            {
-                try
-                {
-                    return this.client.ReceiveTimeout;
-                }
-                catch (SocketException e)
-                {
-                    throw new RpcException($"Could not get receive timeout. Socket error code: {e.SocketErrorCode}.");
-                }
-            }
+            get => Utilities.GetReceiveTimeout(this.client);
+            set => Utilities.SetReceiveTimeout(this.client, value);
+        }
 
-            set
-            {
-                try
-                {
-                    this.client.ReceiveTimeout = value;
-                }
-                catch (SocketException e)
-                {
-                    throw new RpcException(
-                        $"Could not set receive timeout to {value} ms. Socket error code: {e.SocketErrorCode}.");
-                }
-            }
+        public TimeSpan SendTimeout
+        {
+            get => Utilities.GetSendTimeout(this.client);
+            set => Utilities.SetSendTimeout(this.client, value);
         }
 
         public void Call(int procedure, int version, IXdrWritable argument, IXdrReadable result)

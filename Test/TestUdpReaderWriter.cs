@@ -144,10 +144,10 @@ namespace RpcNet.Test
             Thread.Sleep(100);
             this.server.Dispose();
             NetworkReadResult readResult = task.GetAwaiter().GetResult();
-            SocketError expextedError = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ?
+            SocketError expectedError = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ?
                 SocketError.Interrupted :
                 SocketError.Success;
-            Assert.That(readResult.SocketError, Is.EqualTo(expextedError));
+            Assert.That(readResult.SocketError, Is.EqualTo(expectedError));
         }
 
         private static void AssertEquals(ReadOnlySpan<byte> one, ReadOnlySpan<byte> two)

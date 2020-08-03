@@ -7,13 +7,13 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace RpcNet
+namespace RpcNet.Internal
 {
     using System;
     using System.Net;
     using RpcNet;
 
-    public static class PortMapperConstants
+    internal static class PortMapperConstants
     {
         public const int PortMapperPort = 111;
         public const int PortMapperVersion = 2;
@@ -26,7 +26,7 @@ namespace RpcNet
         public const int PortMapperProgram = 100000;
     }
 
-    public partial class CallArguments : IXdrReadable, IXdrWritable
+    internal partial class CallArguments : IXdrReadable, IXdrWritable
     {
         public int Program { get; set; }
         public int Version { get; set; }
@@ -59,7 +59,7 @@ namespace RpcNet
         }
     }
 
-    public partial class CallResult : IXdrReadable, IXdrWritable
+    internal partial class CallResult : IXdrReadable, IXdrWritable
     {
         public int Port { get; set; }
         public byte[] Result { get; set; }
@@ -86,7 +86,7 @@ namespace RpcNet
         }
     }
 
-    public partial class Mapping : IXdrReadable, IXdrWritable
+    internal partial class Mapping : IXdrReadable, IXdrWritable
     {
         public int Program { get; set; }
         public int Version { get; set; }
@@ -119,7 +119,7 @@ namespace RpcNet
         }
     }
 
-    public partial class MappingNode : IXdrReadable, IXdrWritable
+    internal partial class MappingNode : IXdrReadable, IXdrWritable
     {
         public Mapping Mapping { get; set; }
         public MappingNode Next { get; set; }
@@ -158,16 +158,41 @@ namespace RpcNet
         }
     }
 
-    public enum ProtocolKind
+    internal partial class MappingNodeHead : IXdrReadable, IXdrWritable
     {
+        public MappingNode MappingNode { get; set; }
+
+        public MappingNodeHead()
+        {
+        }
+
+        public MappingNodeHead(IXdrReader reader)
+        {
+            ReadFrom(reader);
+        }
+
+        public void WriteTo(IXdrWriter writer)
+        {
+            if (MappingNode != null) { writer.Write(true); MappingNode.WriteTo(writer); } else { writer.Write(false); }
+        }
+
+        public void ReadFrom(IXdrReader reader)
+        {
+            MappingNode = reader.ReadBool() ? new MappingNode(reader) : null;
+        }
+    }
+
+    internal enum ProtocolKind
+    {
+        Unknown = 0,
         Tcp = 6,
         Udp = 17,
     }
 
-    public class PortMapperClient : ClientStub
+    internal class PortMapperClient : ClientStub
     {
-        public PortMapperClient(Protocol protocol, IPAddress ipAddress, int port = 0, ILogger logger = null) :
-            base(protocol, ipAddress, port, PortMapperConstants.PortMapperProgram, PortMapperConstants.PortMapperVersion, logger)
+        public PortMapperClient(Protocol protocol, IPAddress ipAddress, ClientSettings clientSettings = default) :
+            base(protocol, ipAddress, PortMapperConstants.PortMapperProgram, PortMapperConstants.PortMapperVersion, clientSettings)
         {
         }
 
@@ -250,10 +275,10 @@ namespace RpcNet
             }
         }
 
-        public MappingNode Dump_2()
+        public MappingNodeHead Dump_2()
         {
             var args = new Arguments_4();
-            var result = new MappingNode();
+            var result = new MappingNodeHead();
             Call(PortMapperConstants.Dump_2, PortMapperConstants.PortMapperVersion, args, result);
             return result;
         }
@@ -266,10 +291,10 @@ namespace RpcNet
         }
     }
 
-    public abstract class PortMapperServerStub : ServerStub
+    internal abstract class PortMapperServerStub : ServerStub
     {
-        public PortMapperServerStub(Protocol protocol, IPAddress ipAddress, int port = 0, ILogger logger = null) :
-            base(protocol, ipAddress, port, PortMapperConstants.PortMapperProgram, new[] { PortMapperConstants.PortMapperVersion }, logger)
+        public PortMapperServerStub(Protocol protocol, IPAddress ipAddress, ServerSettings serverSettings = default) :
+            base(protocol, ipAddress, PortMapperConstants.PortMapperProgram, new[] { PortMapperConstants.PortMapperVersion }, serverSettings)
         {
         }
 
@@ -396,7 +421,7 @@ namespace RpcNet
         public abstract bool Set_2(Caller caller, Mapping arg1);
         public abstract bool Unset_2(Caller caller, Mapping arg1);
         public abstract int GetPort_2(Caller caller, Mapping arg1);
-        public abstract MappingNode Dump_2(Caller caller);
+        public abstract MappingNodeHead Dump_2(Caller caller);
         public abstract CallResult Call_2(Caller caller, CallArguments arg1);
     }
 }

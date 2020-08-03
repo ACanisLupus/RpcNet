@@ -24,7 +24,7 @@ namespace RpcNet.Internal
             int program,
             int[] versions,
             Action<ReceivedRpcCall> receivedCallDispatcher,
-            ILogger logger)
+            ILogger logger = null)
         {
             this.tcpClient = tcpClient;
             this.remoteIpEndPoint = (IPEndPoint)tcpClient.RemoteEndPoint;
@@ -40,7 +40,8 @@ namespace RpcNet.Internal
                 this.writer,
                 receivedCallDispatcher);
 
-            this.receivingThread = new Thread(this.Receiving) { IsBackground = true };
+            this.receivingThread = new Thread(this.Receiving)
+                { IsBackground = true, Name = $"RpcNet TCP Connection {this.remoteIpEndPoint}" };
             this.receivingThread.Start();
         }
 
