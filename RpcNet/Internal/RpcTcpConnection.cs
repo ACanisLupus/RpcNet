@@ -24,13 +24,13 @@ namespace RpcNet.Internal
             int program,
             int[] versions,
             Action<ReceivedRpcCall> receivedCallDispatcher,
-            ILogger logger = null)
+            ILogger logger = default)
         {
             this.tcpClient = tcpClient;
             this.remoteIpEndPoint = (IPEndPoint)tcpClient.RemoteEndPoint;
             this.caller = new Caller(this.remoteIpEndPoint, Protocol.Tcp);
-            this.reader = new TcpReader(tcpClient);
-            this.writer = new TcpWriter(tcpClient);
+            this.reader = new TcpReader(tcpClient, logger);
+            this.writer = new TcpWriter(tcpClient, logger);
             this.logger = logger;
 
             this.receivedCall = new ReceivedRpcCall(

@@ -9,6 +9,7 @@ namespace RpcNet.Internal
         private const int TcpHeaderLength = 4;
 
         private readonly byte[] buffer;
+        private readonly ILogger logger;
 
         private int bodyIndex;
         private int headerIndex;
@@ -18,16 +19,18 @@ namespace RpcNet.Internal
         private Socket tcpClient;
         private int writeIndex;
 
-        public TcpReader(Socket tcpClient) : this(tcpClient, 65536)
+        public TcpReader(Socket tcpClient, ILogger logger = default) : this(tcpClient, 65536, logger)
         {
         }
 
-        public TcpReader(Socket tcpClient, int bufferSize)
+        public TcpReader(Socket tcpClient, int bufferSize, ILogger logger = default)
         {
             if ((bufferSize < (TcpHeaderLength + sizeof(int))) || ((bufferSize % 4) != 0))
             {
                 throw new ArgumentOutOfRangeException(nameof(bufferSize));
             }
+
+            this.logger = logger;
 
             this.Reset(tcpClient);
             this.buffer = new byte[bufferSize];
@@ -165,12 +168,28 @@ namespace RpcNet.Internal
 
         private NetworkReadResult ReadFromNetwork(ref bool readFromNetwork)
         {
-            int receivedLength = this.tcpClient.Receive(
-                this.buffer,
-                this.writeIndex,
-                this.buffer.Length - this.writeIndex,
-                SocketFlags.None,
-                out SocketError socketError);
+            int receivedLength;
+            SocketError socketError;
+            try
+            {
+                receivedLength = this.tcpClient.Receive(
+                    this.buffer,
+                    this.writeIndex,
+                    this.buffer.Length - this.writeIndex,
+                    SocketFlags.None,
+                    out socketError);
+            }
+            catch (SocketException exception)
+            {
+                return NetworkReadResult.CreateError(exception.SocketErrorCode);
+            }
+            catch (Exception exception)
+            {
+                this.logger?.Error(
+                    $"Unexpected error while receiving TCP data from {this.tcpClient?.RemoteEndPoint}: {exception}");
+                return NetworkReadResult.CreateError(SocketError.SocketError);
+            }
+
             if (socketError != SocketError.Success)
             {
                 return NetworkReadResult.CreateError(socketError);

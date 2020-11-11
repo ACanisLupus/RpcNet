@@ -36,8 +36,8 @@ namespace RpcNet.Internal
             this.ReceiveTimeout = clientSettings?.ReceiveTimeout ?? Utilities.DefaultClientReceiveTimeout;
             this.SendTimeout = clientSettings?.SendTimeout ?? Utilities.DefaultClientSendTimeout;
             this.EstablishConnection();
-            this.tcpReader = new TcpReader(this.client);
-            this.tcpWriter = new TcpWriter(this.client);
+            this.tcpReader = new TcpReader(this.client, clientSettings?.Logger);
+            this.tcpWriter = new TcpWriter(this.client, clientSettings?.Logger);
             this.call = new RpcCall(
                 program,
                 this.remoteIpEndPoint,

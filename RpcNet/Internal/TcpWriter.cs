@@ -10,20 +10,23 @@ namespace RpcNet.Internal
         private const int TcpHeaderLength = 4;
 
         private readonly byte[] buffer;
+        private readonly ILogger logger;
 
         private Socket tcpClient;
         private int writeIndex;
 
-        public TcpWriter(Socket tcpClient) : this(tcpClient, 65536)
+        public TcpWriter(Socket tcpClient, ILogger logger = default) : this(tcpClient, 65536, logger)
         {
         }
 
-        public TcpWriter(Socket tcpClient, int bufferSize)
+        public TcpWriter(Socket tcpClient, int bufferSize, ILogger logger = default)
         {
             if ((bufferSize < (TcpHeaderLength + sizeof(int))) || ((bufferSize % 4) != 0))
             {
                 throw new ArgumentOutOfRangeException(nameof(bufferSize));
             }
+
+            this.logger = logger;
 
             this.Reset(tcpClient);
             this.buffer = new byte[bufferSize];
@@ -67,12 +70,27 @@ namespace RpcNet.Internal
             int lengthToDecode = lastPacket ? length | unchecked((int)0x80000000) : length;
 
             Utilities.WriteBytesBigEndian(this.buffer.AsSpan(), lengthToDecode);
-            this.tcpClient.Send(
-                this.buffer,
-                0,
-                length + TcpHeaderLength,
-                SocketFlags.None,
-                out SocketError socketError);
+
+            SocketError socketError;
+            try
+            {
+                this.tcpClient.Send(
+                    this.buffer,
+                    0,
+                    length + TcpHeaderLength,
+                    SocketFlags.None,
+                    out socketError);
+            }
+            catch (SocketException exception)
+            {
+                return new NetworkWriteResult(exception.SocketErrorCode);
+            }
+            catch (Exception exception)
+            {
+                this.logger?.Error(
+                    $"Unexpected error while sending TCP data to {this.tcpClient?.RemoteEndPoint}: {exception}");
+                return new NetworkWriteResult(SocketError.SocketError);
+            }
             if (socketError == SocketError.Success)
             {
                 this.BeginWriting();

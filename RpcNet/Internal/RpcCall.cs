@@ -22,7 +22,7 @@ namespace RpcNet.Internal
             INetworkReader networkReader,
             INetworkWriter networkWriter,
             Action reestablishConnection,
-            ILogger logger = null)
+            ILogger logger = default)
         {
             this.remoteIpEndPoint = remoteIpEndPoint;
             this.networkReader = networkReader;

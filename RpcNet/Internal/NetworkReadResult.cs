@@ -21,7 +21,7 @@ namespace RpcNet.Internal
         public static NetworkReadResult CreateError(SocketError socketError) =>
             new NetworkReadResult(null, socketError, false);
 
-        public static NetworkReadResult CreateSuccess(IPEndPoint remoteIpEndPoint = null) =>
+        public static NetworkReadResult CreateSuccess(IPEndPoint remoteIpEndPoint = default) =>
             new NetworkReadResult(remoteIpEndPoint, SocketError.Success, false);
 
         public static NetworkReadResult CreateDisconnected() => new NetworkReadResult(null, SocketError.Success, true);

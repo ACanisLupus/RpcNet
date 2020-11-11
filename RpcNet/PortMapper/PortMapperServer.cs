@@ -10,7 +10,7 @@ namespace RpcNet.PortMapper
     {
         private readonly PortMapperServerImpl server;
 
-        public PortMapperServer(Protocol protocol, IPAddress ipAddress, PortMapperServerSettings portMapperServerSettings = null)
+        public PortMapperServer(Protocol protocol, IPAddress ipAddress, PortMapperServerSettings portMapperServerSettings = default)
         {
             var settings = new ServerSettings();
             if (portMapperServerSettings != null)

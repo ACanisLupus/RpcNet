@@ -47,7 +47,10 @@ namespace RpcNet
 
         public void Call(int procedure, int version, IXdrWritable argument, IXdrReadable result)
         {
-            this.networkClient.Call(procedure, version, argument, result);
+            lock (this.networkClient)
+            {
+                this.networkClient.Call(procedure, version, argument, result);
+            }
         }
 
         public void Dispose()
