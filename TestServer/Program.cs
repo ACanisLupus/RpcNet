@@ -3,7 +3,7 @@ namespace TestServer
     using System.Net;
     using System.Threading;
     using RpcNet;
-    using RpcNet.Test;
+    using Test;
     using TestService;
 
     internal class Program
