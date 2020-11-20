@@ -107,17 +107,17 @@ namespace RpcNet.PortMapper
                 case Protocol.Udp:
                     return ProtocolKind.Udp;
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(protocol), protocol, null);
+                    return ProtocolKind.Unknown;
             }
         }
 
-        private static Mapping Convert(Internal.Mapping mapping) =>
+        private static Mapping Convert(Internal.Mapping internalMapping) =>
             new Mapping
             {
-                Protocol = Convert(mapping.Protocol),
-                Port = mapping.Port,
-                Program = mapping.Program,
-                Version = mapping.Version
+                Protocol = Convert(internalMapping.Protocol),
+                Port = internalMapping.Port,
+                Program = internalMapping.Program,
+                Version = internalMapping.Version
             };
 
         private static Internal.Mapping Convert(Mapping mapping) =>

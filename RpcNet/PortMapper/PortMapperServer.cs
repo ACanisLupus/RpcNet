@@ -97,24 +97,20 @@ namespace RpcNet.PortMapper
                 }
             }
 
+            private delegate bool Equal(Internal.Mapping mapping1, Internal.Mapping mapping2);
+
             public override bool Unset_2(Caller caller, Internal.Mapping mapping)
             {
                 this.logger?.Info($"{caller} UNSET   {ToLogString(mapping)}.");
                 lock (this.mappings)
                 {
-                    for (int i = this.mappings.Count - 1; i >= 0; i--)
+                    Equal equal = IsProgramAndVersionAndProtocolEqual;
+                    if (mapping.Protocol == ProtocolKind.Unknown)
                     {
-                        bool result = mapping.Protocol == ProtocolKind.Unknown
-                            ? IsProgramAndVersionEqual(this.mappings[i], mapping)
-                            : IsProgramAndVersionAndProtocolEqual(this.mappings[i], mapping);
-                        if (result)
-                        {
-                            this.mappings.RemoveAt(i);
-                            return true;
-                        }
+                        equal = IsProgramAndVersionEqual;
                     }
 
-                    return false;
+                    return this.mappings.RemoveAll(tmpMapping => equal(tmpMapping, mapping)) > 0;
                 }
             }
 
