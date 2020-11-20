@@ -1,24 +1,6 @@
-enum AuthenticationFlavor {
-  None = 0,
-  Unix = 1,
-  Short = 2,
-  Des = 3,
-  Gss = 6
-};
-
-struct OpaqueAuthentication {
-  AuthenticationFlavor AuthenticationFlavor;
-  opaque Body<400>;
-};
-
-enum MessageType {
-  Call = 0,
-  Reply = 1
-};
-
-enum ReplyStatus {
-  Accepted = 0,
-  Denied = 1
+struct AcceptedReply {
+  OpaqueAuthentication Verifier;
+  ReplyData ReplyData;
 };
 
 enum AcceptStatus {
@@ -30,9 +12,12 @@ enum AcceptStatus {
   SystemError = 5 /* e.g. memory allocation failure */
 };
 
-enum RejectStatus {
-  RpcVersionMismatch = 0, /* RPC version number != 2 */
-  AuthenticationError = 1 /* remote can't authenticate caller */
+enum AuthenticationFlavor {
+  None = 0,
+  Unix = 1,
+  Short = 2,
+  Des = 3,
+  Gss = 6
 };
 
 enum AuthenticationStatus {
@@ -72,11 +57,6 @@ union Body switch (MessageType MessageType) {
     ReplyBody ReplyBody;
 };
 
-struct RpcMessage {
-  unsigned int Xid;
-  Body Body;
-};
-
 struct CallBody {
   unsigned int RpcVersion; /* must be equal to two (2) */
   unsigned int Program;
@@ -87,16 +67,38 @@ struct CallBody {
   /* procedure-specific parameters start here */
 };
 
-union ReplyBody switch (ReplyStatus ReplyStatus) {
-  case Accepted:
-    AcceptedReply AcceptedReply;
-  case Denied:
-    RejectedReply RejectedReply;
+enum MessageType {
+  Call = 0,
+  Reply = 1
 };
 
 struct MismatchInfo {
   unsigned int Low;
   unsigned int High;
+};
+
+struct OpaqueAuthentication {
+  AuthenticationFlavor AuthenticationFlavor;
+  opaque Body<400>;
+};
+
+union RejectedReply switch (RejectStatus RejectStatus) {
+  case RpcVersionMismatch:
+    MismatchInfo MismatchInfo;
+  case AuthenticationError:
+    AuthenticationStatus AuthenticationStatus;
+};
+
+enum RejectStatus {
+  RpcVersionMismatch = 0, /* RPC version number != 2 */
+  AuthenticationError = 1 /* remote can't authenticate caller */
+};
+
+union ReplyBody switch (ReplyStatus ReplyStatus) {
+  case Accepted:
+    AcceptedReply AcceptedReply;
+  case Denied:
+    RejectedReply RejectedReply;
 };
 
 union ReplyData switch (AcceptStatus AcceptStatus) {
@@ -116,14 +118,12 @@ union ReplyData switch (AcceptStatus AcceptStatus) {
     void;
 };
 
-struct AcceptedReply {
-  OpaqueAuthentication Verifier;
-  ReplyData ReplyData;
+enum ReplyStatus {
+  Accepted = 0,
+  Denied = 1
 };
 
-union RejectedReply switch (RejectStatus RejectStatus) {
-  case RpcVersionMismatch:
-    MismatchInfo MismatchInfo;
-  case AuthenticationError:
-    AuthenticationStatus AuthenticationStatus;
+struct RpcMessage {
+  unsigned int Xid;
+  Body Body;
 };
