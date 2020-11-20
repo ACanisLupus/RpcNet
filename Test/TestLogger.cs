@@ -1,6 +1,7 @@
-namespace RpcNet.Test
+namespace Test
 {
     using System;
+    using RpcNet;
 
     internal class TestLogger : ILogger
     {

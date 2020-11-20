@@ -1,4 +1,4 @@
-namespace RpcNet.Test
+namespace Test
 {
     using System;
     using System.Net;

@@ -1,4 +1,4 @@
-namespace PortMapperDump
+namespace Dump
 {
     using System;
     using System.Collections.Generic;

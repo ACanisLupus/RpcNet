@@ -1,7 +1,8 @@
-namespace RpcNet.Test
+namespace Test
 {
     using System.Net;
     using NUnit.Framework;
+    using RpcNet;
     using RpcNet.PortMapper;
     using TestService;
 

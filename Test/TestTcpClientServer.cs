@@ -1,8 +1,9 @@
-namespace RpcNet.Test
+namespace Test
 {
     using System;
     using System.Net;
     using NUnit.Framework;
+    using RpcNet;
     using RpcNet.Internal;
     using TestService;
 

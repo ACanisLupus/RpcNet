@@ -1,6 +1,7 @@
-namespace RpcNet.Test
+namespace Test
 {
     using NUnit.Framework;
+    using RpcNet;
     using RpcNet.Internal;
 
     [TestFixture]

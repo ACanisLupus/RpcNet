@@ -1,6 +1,7 @@
-namespace RpcNet.Test
+namespace Test
 {
     using System.Net;
+    using RpcNet;
     using TestService;
 
     internal class TestServer : TestServiceServerStub

@@ -1,4 +1,4 @@
-namespace RpcNet.Test
+namespace Test
 {
     using System;
     using System.Net;
@@ -7,6 +7,7 @@ namespace RpcNet.Test
     using System.Threading;
     using System.Threading.Tasks;
     using NUnit.Framework;
+    using RpcNet;
     using RpcNet.Internal;
 
     [TestFixture]

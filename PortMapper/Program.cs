@@ -4,7 +4,7 @@ namespace PortMapper
     using System.Threading;
     using RpcNet;
     using RpcNet.PortMapper;
-    using RpcNet.Test;
+    using Test;
 
     internal class Program
     {

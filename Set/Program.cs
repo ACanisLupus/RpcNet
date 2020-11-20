@@ -1,7 +1,8 @@
-namespace RpcNet
+namespace Set
 {
     using System;
     using System.Net;
+    using RpcNet;
     using RpcNet.PortMapper;
 
     internal class Program
