@@ -48,14 +48,9 @@ namespace RpcNet.Internal
             set => Utilities.SetSendTimeout(this.client, value);
         }
 
-        public void Call(int procedure, int version, IXdrWritable argument, IXdrReadable result)
-        {
+        public void Call(int procedure, int version, IXdrWritable argument, IXdrReadable result) =>
             this.call.SendCall(procedure, version, argument, result);
-        }
 
-        public void Dispose()
-        {
-            this.client.Dispose();
-        }
+        public void Dispose() => this.client.Dispose();
     }
 }

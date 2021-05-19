@@ -36,10 +36,7 @@ namespace RpcNet.Internal
             this.buffer = new byte[bufferSize];
         }
 
-        public void Reset(Socket tcpClient)
-        {
-            this.tcpClient = tcpClient;
-        }
+        public void Reset(Socket tcpClient) => this.tcpClient = tcpClient;
 
         public NetworkReadResult BeginReading()
         {

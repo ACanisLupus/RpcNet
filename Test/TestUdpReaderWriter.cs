@@ -88,7 +88,7 @@ namespace Test
 
             Assert.That(readResult.SocketError, Is.EqualTo(SocketError.Success));
 
-            var buffer = new byte[100];
+            byte[] buffer = new byte[100];
             int index = 0;
             for (int i = 0; i < (100 / length); i++)
             {
@@ -141,13 +141,13 @@ namespace Test
         [Test]
         public void AbortReading()
         {
-            Task<NetworkReadResult> task = Task.Run(() => this.reader.BeginReading());
+            var task = Task.Run(() => this.reader.BeginReading());
             Thread.Sleep(100);
             this.server.Dispose();
             NetworkReadResult readResult = task.GetAwaiter().GetResult();
-            SocketError expectedError = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ?
-                SocketError.Interrupted :
-                SocketError.Success;
+            SocketError expectedError = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                ? SocketError.Interrupted
+                : SocketError.Success;
             Assert.That(readResult.SocketError, Is.EqualTo(expectedError));
         }
 

@@ -28,10 +28,7 @@ namespace Test
         }
 
         [OneTimeTearDown]
-        public void OneTimeTearDown()
-        {
-            this.portMapperServer?.Dispose();
-        }
+        public void OneTimeTearDown() => this.portMapperServer?.Dispose();
 
         [SetUp]
         public void SetUp()
@@ -47,10 +44,7 @@ namespace Test
         }
 
         [TearDown]
-        public void TearDown()
-        {
-            this.testServer?.Dispose();
-        }
+        public void TearDown() => this.testServer?.Dispose();
 
         [Test]
         [TestCase(Protocol.Tcp)]

@@ -57,6 +57,7 @@ namespace Dump
                 catch (RpcException e)
                 {
                     Console.WriteLine($"Could not dump ports. Reason: {e.Message}");
+                    return 1;
                 }
             }
 

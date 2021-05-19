@@ -20,55 +20,25 @@ namespace RpcNet.Internal
             this.Write((int)(value & 0xffffffff));
         }
 
-        public void Write(ulong value)
-        {
-            this.Write((long)value);
-        }
+        public void Write(ulong value) => this.Write((long)value);
 
-        public void Write(int value)
-        {
-            Utilities.WriteBytesBigEndian(this.networkWriter.Reserve(sizeof(int)), value);
-        }
+        public void Write(int value) => Utilities.WriteBytesBigEndian(this.networkWriter.Reserve(sizeof(int)), value);
 
-        public void Write(uint value)
-        {
-            this.Write((int)value);
-        }
+        public void Write(uint value) => this.Write((int)value);
 
-        public void Write(short value)
-        {
-            this.Write((int)value);
-        }
+        public void Write(short value) => this.Write((int)value);
 
-        public void Write(ushort value)
-        {
-            this.Write((int)value);
-        }
+        public void Write(ushort value) => this.Write((int)value);
 
-        public void Write(sbyte value)
-        {
-            this.Write((int)value);
-        }
+        public void Write(sbyte value) => this.Write((int)value);
 
-        public void Write(byte value)
-        {
-            this.Write((int)value);
-        }
+        public void Write(byte value) => this.Write((int)value);
 
-        public void Write(bool value)
-        {
-            this.Write(value ? 1 : 0);
-        }
+        public void Write(bool value) => this.Write(value ? 1 : 0);
 
-        public void Write(float value)
-        {
-            this.Write(Utilities.SingleToInt32Bits(value));
-        }
+        public void Write(float value) => this.Write(Utilities.SingleToInt32Bits(value));
 
-        public void Write(double value)
-        {
-            this.Write(BitConverter.DoubleToInt64Bits(value));
-        }
+        public void Write(double value) => this.Write(BitConverter.DoubleToInt64Bits(value));
 
         public void WriteFixedLengthOpaque(ReadOnlySpan<byte> value)
         {

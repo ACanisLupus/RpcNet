@@ -10,7 +10,10 @@ namespace RpcNet.PortMapper
     {
         private readonly PortMapperServerImpl server;
 
-        public PortMapperServer(Protocol protocol, IPAddress ipAddress, PortMapperServerSettings portMapperServerSettings = default)
+        public PortMapperServer(
+            Protocol protocol,
+            IPAddress ipAddress,
+            PortMapperServerSettings portMapperServerSettings = default)
         {
             var settings = new ServerSettings();
             if (portMapperServerSettings != null)
@@ -29,15 +32,9 @@ namespace RpcNet.PortMapper
             this.server = new PortMapperServerImpl(protocol, ipAddress, settings);
         }
 
-        public void Start()
-        {
-            this.server.Start();
-        }
+        public void Start() => this.server.Start();
 
-        public void Dispose()
-        {
-            this.server.Dispose();
-        }
+        public void Dispose() => this.server.Dispose();
 
         private class PortMapperServerImpl : PortMapperServerStub
         {
@@ -55,32 +52,31 @@ namespace RpcNet.PortMapper
                 {
                     if (protocol.HasFlag(Protocol.Tcp))
                     {
-                        this.mappings.Add(new Internal.Mapping
-                        {
-                            Port = serverSettings?.Port ?? PortMapperConstants.PortMapperPort,
-                            Program = PortMapperConstants.PortMapperProgram,
-                            Protocol = ProtocolKind.Tcp,
-                            Version = PortMapperConstants.PortMapperVersion
-                        });
+                        this.mappings.Add(
+                            new Internal.Mapping
+                            {
+                                Port = serverSettings?.Port ?? PortMapperConstants.PortMapperPort,
+                                Program = PortMapperConstants.PortMapperProgram,
+                                Protocol = ProtocolKind.Tcp,
+                                Version = PortMapperConstants.PortMapperVersion
+                            });
                     }
 
                     if (protocol.HasFlag(Protocol.Udp))
                     {
-                        this.mappings.Add(new Internal.Mapping
-                        {
-                            Port = serverSettings?.Port ?? PortMapperConstants.PortMapperPort,
-                            Program = PortMapperConstants.PortMapperProgram,
-                            Protocol = ProtocolKind.Udp,
-                            Version = PortMapperConstants.PortMapperVersion
-                        });
+                        this.mappings.Add(
+                            new Internal.Mapping
+                            {
+                                Port = serverSettings?.Port ?? PortMapperConstants.PortMapperPort,
+                                Program = PortMapperConstants.PortMapperProgram,
+                                Protocol = ProtocolKind.Udp,
+                                Version = PortMapperConstants.PortMapperVersion
+                            });
                     }
                 }
             }
 
-            public override void Ping_2(Caller caller)
-            {
-                this.logger?.Info($"Received PING from {caller}.");
-            }
+            public override void Ping_2(Caller caller) => this.logger?.Info($"Received PING from {caller}.");
 
             public override bool Set_2(Caller caller, Internal.Mapping mapping)
             {
@@ -96,8 +92,6 @@ namespace RpcNet.PortMapper
                     return true;
                 }
             }
-
-            private delegate bool Equal(Internal.Mapping mapping1, Internal.Mapping mapping2);
 
             public override bool Unset_2(Caller caller, Internal.Mapping mapping)
             {
@@ -175,6 +169,8 @@ namespace RpcNet.PortMapper
             private static string ToLogString(Internal.Mapping mapping) =>
                 $"(Port: {mapping.Port}, Program: {mapping.Program}, " +
                 $"Protocol: {mapping.Protocol}, Version: {mapping.Version})";
+
+            private delegate bool Equal(Internal.Mapping mapping1, Internal.Mapping mapping2);
         }
     }
 }

@@ -10,13 +10,13 @@ namespace RpcNet.Internal
     public class RpcUdpServer : IDisposable
     {
         private readonly ILogger logger;
+        private readonly int port;
         private readonly UdpReader reader;
         private readonly ReceivedRpcCall receivedCall;
         private readonly Socket server;
         private readonly UdpWriter writer;
 
         private bool isDisposed;
-        private int port;
         private Thread receivingThread;
         private volatile bool stopReceiving;
 
@@ -29,7 +29,7 @@ namespace RpcNet.Internal
         {
             this.port = serverSettings?.Port ?? 0;
             this.server = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            this.server.Bind(new IPEndPoint(ipAddress, port));
+            this.server.Bind(new IPEndPoint(ipAddress, this.port));
 
             this.reader = new UdpReader(this.server);
             this.writer = new UdpWriter(this.server);

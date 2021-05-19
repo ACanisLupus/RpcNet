@@ -134,84 +134,84 @@ namespace RpcNet.Internal
 
         public byte[] ReadOpaque()
         {
-            var array = new byte[this.ReadInt()];
+            byte[] array = new byte[this.ReadInt()];
             this.ReadOpaque(array);
             return array;
         }
 
         public bool[] ReadBoolArray()
         {
-            var array = new bool[this.ReadInt()];
+            bool[] array = new bool[this.ReadInt()];
             this.ReadBoolArray(array);
             return array;
         }
 
         public byte[] ReadByteArray()
         {
-            var array = new byte[this.ReadInt()];
+            byte[] array = new byte[this.ReadInt()];
             this.ReadByteArray(array);
             return array;
         }
 
         public double[] ReadDoubleArray()
         {
-            var array = new double[this.ReadInt()];
+            double[] array = new double[this.ReadInt()];
             this.ReadDoubleArray(array);
             return array;
         }
 
         public float[] ReadFloatArray()
         {
-            var array = new float[this.ReadInt()];
+            float[] array = new float[this.ReadInt()];
             this.ReadFloatArray(array);
             return array;
         }
 
         public int[] ReadIntArray()
         {
-            var array = new int[this.ReadInt()];
+            int[] array = new int[this.ReadInt()];
             this.ReadIntArray(array);
             return array;
         }
 
         public long[] ReadLongArray()
         {
-            var array = new long[this.ReadInt()];
+            long[] array = new long[this.ReadInt()];
             this.ReadLongArray(array);
             return array;
         }
 
         public sbyte[] ReadSByteArray()
         {
-            var array = new sbyte[this.ReadInt()];
+            sbyte[] array = new sbyte[this.ReadInt()];
             this.ReadSByteArray(array);
             return array;
         }
 
         public short[] ReadShortArray()
         {
-            var array = new short[this.ReadInt()];
+            short[] array = new short[this.ReadInt()];
             this.ReadShortArray(array);
             return array;
         }
 
         public uint[] ReadUIntArray()
         {
-            var array = new uint[this.ReadInt()];
+            uint[] array = new uint[this.ReadInt()];
             this.ReadUIntArray(array);
             return array;
         }
 
         public ulong[] ReadULongArray()
         {
-            var array = new ulong[this.ReadInt()];
+            ulong[] array = new ulong[this.ReadInt()];
             this.ReadULongArray(array);
             return array;
         }
 
         public ushort[] ReadUShortArray()
         {
-            var array = new ushort[this.ReadInt()];
+            ushort[] array = new ushort[this.ReadInt()];
             this.ReadUShortArray(array);
             return array;
         }

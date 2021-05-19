@@ -86,7 +86,7 @@ namespace Test
 
             byte[] value = TestXdr.GenerateByteTestData(17);
 
-            Task task = Task.Run(
+            var task = Task.Run(
                 () =>
                 {
                     NetworkReadResult readResult = this.reader.BeginReading();

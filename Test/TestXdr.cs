@@ -18,9 +18,12 @@ namespace Test
             this.writer = new XdrWriter(this.stubNetwork);
         }
 
+        [SetUp]
+        public void SetUp() => this.stubNetwork.Reset();
+
         public static byte[] GenerateByteTestData(int length)
         {
-            var value = new byte[length];
+            byte[] value = new byte[length];
             for (int i = 0; i < length; i++)
             {
                 value[i] = (byte)i;
@@ -28,9 +31,6 @@ namespace Test
 
             return value;
         }
-
-        [SetUp]
-        public void SetUp() => this.stubNetwork.Reset();
 
         [Test]
         [TestCase(28, 28)]
@@ -219,7 +219,7 @@ namespace Test
 
             Assert.That(this.stubNetwork.WriteIndex, Is.EqualTo(expectedWriteIndex));
 
-            var result = new byte[length];
+            byte[] result = new byte[length];
             this.reader.ReadOpaque(result);
             Assert.That(result, Is.EqualTo(value));
         }
@@ -267,7 +267,7 @@ namespace Test
 
             Assert.That(this.stubNetwork.WriteIndex, Is.EqualTo(expectedWriteIndex));
 
-            var result = new bool[length];
+            bool[] result = new bool[length];
             this.reader.ReadBoolArray(result);
             Assert.That(result, Is.EqualTo(value));
         }
@@ -298,7 +298,7 @@ namespace Test
 
             Assert.That(this.stubNetwork.WriteIndex, Is.EqualTo(expectedWriteIndex));
 
-            var result = new byte[length];
+            byte[] result = new byte[length];
             this.reader.ReadByteArray(result);
             Assert.That(result, Is.EqualTo(value));
         }
@@ -329,7 +329,7 @@ namespace Test
 
             Assert.That(this.stubNetwork.WriteIndex, Is.EqualTo(expectedWriteIndex));
 
-            var result = new sbyte[length];
+            sbyte[] result = new sbyte[length];
             this.reader.ReadSByteArray(result);
             Assert.That(result, Is.EqualTo(value));
         }
@@ -360,7 +360,7 @@ namespace Test
 
             Assert.That(this.stubNetwork.WriteIndex, Is.EqualTo(expectedWriteIndex));
 
-            var result = new short[length];
+            short[] result = new short[length];
             this.reader.ReadShortArray(result);
             Assert.That(result, Is.EqualTo(value));
         }
@@ -391,7 +391,7 @@ namespace Test
 
             Assert.That(this.stubNetwork.WriteIndex, Is.EqualTo(expectedWriteIndex));
 
-            var result = new ushort[length];
+            ushort[] result = new ushort[length];
             this.reader.ReadUShortArray(result);
             Assert.That(result, Is.EqualTo(value));
         }
@@ -422,7 +422,7 @@ namespace Test
 
             Assert.That(this.stubNetwork.WriteIndex, Is.EqualTo(expectedWriteIndex));
 
-            var result = new int[length];
+            int[] result = new int[length];
             this.reader.ReadIntArray(result);
             Assert.That(result, Is.EqualTo(value));
         }
@@ -453,7 +453,7 @@ namespace Test
 
             Assert.That(this.stubNetwork.WriteIndex, Is.EqualTo(expectedWriteIndex));
 
-            var result = new uint[length];
+            uint[] result = new uint[length];
             this.reader.ReadUIntArray(result);
             Assert.That(result, Is.EqualTo(value));
         }
@@ -484,7 +484,7 @@ namespace Test
 
             Assert.That(this.stubNetwork.WriteIndex, Is.EqualTo(expectedWriteIndex));
 
-            var result = new long[length];
+            long[] result = new long[length];
             this.reader.ReadLongArray(result);
             Assert.That(result, Is.EqualTo(value));
         }
@@ -515,7 +515,7 @@ namespace Test
 
             Assert.That(this.stubNetwork.WriteIndex, Is.EqualTo(expectedWriteIndex));
 
-            var result = new ulong[length];
+            ulong[] result = new ulong[length];
             this.reader.ReadULongArray(result);
             Assert.That(result, Is.EqualTo(value));
         }
@@ -546,7 +546,7 @@ namespace Test
 
             Assert.That(this.stubNetwork.WriteIndex, Is.EqualTo(expectedWriteIndex));
 
-            var result = new float[length];
+            float[] result = new float[length];
             this.reader.ReadFloatArray(result);
             Assert.That(result, Is.EqualTo(value));
         }
@@ -577,7 +577,7 @@ namespace Test
 
             Assert.That(this.stubNetwork.WriteIndex, Is.EqualTo(expectedWriteIndex));
 
-            var result = new double[length];
+            double[] result = new double[length];
             this.reader.ReadDoubleArray(result);
             Assert.That(result, Is.EqualTo(value));
         }
@@ -598,7 +598,7 @@ namespace Test
 
         private static bool[] GenerateBoolTestData(int length)
         {
-            var value = new bool[length];
+            bool[] value = new bool[length];
             for (int i = 0; i < length; i++)
             {
                 value[i] = (i % 2) == 0;
@@ -609,7 +609,7 @@ namespace Test
 
         private static sbyte[] GenerateSByteTestData(int length)
         {
-            var value = new sbyte[length];
+            sbyte[] value = new sbyte[length];
             for (int i = 0; i < length; i++)
             {
                 value[i] = (sbyte)i;
@@ -620,7 +620,7 @@ namespace Test
 
         private static short[] GenerateShortTestData(int length)
         {
-            var value = new short[length];
+            short[] value = new short[length];
             for (int i = 0; i < length; i++)
             {
                 value[i] = (short)i;
@@ -631,7 +631,7 @@ namespace Test
 
         private static ushort[] GenerateUShortTestData(int length)
         {
-            var value = new ushort[length];
+            ushort[] value = new ushort[length];
             for (int i = 0; i < length; i++)
             {
                 value[i] = (ushort)i;
@@ -642,7 +642,7 @@ namespace Test
 
         private static int[] GenerateIntTestData(int length)
         {
-            var value = new int[length];
+            int[] value = new int[length];
             for (int i = 0; i < length; i++)
             {
                 value[i] = i;
@@ -653,7 +653,7 @@ namespace Test
 
         private static uint[] GenerateUIntTestData(int length)
         {
-            var value = new uint[length];
+            uint[] value = new uint[length];
             for (int i = 0; i < length; i++)
             {
                 value[i] = (uint)i;
@@ -664,7 +664,7 @@ namespace Test
 
         private static long[] GenerateLongTestData(int length)
         {
-            var value = new long[length];
+            long[] value = new long[length];
             for (int i = 0; i < length; i++)
             {
                 value[i] = i;
@@ -675,7 +675,7 @@ namespace Test
 
         private static ulong[] GenerateULongTestData(int length)
         {
-            var value = new ulong[length];
+            ulong[] value = new ulong[length];
             for (int i = 0; i < length; i++)
             {
                 value[i] = (ulong)i;
@@ -686,7 +686,7 @@ namespace Test
 
         private static float[] GenerateFloatTestData(int length)
         {
-            var value = new float[length];
+            float[] value = new float[length];
             for (int i = 0; i < length; i++)
             {
                 value[i] = i;
@@ -697,7 +697,7 @@ namespace Test
 
         private static double[] GenerateDoubleTestData(int length)
         {
-            var value = new double[length];
+            double[] value = new double[length];
             for (int i = 0; i < length; i++)
             {
                 value[i] = i;

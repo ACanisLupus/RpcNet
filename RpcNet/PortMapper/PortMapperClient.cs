@@ -31,10 +31,7 @@ namespace RpcNet.PortMapper
             this.client = new Internal.PortMapperClient(protocol, ipAddress, settings);
         }
 
-        public void Ping()
-        {
-            this.client.Ping_2();
-        }
+        public void Ping() => this.client.Ping_2();
 
         public bool Unset(Mapping mapping)
         {
@@ -80,10 +77,7 @@ namespace RpcNet.PortMapper
             return list;
         }
 
-        public void Dispose()
-        {
-            this.client.Dispose();
-        }
+        public void Dispose() => this.client.Dispose();
 
         private static Protocol Convert(ProtocolKind protocol)
         {

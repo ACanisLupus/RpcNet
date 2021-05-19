@@ -27,10 +27,7 @@ namespace RpcNet.Internal
             this.buffer = new byte[bufferSize];
         }
 
-        public void BeginWriting()
-        {
-            this.writeIndex = 0;
-        }
+        public void BeginWriting() => this.writeIndex = 0;
 
         public NetworkWriteResult EndWriting(IPEndPoint remoteEndPoint)
         {

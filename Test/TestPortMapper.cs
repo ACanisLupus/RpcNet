@@ -25,10 +25,7 @@ namespace Test
         }
 
         [TearDown]
-        public void TearDown()
-        {
-            Interlocked.Exchange(ref this.server, null)?.Dispose();
-        }
+        public void TearDown() => Interlocked.Exchange(ref this.server, null)?.Dispose();
 
         [Test]
         [TestCase(4711, 4712, Protocol.Tcp, 4713)]

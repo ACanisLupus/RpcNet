@@ -12,19 +12,10 @@ namespace Test
             this.name = name;
         }
 
-        public void Trace(string entry)
-        {
-            Console.WriteLine($"[{this.name}] [TRACE] {entry}");
-        }
+        public void Trace(string entry) => Console.WriteLine($"[{this.name}] [TRACE] {entry}");
 
-        public void Info(string entry)
-        {
-            Console.WriteLine($"[{this.name}] [INFO]  {entry}");
-        }
+        public void Info(string entry) => Console.WriteLine($"[{this.name}] [INFO]  {entry}");
 
-        public void Error(string entry)
-        {
-            Console.WriteLine($"[{this.name}] [ERROR] {entry}");
-        }
+        public void Error(string entry) => Console.WriteLine($"[{this.name}] [ERROR] {entry}");
     }
 }

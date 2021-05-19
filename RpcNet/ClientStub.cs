@@ -53,9 +53,6 @@ namespace RpcNet
             }
         }
 
-        public void Dispose()
-        {
-            this.networkClient.Dispose();
-        }
+        public void Dispose() => this.networkClient.Dispose();
     }
 }

@@ -32,15 +32,9 @@ namespace RpcNet.Internal
             this.buffer = new byte[bufferSize];
         }
 
-        public void Reset(Socket tcpClient)
-        {
-            this.tcpClient = tcpClient;
-        }
+        public void Reset(Socket tcpClient) => this.tcpClient = tcpClient;
 
-        public void BeginWriting()
-        {
-            this.writeIndex = TcpHeaderLength;
-        }
+        public void BeginWriting() => this.writeIndex = TcpHeaderLength;
 
         public NetworkWriteResult EndWriting(IPEndPoint remoteEndPoint) => this.FlushPacket(true);
 
@@ -91,6 +85,7 @@ namespace RpcNet.Internal
                     $"Unexpected error while sending TCP data to {this.tcpClient?.RemoteEndPoint}: {exception}");
                 return new NetworkWriteResult(SocketError.SocketError);
             }
+
             if (socketError == SocketError.Success)
             {
                 this.BeginWriting();

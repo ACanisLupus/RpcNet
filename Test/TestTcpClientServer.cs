@@ -26,7 +26,7 @@ namespace Test
                 Logger = new TestLogger("TCP Client")
             };
 
-            var exception = Assert.Throws<RpcException>(
+            RpcException exception = Assert.Throws<RpcException>(
                 () => _ = new RpcTcpClient(this.ipAddress, Program, Version, clientSettings));
 
             Assert.That(
