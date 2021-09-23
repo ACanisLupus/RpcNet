@@ -54,7 +54,7 @@ namespace RpcNet.Internal
                 }
             }
 
-            this.logger?.Trace(
+            this.logger?.Info(
                 $"{Utilities.ConvertToString(Protocol.Udp)} Server listening on {this.server.LocalEndPoint}...");
         }
 

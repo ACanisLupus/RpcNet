@@ -76,11 +76,11 @@ namespace RpcNet.PortMapper
                 }
             }
 
-            public override void Ping_2(Caller caller) => this.logger?.Info($"Received PING from {caller}.");
+            public override void Ping_2(Caller caller) => this.logger?.Info($"{caller} PING");
 
             public override bool Set_2(Caller caller, Internal.Mapping mapping)
             {
-                this.logger?.Info($"{caller} SET     {ToLogString(mapping)}.");
+                this.logger?.Info($"{caller} SET   {ToLogString(mapping)}");
                 lock (this.mappings)
                 {
                     if (this.mappings.Any(m => IsProgramAndVersionAndProtocolEqual(m, mapping)))
@@ -95,7 +95,7 @@ namespace RpcNet.PortMapper
 
             public override bool Unset_2(Caller caller, Internal.Mapping mapping)
             {
-                this.logger?.Info($"{caller} UNSET   {ToLogString(mapping)}.");
+                this.logger?.Info($"{caller} UNSET {ToLogString(mapping)}");
                 lock (this.mappings)
                 {
                     Equal equal = IsProgramAndVersionAndProtocolEqual;
@@ -110,7 +110,7 @@ namespace RpcNet.PortMapper
 
             public override int GetPort_2(Caller caller, Internal.Mapping mapping)
             {
-                this.logger?.Info($"{caller} GETPORT {ToLogString(mapping)}.");
+                this.logger?.Info($"{caller} GET   {ToLogString(mapping)}");
                 lock (this.mappings)
                 {
                     Internal.Mapping found =
@@ -126,7 +126,7 @@ namespace RpcNet.PortMapper
 
             public override MappingNodeHead Dump_2(Caller caller)
             {
-                this.logger?.Info($"{caller} DUMP.");
+                this.logger?.Info($"{caller} DUMP");
                 lock (this.mappings)
                 {
                     var mappingNodeNullable = new MappingNodeHead();
@@ -154,7 +154,7 @@ namespace RpcNet.PortMapper
 
             public override CallResult Call_2(Caller caller, CallArguments arg1)
             {
-                this.logger?.Info($"{caller} CALL.");
+                this.logger?.Info($"{caller} CALL");
                 return new CallResult();
             }
 

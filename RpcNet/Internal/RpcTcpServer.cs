@@ -81,7 +81,7 @@ namespace RpcNet.Internal
                 }
             }
 
-            this.logger?.Trace(
+            this.logger?.Info(
                 $"{Utilities.ConvertToString(Protocol.Tcp)} Server listening on {this.server.LocalEndPoint}...");
 
             this.acceptingThread = new Thread(this.Accepting) { Name = $"RpcNet TCP Accept {this.port}" };
