@@ -8,14 +8,14 @@ using System.Net.Sockets;
 // Public for tests
 public readonly struct NetworkReadResult
 {
-    private NetworkReadResult(IPEndPoint remoteIpEndPoint, SocketError socketError, bool isDisconnected)
+    private NetworkReadResult(IPEndPoint? remoteIpEndPoint, SocketError socketError, bool isDisconnected)
     {
         RemoteIpEndPoint = remoteIpEndPoint;
         SocketError = socketError;
         IsDisconnected = isDisconnected;
     }
 
-    public IPEndPoint RemoteIpEndPoint { get; }
+    public IPEndPoint? RemoteIpEndPoint { get; }
     public SocketError SocketError { get; }
     public bool IsDisconnected { get; }
     public bool HasError => SocketError != SocketError.Success;
@@ -24,6 +24,6 @@ public readonly struct NetworkReadResult
 
     public static NetworkReadResult CreateDisconnected() => new(null, SocketError.Success, true);
 
-    public static NetworkReadResult CreateSuccess(IPEndPoint remoteIpEndPoint = default) =>
+    public static NetworkReadResult CreateSuccess(IPEndPoint? remoteIpEndPoint = default) =>
         new(remoteIpEndPoint, SocketError.Success, false);
 }

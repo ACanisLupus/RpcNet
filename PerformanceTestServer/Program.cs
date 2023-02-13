@@ -47,7 +47,7 @@ internal class Program
 
         public override int IntInt1_1(Caller caller, int value)
         {
-            Interlocked.Increment(ref _counter);
+            _ = Interlocked.Increment(ref _counter);
             return value;
         }
 

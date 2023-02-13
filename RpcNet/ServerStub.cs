@@ -8,10 +8,10 @@ using Internal;
 public abstract class ServerStub : IDisposable
 {
     protected readonly XdrVoid Void = new();
-    protected readonly ServerSettings Settings;
+    protected readonly ServerSettings? Settings;
 
-    private readonly RpcTcpServer _rpcTcpServer;
-    private readonly RpcUdpServer _rpcUdpServer;
+    private readonly RpcTcpServer? _rpcTcpServer;
+    private readonly RpcUdpServer? _rpcUdpServer;
 
     private bool _isDisposed;
 
@@ -21,7 +21,7 @@ public abstract class ServerStub : IDisposable
         int port,
         int program,
         int[] versions,
-        ServerSettings serverSettings = default)
+        ServerSettings? serverSettings = default)
     {
         if (ipAddress == null)
         {

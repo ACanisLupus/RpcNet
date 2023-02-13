@@ -11,16 +11,16 @@ public class TcpWriter : INetworkWriter
     private const int TcpHeaderLength = 4;
 
     private readonly byte[] _buffer;
-    private readonly ILogger _logger;
+    private readonly ILogger? _logger;
 
     private Socket _tcpClient;
     private int _writeIndex;
 
-    public TcpWriter(Socket tcpClient, ILogger logger = default) : this(tcpClient, 65536, logger)
+    public TcpWriter(Socket tcpClient, ILogger? logger = default) : this(tcpClient, 65536, logger)
     {
     }
 
-    public TcpWriter(Socket tcpClient, int bufferSize, ILogger logger = default)
+    public TcpWriter(Socket tcpClient, int bufferSize, ILogger? logger = default)
     {
         if ((bufferSize < (TcpHeaderLength + sizeof(int))) || ((bufferSize % 4) != 0))
         {
@@ -29,7 +29,7 @@ public class TcpWriter : INetworkWriter
 
         _logger = logger;
 
-        Reset(tcpClient);
+        _tcpClient = tcpClient;
         _buffer = new byte[bufferSize];
     }
 
@@ -75,7 +75,7 @@ public class TcpWriter : INetworkWriter
         }
         catch (Exception exception)
         {
-            _logger?.Error($"Unexpected error while sending TCP data to {_tcpClient?.RemoteEndPoint}: {exception}");
+            _logger?.Error($"Unexpected error while sending TCP data to {_tcpClient.RemoteEndPoint}: {exception}");
             return new NetworkWriteResult(SocketError.SocketError);
         }
 

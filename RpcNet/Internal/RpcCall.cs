@@ -6,10 +6,10 @@ using System.Net;
 
 internal class RpcCall
 {
-    private readonly ILogger _logger;
+    private readonly ILogger? _logger;
     private readonly INetworkReader _networkReader;
     private readonly INetworkWriter _networkWriter;
-    private readonly Action _reestablishConnection;
+    private readonly Action? _reestablishConnection;
     private readonly IPEndPoint _remoteIpEndPoint;
     private readonly RpcMessage _rpcMessage;
     private readonly IXdrReader _xdrReader;
@@ -22,8 +22,8 @@ internal class RpcCall
         IPEndPoint remoteIpEndPoint,
         INetworkReader networkReader,
         INetworkWriter networkWriter,
-        Action reestablishConnection,
-        ILogger logger = default)
+        Action? reestablishConnection,
+        ILogger? logger = default)
     {
         _remoteIpEndPoint = remoteIpEndPoint;
         _networkReader = networkReader;
@@ -60,7 +60,7 @@ internal class RpcCall
     {
         for (int i = 0; i < 2; i++)
         {
-            if (!SendMessage(procedure, version, argument, out string errorMessage))
+            if (!SendMessage(procedure, version, argument, out string? errorMessage))
             {
                 if (i == 0)
                 {
@@ -69,6 +69,7 @@ internal class RpcCall
                     continue;
                 }
 
+                errorMessage ??= "Unknown error.";
                 throw new RpcException(errorMessage);
             }
 
@@ -81,6 +82,7 @@ internal class RpcCall
                     continue;
                 }
 
+                errorMessage ??= "Unknown error.";
                 throw new RpcException(errorMessage);
             }
 
@@ -88,7 +90,7 @@ internal class RpcCall
         }
     }
 
-    private bool SendMessage(int procedure, int version, IXdrDataType argument, out string errorMessage)
+    private bool SendMessage(int procedure, int version, IXdrDataType argument, out string? errorMessage)
     {
         _networkWriter.BeginWriting();
 
@@ -118,7 +120,7 @@ internal class RpcCall
         return true;
     }
 
-    private bool ReceiveReply(IXdrDataType result, out string errorMessage)
+    private bool ReceiveReply(IXdrDataType result, out string? errorMessage)
     {
         var reply = new RpcMessage();
         reply.ReadFrom(_xdrReader);

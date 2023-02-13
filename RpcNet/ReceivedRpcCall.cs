@@ -32,7 +32,7 @@ public class ReceivedRpcCall
 
     public uint Version { get; private set; }
     public uint Procedure { get; private set; }
-    public Caller Caller { get; private set; }
+    public Caller? Caller { get; private set; }
 
     public void RetrieveCall(IXdrDataType argument) => argument.ReadFrom(_xdrReader);
 

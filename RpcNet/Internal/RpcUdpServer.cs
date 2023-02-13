@@ -9,7 +9,7 @@ using PortMapper;
 // Public for tests
 public class RpcUdpServer : IDisposable
 {
-    private readonly ILogger _logger;
+    private readonly ILogger? _logger;
     private readonly int _port;
     private readonly UdpReader _reader;
     private readonly ReceivedRpcCall _receivedCall;
@@ -17,7 +17,7 @@ public class RpcUdpServer : IDisposable
     private readonly UdpWriter _writer;
 
     private bool _isDisposed;
-    private Thread _receivingThread;
+    private Thread? _receivingThread;
     private volatile bool _stopReceiving;
 
     public RpcUdpServer(
@@ -26,7 +26,7 @@ public class RpcUdpServer : IDisposable
         int program,
         int[] versions,
         Action<ReceivedRpcCall> receivedCallDispatcher,
-        ServerSettings serverSettings = default)
+        ServerSettings? serverSettings = default)
     {
         serverSettings ??= new ServerSettings();
 
@@ -132,10 +132,17 @@ public class RpcUdpServer : IDisposable
                     continue;
                 }
 
+                IPEndPoint? remoteIpEndPoint = result.RemoteIpEndPoint;
+                if (remoteIpEndPoint == null)
+                {
+                    // Can this happen?
+                    continue;
+                }
+
                 _writer.BeginWriting();
-                _receivedCall.HandleCall(new Caller(result.RemoteIpEndPoint, Protocol.Udp));
+                _receivedCall.HandleCall(new Caller(remoteIpEndPoint, Protocol.Udp));
                 _reader.EndReading();
-                _writer.EndWriting(result.RemoteIpEndPoint);
+                _writer.EndWriting(remoteIpEndPoint);
             }
             catch (Exception e)
             {

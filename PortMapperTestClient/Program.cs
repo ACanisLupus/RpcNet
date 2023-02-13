@@ -24,19 +24,14 @@ internal class Program
             return 1;
         }
 
-        switch (command)
+        return command switch
         {
-            case Command.Dump:
-                return Dump(ipEndPoint);
-            case Command.Get:
-                return Get(ipEndPoint, arguments);
-            case Command.Set:
-                return Set(ipEndPoint, arguments);
-            case Command.Unset:
-                return Unset(ipEndPoint, arguments);
-        }
-
-        return 0;
+            Command.Dump => Dump(ipEndPoint),
+            Command.Get => Get(ipEndPoint, arguments),
+            Command.Set => Set(ipEndPoint, arguments),
+            Command.Unset => Unset(ipEndPoint, arguments),
+            _ => 0
+        };
     }
 
     private static bool TryReadCommand(List<string> args, out Command command)
@@ -57,7 +52,7 @@ internal class Program
         return true;
     }
 
-    private static bool TryReadIpEndPoint(List<string> args, out IPEndPoint ipEndPoint)
+    private static bool TryReadIpEndPoint(IList<string> args, out IPEndPoint ipEndPoint)
     {
         ipEndPoint = new IPEndPoint(IPAddress.Loopback, 111);
 
@@ -71,7 +66,7 @@ internal class Program
             return true;
         }
 
-        if (!IPEndPoint.TryParse(args[0], out IPEndPoint differentIpEndPoint))
+        if (!IPEndPoint.TryParse(args[0], out IPEndPoint? differentIpEndPoint))
         {
             return false;
         }
@@ -150,7 +145,7 @@ internal class Program
 
     private static int Unset(IPEndPoint ipEndPoint, IReadOnlyList<string> args)
     {
-        if ((args.Count < 2) || (args.Count > 3))
+        if (args.Count is < 2 or > 3)
         {
             PrintUsage();
             return 1;

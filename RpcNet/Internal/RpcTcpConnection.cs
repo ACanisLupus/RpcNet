@@ -9,7 +9,7 @@ using System.Net.Sockets;
 public class RpcTcpConnection : IDisposable
 {
     private readonly Caller _caller;
-    private readonly ILogger _logger;
+    private readonly ILogger? _logger;
     private readonly TcpReader _reader;
     private readonly ReceivedRpcCall _receivedCall;
     private readonly IPEndPoint _remoteIpEndPoint;
@@ -21,11 +21,16 @@ public class RpcTcpConnection : IDisposable
         int program,
         int[] versions,
         Action<ReceivedRpcCall> receivedCallDispatcher,
-        ILogger logger = default)
+        ILogger? logger = default)
     {
         _tcpClient = tcpClient;
-        _remoteIpEndPoint = (IPEndPoint)tcpClient.RemoteEndPoint;
-        _caller = new Caller(_remoteIpEndPoint, Protocol.Tcp);
+        if (tcpClient.RemoteEndPoint is not IPEndPoint remoteIpEndPoint)
+        {
+            throw new RpcException("Could not find remote IP end point for TCP connection.");
+        }
+
+        _remoteIpEndPoint = remoteIpEndPoint;
+        _caller = new Caller(remoteIpEndPoint, Protocol.Tcp);
         _reader = new TcpReader(tcpClient, logger);
         _writer = new TcpWriter(tcpClient, logger);
         _logger = logger;

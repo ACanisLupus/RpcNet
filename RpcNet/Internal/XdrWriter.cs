@@ -52,7 +52,7 @@ public class XdrWriter : IXdrWriter
         WriteFixedLengthOpaque(value);
     }
 
-    public void Write(string value)
+    public void Write(string? value)
     {
         int length = value?.Length ?? 0;
         if ((value == null) || (length == 0))

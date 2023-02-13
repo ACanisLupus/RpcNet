@@ -12,7 +12,7 @@ public interface IXdrWriter
     void Write(long value);
     void Write(sbyte value);
     void Write(short value);
-    void Write(string value);
+    void Write(string? value);
     void Write(uint value);
     void Write(ulong value);
     void Write(ushort value);

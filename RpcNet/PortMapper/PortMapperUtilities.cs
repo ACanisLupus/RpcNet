@@ -12,7 +12,7 @@ internal static class PortMapperUtilities
         int portMapperPort,
         int program,
         int version,
-        ClientSettings clientSettings = default)
+        ClientSettings? clientSettings = default)
     {
         using var portMapperClient = new PortMapperClient(Protocol.Tcp, ipAddress, portMapperPort, clientSettings);
         return portMapperClient.GetPort_2(
@@ -30,7 +30,7 @@ internal static class PortMapperUtilities
         int portToSet,
         int program,
         int version,
-        ClientSettings clientSettings = default)
+        ClientSettings? clientSettings = default)
     {
         using var portMapperClient = new PortMapperClient(
             Protocol.Tcp,

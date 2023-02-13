@@ -11,7 +11,7 @@ public class RpcTcpServer : IDisposable
 {
     private readonly Dictionary<Socket, RpcTcpConnection> _connections = new();
     private readonly IPAddress _ipAddress;
-    private readonly ILogger _logger;
+    private readonly ILogger? _logger;
     private readonly int _portMapperPort;
     private readonly int _program;
     private readonly Action<ReceivedRpcCall> _receivedCallDispatcher;
@@ -19,7 +19,7 @@ public class RpcTcpServer : IDisposable
     private readonly int[] _versions;
     private readonly ServerSettings _serverSettings;
 
-    private Thread _acceptingThread;
+    private Thread? _acceptingThread;
     private bool _isDisposed;
     private int _port;
     private volatile bool _stopAccepting;
@@ -30,7 +30,7 @@ public class RpcTcpServer : IDisposable
         int program,
         int[] versions,
         Action<ReceivedRpcCall> receivedCallDispatcher,
-        ServerSettings serverSettings = default)
+        ServerSettings? serverSettings = default)
     {
         serverSettings ??= new ServerSettings();
 

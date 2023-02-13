@@ -8,7 +8,7 @@ using Internal;
 public abstract class ClientStub : IDisposable
 {
     protected readonly XdrVoid Void = new();
-    protected readonly ClientSettings Settings;
+    protected readonly ClientSettings? Settings;
 
     private readonly INetworkClient _networkClient;
 
@@ -18,7 +18,7 @@ public abstract class ClientStub : IDisposable
         int port,
         int program,
         int version,
-        ClientSettings clientSettings = default)
+        ClientSettings? clientSettings = default)
     {
         if (ipAddress == null)
         {

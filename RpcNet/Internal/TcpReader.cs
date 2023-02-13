@@ -10,7 +10,7 @@ public class TcpReader : INetworkReader
     private const int TcpHeaderLength = 4;
 
     private readonly byte[] _buffer;
-    private readonly ILogger _logger;
+    private readonly ILogger? _logger;
 
     private int _bodyIndex;
     private int _headerIndex;
@@ -20,11 +20,11 @@ public class TcpReader : INetworkReader
     private Socket _tcpClient;
     private int _writeIndex;
 
-    public TcpReader(Socket tcpClient, ILogger logger = default) : this(tcpClient, 65536, logger)
+    public TcpReader(Socket tcpClient, ILogger? logger = default) : this(tcpClient, 65536, logger)
     {
     }
 
-    public TcpReader(Socket tcpClient, int bufferSize, ILogger logger = default)
+    public TcpReader(Socket tcpClient, int bufferSize, ILogger? logger = default)
     {
         if ((bufferSize < (TcpHeaderLength + sizeof(int))) || ((bufferSize % 4) != 0))
         {
@@ -33,7 +33,7 @@ public class TcpReader : INetworkReader
 
         _logger = logger;
 
-        Reset(tcpClient);
+        _tcpClient = tcpClient;
         _buffer = new byte[bufferSize];
     }
 
@@ -184,7 +184,7 @@ public class TcpReader : INetworkReader
         catch (Exception exception)
         {
             _logger?.Error(
-                $"Unexpected error while receiving TCP data from {_tcpClient?.RemoteEndPoint}: {exception}");
+                $"Unexpected error while receiving TCP data from {_tcpClient.RemoteEndPoint}: {exception}");
             return NetworkReadResult.CreateError(SocketError.SocketError);
         }
 

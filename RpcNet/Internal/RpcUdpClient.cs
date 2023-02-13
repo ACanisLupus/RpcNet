@@ -17,7 +17,7 @@ public class RpcUdpClient : INetworkClient
         int port,
         int program,
         int version,
-        ClientSettings clientSettings = default)
+        ClientSettings? clientSettings = default)
     {
         clientSettings ??= new ClientSettings();
 
