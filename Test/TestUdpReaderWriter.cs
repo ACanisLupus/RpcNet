@@ -4,7 +4,6 @@ namespace Test;
 
 using System.Net;
 using System.Net.Sockets;
-using System.Runtime.InteropServices;
 using NUnit.Framework;
 using RpcNet;
 using RpcNet.Internal;
@@ -144,10 +143,7 @@ internal class TestUdpReaderWriter
         Thread.Sleep(100);
         _server.Dispose();
         NetworkReadResult readResult = task.GetAwaiter().GetResult();
-        SocketError expectedError = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? SocketError.Interrupted
-            : SocketError.Success;
-        Assert.That(readResult.SocketError, Is.EqualTo(expectedError));
+        Assert.That(readResult.SocketError, Is.EqualTo(SocketError.Interrupted));
     }
 
     private static void AssertEquals(ReadOnlySpan<byte> one, ReadOnlySpan<byte> two)
