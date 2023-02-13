@@ -1,104 +1,94 @@
-namespace RpcNet.Internal
+// Copyright by Artur Wolf
+
+namespace RpcNet.Internal;
+
+using System.Net.Sockets;
+using System.Runtime.CompilerServices;
+
+internal static class Utilities
 {
-    using System;
-    using System.Net.Sockets;
-    using System.Runtime.CompilerServices;
-    using System.Threading;
+    public static readonly TimeSpan DefaultClientReceiveTimeout = TimeSpan.FromSeconds(10);
+    public static readonly TimeSpan DefaultClientSendTimeout = TimeSpan.FromSeconds(10);
+    public static readonly TimeSpan DefaultServerReceiveTimeout = Timeout.InfiniteTimeSpan;
+    public static readonly TimeSpan DefaultServerSendTimeout = TimeSpan.FromSeconds(10);
 
-    internal static class Utilities
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int ToInt32BigEndian(ReadOnlySpan<byte> value) =>
+        (value[0] << 24) | (value[1] << 16) | (value[2] << 8) | value[3];
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void WriteBytesBigEndian(Span<byte> destination, int value)
     {
-        public static readonly TimeSpan DefaultClientReceiveTimeout = TimeSpan.FromSeconds(10);
-        public static readonly TimeSpan DefaultClientSendTimeout = TimeSpan.FromSeconds(10);
-        public static readonly TimeSpan DefaultServerReceiveTimeout = Timeout.InfiniteTimeSpan;
-        public static readonly TimeSpan DefaultServerSendTimeout = TimeSpan.FromSeconds(10);
+        destination[0] = (byte)(value >> 24);
+        destination[1] = (byte)((value >> 16) & 0xff);
+        destination[2] = (byte)((value >> 8) & 0xff);
+        destination[3] = (byte)(value & 0xff);
+    }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int ToInt32BigEndian(ReadOnlySpan<byte> value) =>
-            (value[0] << 24) | (value[1] << 16) | (value[2] << 8) | value[3];
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int CalculateXdrPadding(int length) => (4 - (length & 3)) & 3;
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteBytesBigEndian(Span<byte> destination, int value)
+    public static string ConvertToString(Protocol protocol)
+    {
+        switch (protocol)
         {
-            destination[0] = (byte)(value >> 24);
-            destination[1] = (byte)((value >> 16) & 0xff);
-            destination[2] = (byte)((value >> 8) & 0xff);
-            destination[3] = (byte)(value & 0xff);
+            case Protocol.Tcp:
+                return "TCP";
+            case Protocol.Udp:
+                return "UDP";
+            case Protocol.TcpAndUdp:
+                return "TCP and UDP";
+            default:
+                throw new ArgumentOutOfRangeException(nameof(protocol), protocol, null);
         }
+    }
 
-        // Not available in .NET Standard 2.0
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static unsafe int SingleToInt32Bits(float value) => *(int*)&value;
-
-        // Not available in .NET Standard 2.0
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static unsafe float Int32BitsToSingle(int value) => *(float*)&value;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int CalculateXdrPadding(int length) => (4 - (length & 3)) & 3;
-
-        public static string ConvertToString(Protocol protocol)
+    public static TimeSpan GetReceiveTimeout(Socket socket)
+    {
+        try
         {
-            switch (protocol)
-            {
-                case Protocol.Tcp:
-                    return "TCP";
-                case Protocol.Udp:
-                    return "UDP";
-                case Protocol.TcpAndUdp:
-                    return "TCP and UDP";
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(protocol), protocol, null);
-            }
+            return TimeSpan.FromMilliseconds(socket.ReceiveTimeout);
         }
-
-        public static TimeSpan GetReceiveTimeout(Socket socket)
+        catch (SocketException e)
         {
-            try
-            {
-                return TimeSpan.FromMilliseconds(socket.ReceiveTimeout);
-            }
-            catch (SocketException e)
-            {
-                throw new RpcException($"Could not get receive timeout. Socket error: {e.SocketErrorCode}.");
-            }
+            throw new RpcException($"Could not get receive timeout. Socket error: {e.SocketErrorCode}.");
         }
+    }
 
-        public static void SetReceiveTimeout(Socket socket, TimeSpan timeout)
+    public static void SetReceiveTimeout(Socket socket, TimeSpan timeout)
+    {
+        try
         {
-            try
-            {
-                socket.ReceiveTimeout = (int)timeout.TotalMilliseconds;
-            }
-            catch (SocketException e)
-            {
-                throw new RpcException(
-                    $"Could not set receive timeout to {timeout}. Socket error: {e.SocketErrorCode}.");
-            }
+            socket.ReceiveTimeout = (int)timeout.TotalMilliseconds;
         }
-
-        public static TimeSpan GetSendTimeout(Socket socket)
+        catch (SocketException e)
         {
-            try
-            {
-                return TimeSpan.FromMilliseconds(socket.SendTimeout);
-            }
-            catch (SocketException e)
-            {
-                throw new RpcException($"Could not get send timeout. Socket error: {e.SocketErrorCode}.");
-            }
+            throw new RpcException(
+                $"Could not set receive timeout to {timeout}. Socket error: {e.SocketErrorCode}.");
         }
+    }
 
-        public static void SetSendTimeout(Socket socket, TimeSpan timeout)
+    public static TimeSpan GetSendTimeout(Socket socket)
+    {
+        try
         {
-            try
-            {
-                socket.SendTimeout = (int)timeout.TotalMilliseconds;
-            }
-            catch (SocketException e)
-            {
-                throw new RpcException(
-                    $"Could not set send timeout to {timeout}. Socket error: {e.SocketErrorCode}.");
-            }
+            return TimeSpan.FromMilliseconds(socket.SendTimeout);
+        }
+        catch (SocketException e)
+        {
+            throw new RpcException($"Could not get send timeout. Socket error: {e.SocketErrorCode}.");
+        }
+    }
+
+    public static void SetSendTimeout(Socket socket, TimeSpan timeout)
+    {
+        try
+        {
+            socket.SendTimeout = (int)timeout.TotalMilliseconds;
+        }
+        catch (SocketException e)
+        {
+            throw new RpcException($"Could not set send timeout to {timeout}. Socket error: {e.SocketErrorCode}.");
         }
     }
 }

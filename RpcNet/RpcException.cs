@@ -1,11 +1,10 @@
-namespace RpcNet
-{
-    using System;
+// Copyright by Artur Wolf
 
-    public class RpcException : Exception
+namespace RpcNet;
+
+public class RpcException : Exception
+{
+    public RpcException(string message) : base(message)
     {
-        public RpcException(string message) : base(message)
-        {
-        }
     }
 }

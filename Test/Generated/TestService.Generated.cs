@@ -10,61 +10,60 @@
 namespace TestService
 {
     using System;
+    using System.Collections.Generic;
     using System.Net;
+    using System.Text;
     using RpcNet;
 
     internal static class TestServiceConstants
     {
+        public const int IntInt1 = 3;
+        public const int IntInt2 = 4;
+        public const int SimpleStructSimpleStruct = 7;
+        public const int TestServiceProgram = 0x020406080;
         public const int TestServiceVersion = 1;
-        public const int Ping_1 = 1;
-        public const int TestMyStruct_1 = 2;
         public const int TestServiceVersion2 = 2;
-        public const int Ping2_2 = 1;
-        public const int TestMyStruct2_2 = 2;
-        public const int TestServiceProgram = 0x02004009;
+        public const int VoidVoid1 = 1;
+        public const int VoidVoid2 = 2;
     }
 
-    internal partial class MyStruct : IXdrReadable, IXdrWritable
+    internal enum SimpleEnum
     {
-        public bool BoolValue { get; set; }
-        public byte Int8Value { get; set; }
-        public short Int16Value { get; set; }
-        public int Int32Value { get; set; }
-        public long Int64Value { get; set; }
-        public ushort UInt16Value { get; set; }
-        public uint UInt32Value { get; set; }
-        public ulong UInt64Value { get; set; }
-        public double Float64Value { get; set; }
-        public float Float32Value { get; set; }
-        public bool[] BoolValue2 { get; set; }
-        public byte[] Int8Value2 { get; set; }
-        public short[] Int16Value2 { get; set; }
-        public int[] Int32Value2 { get; set; }
-        public long[] Int64Value2 { get; set; }
-        public ushort[] UInt16Value2 { get; set; }
-        public uint[] UInt32Value2 { get; set; }
-        public ulong[] UInt64Value2 { get; set; }
-        public double[] Float64Value2 { get; set; }
-        public float[] Float32Value2 { get; set; }
-        public bool[] BoolValue3 { get; } = new bool[10];
-        public byte[] Int8Value3 { get; } = new byte[10];
-        public short[] Int16Value3 { get; } = new short[10];
-        public int[] Int32Value3 { get; } = new int[10];
-        public long[] Int64Value3 { get; } = new long[10];
-        public ushort[] UInt16Value3 { get; } = new ushort[10];
-        public uint[] UInt32Value3 { get; } = new uint[10];
-        public ulong[] UInt64Value3 { get; } = new ulong[10];
-        public double[] Float64Value3 { get; } = new double[10];
-        public float[] Float32Value3 { get; } = new float[10];
+        Value1,
+        Value2 = 1,
+    }
 
-        public MyStruct()
+    internal partial class ComplexStruct : IXdrDataType
+    {
+        public ComplexStruct()
         {
         }
 
-        public MyStruct(IXdrReader reader)
+        public ComplexStruct(IXdrReader reader)
         {
             ReadFrom(reader);
         }
+
+        public bool BoolValue { get; set; }
+        public sbyte Int8Value { get; set; }
+        public short Int16Value { get; set; }
+        public int Int32Value { get; set; }
+        public long Int64Value { get; set; }
+        public byte UInt8Value { get; set; }
+        public ushort UInt16Value { get; set; }
+        public uint UInt32Value { get; set; }
+        public ulong UInt64Value { get; set; }
+        public float Float32Value { get; set; }
+        public double Float64Value { get; set; }
+        public SimpleStruct SimpleStructValue { get; set; } = new SimpleStruct();
+        public SimpleEnum SimpleEnumValue { get; set; }
+        public List<byte> UInt8DynamicArray { get; set; } = new List<byte>();
+        public List<SimpleStruct> SimpleStructDynamicArray { get; set; } = new List<SimpleStruct>();
+        public List<SimpleEnum> SimpleEnumDynamicArray { get; set; } = new List<SimpleEnum>();
+        public double[] Float64FixedArray { get; set; } = new double[10];
+        public SimpleStruct[] SimpleStructFixedArray { get; set; } = new SimpleStruct[10];
+        public SimpleEnum[] SimpleEnumFixedArray { get; set; } = new SimpleEnum[10];
+        public StringType[] StringArray { get; set; } = new StringType[2];
 
         public void WriteTo(IXdrWriter writer)
         {
@@ -73,80 +72,233 @@ namespace TestService
             writer.Write(Int16Value);
             writer.Write(Int32Value);
             writer.Write(Int64Value);
+            writer.Write(UInt8Value);
             writer.Write(UInt16Value);
             writer.Write(UInt32Value);
             writer.Write(UInt64Value);
-            writer.Write(Float64Value);
             writer.Write(Float32Value);
-            writer.WriteVariableLengthArray(BoolValue2);
-            writer.WriteVariableLengthArray(Int8Value2);
-            writer.WriteVariableLengthArray(Int16Value2);
-            writer.WriteVariableLengthArray(Int32Value2);
-            writer.WriteVariableLengthArray(Int64Value2);
-            writer.WriteVariableLengthArray(UInt16Value2);
-            writer.WriteVariableLengthArray(UInt32Value2);
-            writer.WriteVariableLengthArray(UInt64Value2);
-            writer.WriteVariableLengthArray(Float64Value2);
-            writer.WriteVariableLengthArray(Float32Value2);
-            writer.WriteFixedLengthArray(BoolValue3);
-            writer.WriteFixedLengthArray(Int8Value3);
-            writer.WriteFixedLengthArray(Int16Value3);
-            writer.WriteFixedLengthArray(Int32Value3);
-            writer.WriteFixedLengthArray(Int64Value3);
-            writer.WriteFixedLengthArray(UInt16Value3);
-            writer.WriteFixedLengthArray(UInt32Value3);
-            writer.WriteFixedLengthArray(UInt64Value3);
-            writer.WriteFixedLengthArray(Float64Value3);
-            writer.WriteFixedLengthArray(Float32Value3);
+            writer.Write(Float64Value);
+            SimpleStructValue.WriteTo(writer);
+            writer.Write((int)SimpleEnumValue);
+            if (UInt8DynamicArray != null)
+            {
+                int _size = UInt8DynamicArray.Count;
+                writer.Write(_size);
+                for (int _idx = 0; _idx < _size; _idx++)
+                {
+                    writer.Write(UInt8DynamicArray[_idx]);
+                }
+            }
+            if (SimpleStructDynamicArray != null)
+            {
+                int _size = SimpleStructDynamicArray.Count;
+                writer.Write(_size);
+                for (int _idx = 0; _idx < _size; _idx++)
+                {
+                    SimpleStructDynamicArray[_idx].WriteTo(writer);
+                }
+            }
+            if (SimpleEnumDynamicArray != null)
+            {
+                int _size = SimpleEnumDynamicArray.Count;
+                writer.Write(_size);
+                for (int _idx = 0; _idx < _size; _idx++)
+                {
+                    writer.Write((int)SimpleEnumDynamicArray[_idx]);
+                }
+            }
+            {
+                for (int _idx = 0; _idx < Float64FixedArray.Length; _idx++)
+                {
+                    writer.Write(Float64FixedArray[_idx]);
+                }
+            }
+            {
+                for (int _idx = 0; _idx < SimpleStructFixedArray.Length; _idx++)
+                {
+                    SimpleStructFixedArray[_idx].WriteTo(writer);
+                }
+            }
+            {
+                for (int _idx = 0; _idx < SimpleEnumFixedArray.Length; _idx++)
+                {
+                    writer.Write((int)SimpleEnumFixedArray[_idx]);
+                }
+            }
+            {
+                for (int _idx = 0; _idx < StringArray.Length; _idx++)
+                {
+                    StringArray[_idx].WriteTo(writer);
+                }
+            }
         }
 
         public void ReadFrom(IXdrReader reader)
         {
             BoolValue = reader.ReadBool();
-            Int8Value = reader.ReadByte();
-            Int16Value = reader.ReadShort();
-            Int32Value = reader.ReadInt();
-            Int64Value = reader.ReadLong();
-            UInt16Value = reader.ReadUShort();
-            UInt32Value = reader.ReadUInt();
-            UInt64Value = reader.ReadULong();
-            Float64Value = reader.ReadDouble();
-            Float32Value = reader.ReadFloat();
-            BoolValue2 = reader.ReadBoolArray();
-            Int8Value2 = reader.ReadByteArray();
-            Int16Value2 = reader.ReadShortArray();
-            Int32Value2 = reader.ReadIntArray();
-            Int64Value2 = reader.ReadLongArray();
-            UInt16Value2 = reader.ReadUShortArray();
-            UInt32Value2 = reader.ReadUIntArray();
-            UInt64Value2 = reader.ReadULongArray();
-            Float64Value2 = reader.ReadDoubleArray();
-            Float32Value2 = reader.ReadFloatArray();
-            reader.ReadBoolArray(BoolValue3);
-            reader.ReadByteArray(Int8Value3);
-            reader.ReadShortArray(Int16Value3);
-            reader.ReadIntArray(Int32Value3);
-            reader.ReadLongArray(Int64Value3);
-            reader.ReadUShortArray(UInt16Value3);
-            reader.ReadUIntArray(UInt32Value3);
-            reader.ReadULongArray(UInt64Value3);
-            reader.ReadDoubleArray(Float64Value3);
-            reader.ReadFloatArray(Float32Value3);
+            Int8Value = reader.ReadInt8();
+            Int16Value = reader.ReadInt16();
+            Int32Value = reader.ReadInt32();
+            Int64Value = reader.ReadInt64();
+            UInt8Value = reader.ReadUInt8();
+            UInt16Value = reader.ReadUInt16();
+            UInt32Value = reader.ReadUInt32();
+            UInt64Value = reader.ReadUInt64();
+            Float32Value = reader.ReadFloat32();
+            Float64Value = reader.ReadFloat64();
+            SimpleStructValue.ReadFrom(reader);
+            SimpleEnumValue = (SimpleEnum)reader.ReadInt32();
+            {
+                int _size = reader.ReadInt32();
+                UInt8DynamicArray.Clear();
+                for (int _idx = 0; _idx < _size; _idx++)
+                {
+                    UInt8DynamicArray.Add(reader.ReadUInt8());
+                }
+            }
+            {
+                int _size = reader.ReadInt32();
+                SimpleStructDynamicArray.Clear();
+                for (int _idx = 0; _idx < _size; _idx++)
+                {
+                    SimpleStructDynamicArray.Add(new SimpleStruct(reader));
+                }
+            }
+            {
+                int _size = reader.ReadInt32();
+                SimpleEnumDynamicArray.Clear();
+                for (int _idx = 0; _idx < _size; _idx++)
+                {
+                    SimpleEnumDynamicArray.Add((SimpleEnum)reader.ReadInt32());
+                }
+            }
+            {
+                for (int _idx = 0; _idx < Float64FixedArray.Length; _idx++)
+                {
+                    Float64FixedArray[_idx] = reader.ReadFloat64();
+                }
+            }
+            {
+                for (int _idx = 0; _idx < SimpleStructFixedArray.Length; _idx++)
+                {
+                    SimpleStructFixedArray[_idx].ReadFrom(reader);
+                }
+            }
+            {
+                for (int _idx = 0; _idx < SimpleEnumFixedArray.Length; _idx++)
+                {
+                    SimpleEnumFixedArray[_idx] = (SimpleEnum)reader.ReadInt32();
+                }
+            }
+            {
+                for (int _idx = 0; _idx < StringArray.Length; _idx++)
+                {
+                    StringArray[_idx].ReadFrom(reader);
+                }
+            }
+        }
+
+        public void ToString(StringBuilder sb)
+        {
+            sb.Append("{");
+            sb.Append(" BoolValue = ");
+            sb.Append(BoolValue);
+            sb.Append(", Int8Value = ");
+            sb.Append(Int8Value);
+            sb.Append(", Int16Value = ");
+            sb.Append(Int16Value);
+            sb.Append(", Int32Value = ");
+            sb.Append(Int32Value);
+            sb.Append(", Int64Value = ");
+            sb.Append(Int64Value);
+            sb.Append(", UInt8Value = ");
+            sb.Append(UInt8Value);
+            sb.Append(", UInt16Value = ");
+            sb.Append(UInt16Value);
+            sb.Append(", UInt32Value = ");
+            sb.Append(UInt32Value);
+            sb.Append(", UInt64Value = ");
+            sb.Append(UInt64Value);
+            sb.Append(", Float32Value = ");
+            sb.Append(Float32Value);
+            sb.Append(", Float64Value = ");
+            sb.Append(Float64Value);
+            sb.Append(", SimpleStructValue = ");
+            SimpleStructValue.ToString(sb);
+            sb.Append(", SimpleEnumValue = ");
+            sb.Append(SimpleEnumValue);
+            sb.Append(", UInt8DynamicArray = [");
+            for (int _idx = 0; _idx < UInt8DynamicArray.Count; _idx++)
+            {
+                sb.Append(_idx == 0 ? " " : ", ");
+                sb.Append(UInt8DynamicArray[_idx]);
+            }
+            sb.Append(" ]");
+            sb.Append(", SimpleStructDynamicArray = [");
+            for (int _idx = 0; _idx < SimpleStructDynamicArray.Count; _idx++)
+            {
+                sb.Append(_idx == 0 ? " " : ", ");
+                SimpleStructDynamicArray[_idx].ToString(sb);
+            }
+            sb.Append(" ]");
+            sb.Append(", SimpleEnumDynamicArray = [");
+            for (int _idx = 0; _idx < SimpleEnumDynamicArray.Count; _idx++)
+            {
+                sb.Append(_idx == 0 ? " " : ", ");
+                sb.Append(SimpleEnumDynamicArray[_idx]);
+            }
+            sb.Append(" ]");
+            sb.Append(", Float64FixedArray = [");
+            for (int _idx = 0; _idx < Float64FixedArray.Length; _idx++)
+            {
+                sb.Append(_idx == 0 ? " " : ", ");
+                sb.Append(Float64FixedArray[_idx]);
+            }
+            sb.Append(" ]");
+            sb.Append(", SimpleStructFixedArray = [");
+            for (int _idx = 0; _idx < SimpleStructFixedArray.Length; _idx++)
+            {
+                sb.Append(_idx == 0 ? " " : ", ");
+                SimpleStructFixedArray[_idx].ToString(sb);
+            }
+            sb.Append(" ]");
+            sb.Append(", SimpleEnumFixedArray = [");
+            for (int _idx = 0; _idx < SimpleEnumFixedArray.Length; _idx++)
+            {
+                sb.Append(_idx == 0 ? " " : ", ");
+                sb.Append(SimpleEnumFixedArray[_idx]);
+            }
+            sb.Append(" ]");
+            sb.Append(", StringArray = [");
+            for (int _idx = 0; _idx < StringArray.Length; _idx++)
+            {
+                sb.Append(_idx == 0 ? " " : ", ");
+                StringArray[_idx].ToString(sb);
+            }
+            sb.Append(" ]");
+            sb.Append(" }");
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            ToString(sb);
+            return sb.ToString();
         }
     }
 
-    internal partial class PingStruct : IXdrReadable, IXdrWritable
+    internal partial class SimpleStruct : IXdrDataType
     {
-        public int Value { get; set; }
-
-        public PingStruct()
+        public SimpleStruct()
         {
         }
 
-        public PingStruct(IXdrReader reader)
+        public SimpleStruct(IXdrReader reader)
         {
             ReadFrom(reader);
         }
+
+        public int Value { get; set; }
 
         public void WriteTo(IXdrWriter writer)
         {
@@ -155,52 +307,377 @@ namespace TestService
 
         public void ReadFrom(IXdrReader reader)
         {
-            Value = reader.ReadInt();
+            Value = reader.ReadInt32();
+        }
+
+        public void ToString(StringBuilder sb)
+        {
+            sb.Append("{");
+            sb.Append(" Value = ");
+            sb.Append(Value);
+            sb.Append(" }");
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            ToString(sb);
+            return sb.ToString();
+        }
+    }
+
+    internal partial class StringType : IXdrDataType
+    {
+        public StringType()
+        {
+        }
+
+        public StringType(IXdrReader reader)
+        {
+            ReadFrom(reader);
+        }
+
+        public string Value { get; set; }
+
+        public void WriteTo(IXdrWriter writer)
+        {
+            writer.Write(Value);
+        }
+
+        public void ReadFrom(IXdrReader reader)
+        {
+            Value = reader.ReadString();
+        }
+
+        public void ToString(StringBuilder sb)
+        {
+            sb.Append("{");
+            sb.Append(" Value = ");
+            sb.Append(Value);
+            sb.Append(" }");
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            ToString(sb);
+            return sb.ToString();
         }
     }
 
     internal class TestServiceClient : ClientStub
     {
-        public TestServiceClient(Protocol protocol, IPAddress ipAddress, ClientSettings clientSettings = default) :
-            base(protocol, ipAddress, TestServiceConstants.TestServiceProgram, TestServiceConstants.TestServiceVersion2, clientSettings)
+        public TestServiceClient(Protocol protocol, IPAddress ipAddress, int port = 0, ClientSettings clientSettings = default) :
+            base(protocol, ipAddress, port, TestServiceConstants.TestServiceProgram, TestServiceConstants.TestServiceVersion2, clientSettings)
         {
         }
 
-        public PingStruct Ping_1(PingStruct arg1)
+        public void VoidVoid1_1()
         {
-            var result = new PingStruct();
-            Call(TestServiceConstants.Ping_1, TestServiceConstants.TestServiceVersion, arg1, result);
-            return result;
+            var args = Void;
+            var result = Void;
+            Settings?.Logger?.BeginCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.VoidVoid1, "VoidVoid1", args);
+            Call(TestServiceConstants.VoidVoid1, TestServiceConstants.TestServiceVersion, args, result);
+            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.VoidVoid1, "VoidVoid1", args, result);
         }
 
-        public MyStruct TestMyStruct_1(MyStruct arg1)
+        public void VoidVoid2_1()
         {
-            var result = new MyStruct();
-            Call(TestServiceConstants.TestMyStruct_1, TestServiceConstants.TestServiceVersion, arg1, result);
-            return result;
+            var args = Void;
+            var result = Void;
+            Settings?.Logger?.BeginCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.VoidVoid2, "VoidVoid2", args);
+            Call(TestServiceConstants.VoidVoid2, TestServiceConstants.TestServiceVersion, args, result);
+            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.VoidVoid2, "VoidVoid2", args, result);
         }
 
-        public PingStruct Ping2_2(PingStruct arg1)
+        private class IntInt1_1_Arguments : IXdrDataType
         {
-            var result = new PingStruct();
-            Call(TestServiceConstants.Ping2_2, TestServiceConstants.TestServiceVersion2, arg1, result);
-            return result;
+            public int Value { get; set; }
+
+            public void WriteTo(IXdrWriter writer)
+            {
+                writer.Write(Value);
+            }
+
+            public void ReadFrom(IXdrReader reader)
+            {
+                Value = reader.ReadInt32();
+            }
+
+            public void ToString(StringBuilder sb)
+            {
+                sb.Append("{");
+                sb.Append(" Value = ");
+                sb.Append(Value);
+                sb.Append(" }");
+            }
+
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+                ToString(sb);
+                return sb.ToString();
+            }
         }
 
-        public MyStruct TestMyStruct2_2(MyStruct arg1)
+        private class IntInt1_1_Result : IXdrDataType
         {
-            var result = new MyStruct();
-            Call(TestServiceConstants.TestMyStruct2_2, TestServiceConstants.TestServiceVersion2, arg1, result);
+            public int Value { get; set; }
+
+            public void WriteTo(IXdrWriter writer)
+            {
+                writer.Write(Value);
+            }
+
+            public void ReadFrom(IXdrReader reader)
+            {
+                Value = reader.ReadInt32();
+            }
+
+            public void ToString(StringBuilder sb)
+            {
+                sb.Append("{");
+                sb.Append(" Value = ");
+                sb.Append(Value);
+                sb.Append(" }");
+            }
+
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+                ToString(sb);
+                return sb.ToString();
+            }
+        }
+
+        public int IntInt1_1(int value)
+        {
+            var args = new IntInt1_1_Arguments
+            {
+                Value = value,
+            };
+            var result = new IntInt1_1_Result();
+            Settings?.Logger?.BeginCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.IntInt1, "IntInt1", args);
+            Call(TestServiceConstants.IntInt1, TestServiceConstants.TestServiceVersion, args, result);
+            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.IntInt1, "IntInt1", args, result);
+            return result.Value;
+        }
+
+        private class IntInt2_1_Arguments : IXdrDataType
+        {
+            public int Int32 { get; set; }
+
+            public void WriteTo(IXdrWriter writer)
+            {
+                writer.Write(Int32);
+            }
+
+            public void ReadFrom(IXdrReader reader)
+            {
+                Int32 = reader.ReadInt32();
+            }
+
+            public void ToString(StringBuilder sb)
+            {
+                sb.Append("{");
+                sb.Append(" Int32 = ");
+                sb.Append(Int32);
+                sb.Append(" }");
+            }
+
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+                ToString(sb);
+                return sb.ToString();
+            }
+        }
+
+        private class IntInt2_1_Result : IXdrDataType
+        {
+            public int Value { get; set; }
+
+            public void WriteTo(IXdrWriter writer)
+            {
+                writer.Write(Value);
+            }
+
+            public void ReadFrom(IXdrReader reader)
+            {
+                Value = reader.ReadInt32();
+            }
+
+            public void ToString(StringBuilder sb)
+            {
+                sb.Append("{");
+                sb.Append(" Value = ");
+                sb.Append(Value);
+                sb.Append(" }");
+            }
+
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+                ToString(sb);
+                return sb.ToString();
+            }
+        }
+
+        public int IntInt2_1(int int32)
+        {
+            var args = new IntInt2_1_Arguments
+            {
+                Int32 = int32,
+            };
+            var result = new IntInt2_1_Result();
+            Settings?.Logger?.BeginCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.IntInt2, "IntInt2", args);
+            Call(TestServiceConstants.IntInt2, TestServiceConstants.TestServiceVersion, args, result);
+            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.IntInt2, "IntInt2", args, result);
+            return result.Value;
+        }
+
+        public SimpleStruct SimpleStructSimpleStruct_2(SimpleStruct value)
+        {
+            var result = new SimpleStruct();
+            Settings?.Logger?.BeginCall(TestServiceConstants.TestServiceVersion2, TestServiceConstants.SimpleStructSimpleStruct, "SimpleStructSimpleStruct", value);
+            Call(TestServiceConstants.SimpleStructSimpleStruct, TestServiceConstants.TestServiceVersion2, value, result);
+            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion2, TestServiceConstants.SimpleStructSimpleStruct, "SimpleStructSimpleStruct", value, result);
             return result;
         }
     }
 
     internal abstract class TestServiceServerStub : ServerStub
     {
-        public TestServiceServerStub(Protocol protocol, IPAddress ipAddress, ServerSettings serverSettings = default) :
-            base(protocol, ipAddress, TestServiceConstants.TestServiceProgram, new[] { TestServiceConstants.TestServiceVersion, TestServiceConstants.TestServiceVersion2 }, serverSettings)
+        public TestServiceServerStub(Protocol protocol, IPAddress ipAddress, int port = 0, ServerSettings serverSettings = default) :
+            base(protocol, ipAddress, port, TestServiceConstants.TestServiceProgram, new[] { TestServiceConstants.TestServiceVersion, TestServiceConstants.TestServiceVersion2 }, serverSettings)
         {
         }
+
+        private class IntInt1_1_Arguments : IXdrDataType
+        {
+            public int Value { get; set; }
+
+            public void WriteTo(IXdrWriter writer)
+            {
+                writer.Write(Value);
+            }
+
+            public void ReadFrom(IXdrReader reader)
+            {
+                Value = reader.ReadInt32();
+            }
+
+            public void ToString(StringBuilder sb)
+            {
+                sb.Append("{");
+                sb.Append(" Value = ");
+                sb.Append(Value);
+                sb.Append(" }");
+            }
+
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+                ToString(sb);
+                return sb.ToString();
+            }
+        }
+
+        private class IntInt1_1_Result : IXdrDataType
+        {
+            public int Value { get; set; }
+
+            public void WriteTo(IXdrWriter writer)
+            {
+                writer.Write(Value);
+            }
+
+            public void ReadFrom(IXdrReader reader)
+            {
+                Value = reader.ReadInt32();
+            }
+
+            public void ToString(StringBuilder sb)
+            {
+                sb.Append("{");
+                sb.Append(" Value = ");
+                sb.Append(Value);
+                sb.Append(" }");
+            }
+
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+                ToString(sb);
+                return sb.ToString();
+            }
+        }
+
+        private class IntInt2_1_Arguments : IXdrDataType
+        {
+            public int Int32 { get; set; }
+
+            public void WriteTo(IXdrWriter writer)
+            {
+                writer.Write(Int32);
+            }
+
+            public void ReadFrom(IXdrReader reader)
+            {
+                Int32 = reader.ReadInt32();
+            }
+
+            public void ToString(StringBuilder sb)
+            {
+                sb.Append("{");
+                sb.Append(" Int32 = ");
+                sb.Append(Int32);
+                sb.Append(" }");
+            }
+
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+                ToString(sb);
+                return sb.ToString();
+            }
+        }
+
+        private class IntInt2_1_Result : IXdrDataType
+        {
+            public int Value { get; set; }
+
+            public void WriteTo(IXdrWriter writer)
+            {
+                writer.Write(Value);
+            }
+
+            public void ReadFrom(IXdrReader reader)
+            {
+                Value = reader.ReadInt32();
+            }
+
+            public void ToString(StringBuilder sb)
+            {
+                sb.Append("{");
+                sb.Append(" Value = ");
+                sb.Append(Value);
+                sb.Append(" }");
+            }
+
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+                ToString(sb);
+                return sb.ToString();
+            }
+        }
+
+        public abstract void VoidVoid1_1(Caller caller);
+        public abstract void VoidVoid2_1(Caller caller);
+        public abstract int IntInt1_1(Caller caller, int value);
+        public abstract int IntInt2_1(Caller caller, int int32);
+        public abstract SimpleStruct SimpleStructSimpleStruct_2(Caller caller, SimpleStruct value);
 
         protected override void DispatchReceivedCall(ReceivedRpcCall call)
         {
@@ -208,20 +685,84 @@ namespace TestService
             {
                 switch (call.Procedure)
                 {
-                    case TestServiceConstants.Ping_1:
+                    case TestServiceConstants.VoidVoid1:
                     {
-                        var args = new PingStruct();
+                        var args = Void;
                         call.RetrieveCall(args);
-                        var result = Ping_1(call.Caller, args);
-                        call.Reply(result);
+                        Settings?.Logger?.BeginCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.VoidVoid1, "VoidVoid1", args);
+                        var result = Void;
+                        try
+                        {
+                            VoidVoid1_1(call.Caller);
+                            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.VoidVoid1, "VoidVoid1", args, result);
+                            call.Reply(result);
+                        }
+                        catch (Exception exception) when (!(exception is RpcException))
+                        {
+                            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.VoidVoid1, "VoidVoid1", args, exception);
+                            call.SystemError();
+                            return;
+                        }
                         break;
                     }
-                    case TestServiceConstants.TestMyStruct_1:
+                    case TestServiceConstants.VoidVoid2:
                     {
-                        var args = new MyStruct();
+                        var args = Void;
                         call.RetrieveCall(args);
-                        var result = TestMyStruct_1(call.Caller, args);
-                        call.Reply(result);
+                        Settings?.Logger?.BeginCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.VoidVoid2, "VoidVoid2", args);
+                        var result = Void;
+                        try
+                        {
+                            VoidVoid2_1(call.Caller);
+                            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.VoidVoid2, "VoidVoid2", args, result);
+                            call.Reply(result);
+                        }
+                        catch (Exception exception) when (!(exception is RpcException))
+                        {
+                            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.VoidVoid2, "VoidVoid2", args, exception);
+                            call.SystemError();
+                            return;
+                        }
+                        break;
+                    }
+                    case TestServiceConstants.IntInt1:
+                    {
+                        var args = new IntInt1_1_Arguments();
+                        call.RetrieveCall(args);
+                        Settings?.Logger?.BeginCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.IntInt1, "IntInt1", args);
+                        var result = new IntInt1_1_Result();
+                        try
+                        {
+                            result.Value = IntInt1_1(call.Caller, args.Value);
+                            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.IntInt1, "IntInt1", args, result);
+                            call.Reply(result);
+                        }
+                        catch (Exception exception) when (!(exception is RpcException))
+                        {
+                            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.IntInt1, "IntInt1", args, exception);
+                            call.SystemError();
+                            return;
+                        }
+                        break;
+                    }
+                    case TestServiceConstants.IntInt2:
+                    {
+                        var args = new IntInt2_1_Arguments();
+                        call.RetrieveCall(args);
+                        Settings?.Logger?.BeginCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.IntInt2, "IntInt2", args);
+                        var result = new IntInt2_1_Result();
+                        try
+                        {
+                            result.Value = IntInt2_1(call.Caller, args.Int32);
+                            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.IntInt2, "IntInt2", args, result);
+                            call.Reply(result);
+                        }
+                        catch (Exception exception) when (!(exception is RpcException))
+                        {
+                            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.IntInt2, "IntInt2", args, exception);
+                            call.SystemError();
+                            return;
+                        }
                         break;
                     }
                     default:
@@ -233,20 +774,23 @@ namespace TestService
             {
                 switch (call.Procedure)
                 {
-                    case TestServiceConstants.Ping2_2:
+                    case TestServiceConstants.SimpleStructSimpleStruct:
                     {
-                        var args = new PingStruct();
-                        call.RetrieveCall(args);
-                        var result = Ping2_2(call.Caller, args);
-                        call.Reply(result);
-                        break;
-                    }
-                    case TestServiceConstants.TestMyStruct2_2:
-                    {
-                        var args = new MyStruct();
-                        call.RetrieveCall(args);
-                        var result = TestMyStruct2_2(call.Caller, args);
-                        call.Reply(result);
+                        var value = new SimpleStruct();
+                        call.RetrieveCall(value);
+                        Settings?.Logger?.BeginCall(TestServiceConstants.TestServiceVersion2, TestServiceConstants.SimpleStructSimpleStruct, "SimpleStructSimpleStruct", value);
+                        try
+                        {
+                            SimpleStruct result = SimpleStructSimpleStruct_2(call.Caller, value);
+                            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion2, TestServiceConstants.SimpleStructSimpleStruct, "SimpleStructSimpleStruct", value, result);
+                            call.Reply(result);
+                        }
+                        catch (Exception exception) when (!(exception is RpcException))
+                        {
+                            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion2, TestServiceConstants.SimpleStructSimpleStruct, "SimpleStructSimpleStruct", value, exception);
+                            call.SystemError();
+                            return;
+                        }
                         break;
                     }
                     default:
@@ -259,10 +803,5 @@ namespace TestService
                 call.ProgramMismatch();
             }
         }
-
-        public abstract PingStruct Ping_1(Caller caller, PingStruct arg1);
-        public abstract MyStruct TestMyStruct_1(Caller caller, MyStruct arg1);
-        public abstract PingStruct Ping2_2(Caller caller, PingStruct arg1);
-        public abstract MyStruct TestMyStruct2_2(Caller caller, MyStruct arg1);
     }
 }

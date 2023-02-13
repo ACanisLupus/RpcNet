@@ -1,25 +1,23 @@
-namespace Test
+// Copyright by Artur Wolf
+
+namespace Test;
+
+using System.Collections.Concurrent;
+
+internal class Channel<T>
 {
-    using System;
-    using System.Collections.Concurrent;
-    using System.Threading;
+    private readonly AutoResetEvent _itemReceived = new(false);
+    private readonly ConcurrentQueue<T> _items = new();
 
-    internal class Channel<T>
+    public void Send(T item)
     {
-        private readonly AutoResetEvent itemReceived = new AutoResetEvent(false);
-        private readonly ConcurrentQueue<T> items = new ConcurrentQueue<T>();
+        _items.Enqueue(item);
+        _itemReceived.Set();
+    }
 
-        public void Send(T item)
-        {
-            this.items.Enqueue(item);
-            this.itemReceived.Set();
-        }
-
-        public bool TryReceive(TimeSpan timeout, out T item)
-        {
-            item = default;
-
-            return this.itemReceived.WaitOne(timeout) && this.items.TryDequeue(out item);
-        }
+    public bool TryReceive(TimeSpan timeout, out T item)
+    {
+        item = default;
+        return _itemReceived.WaitOne(timeout) && _items.TryDequeue(out item);
     }
 }

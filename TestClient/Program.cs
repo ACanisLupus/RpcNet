@@ -1,43 +1,37 @@
-namespace TestClient
+// Copyright by Artur Wolf
+
+namespace TestClient;
+
+using System.Net;
+using RpcNet;
+using Test;
+using TestService;
+
+internal class Program
 {
-    using System;
-    using System.Net;
-    using RpcNet;
-    using TestService;
-
-    internal class Program
+    private static void Main()
     {
-        private static void Main()
+        var logger = new TestLogger("Test Client");
+        using (var testTcpClient = new TestServiceClient(
+                   Protocol.Tcp,
+                   IPAddress.Loopback,
+                   0,
+                   new ClientSettings { Logger = logger }))
         {
-            using (var testTcpClient = new TestServiceClient(Protocol.Tcp, IPAddress.Loopback))
+            for (int i = 0; i < 2; i++)
             {
-                for (int i = 0; i < 10; i++)
-                {
-                    var arg = new PingStruct
-                    {
-                        Value = i
-                    };
-                    PingStruct result = testTcpClient.Ping_1(arg);
-                    Console.WriteLine($"PING1 TCP - Sent: {i}, Received: {result.Value}");
-
-                    result = testTcpClient.Ping2_2(arg);
-                    Console.WriteLine($"PING2 TCP - Sent: {i}, Received: {result.Value}");
-                }
+                testTcpClient.IntInt1_1(i);
             }
+        }
 
-            using var testUdpClient = new TestServiceClient(Protocol.Udp, IPAddress.Loopback);
-            for (int i = 0; i < 10; i++)
-            {
-                var arg = new PingStruct
-                {
-                    Value = i
-                };
-                PingStruct result = testUdpClient.Ping_1(arg);
-                Console.WriteLine($"PING1 UDP - Sent: {i}, Received: {result.Value}");
-
-                result = testUdpClient.Ping2_2(arg);
-                Console.WriteLine($"PING2 UDP - Sent: {i}, Received: {result.Value}");
-            }
+        using var testUdpClient = new TestServiceClient(
+            Protocol.Udp,
+            IPAddress.Loopback,
+            0,
+            new ClientSettings { Logger = logger });
+        for (int i = 0; i < 2; i++)
+        {
+            testUdpClient.IntInt1_1(i);
         }
     }
 }

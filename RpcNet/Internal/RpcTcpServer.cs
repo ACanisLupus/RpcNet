@@ -1,158 +1,200 @@
-namespace RpcNet.Internal
+// Copyright by Artur Wolf
+
+namespace RpcNet.Internal;
+
+using System.Net;
+using System.Net.Sockets;
+using PortMapper;
+
+// Public for tests
+public class RpcTcpServer : IDisposable
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Net;
-    using System.Net.Sockets;
-    using System.Threading;
-    using RpcNet.PortMapper;
+    private readonly Dictionary<Socket, RpcTcpConnection> _connections = new();
+    private readonly IPAddress _ipAddress;
+    private readonly ILogger _logger;
+    private readonly int _portMapperPort;
+    private readonly int _program;
+    private readonly Action<ReceivedRpcCall> _receivedCallDispatcher;
+    private readonly Socket _server;
+    private readonly int[] _versions;
+    private readonly ServerSettings _serverSettings;
 
-    // Public for tests
-    public class RpcTcpServer : IDisposable
+    private Thread _acceptingThread;
+    private bool _isDisposed;
+    private int _port;
+    private volatile bool _stopAccepting;
+
+    public RpcTcpServer(
+        IPAddress ipAddress,
+        int port,
+        int program,
+        int[] versions,
+        Action<ReceivedRpcCall> receivedCallDispatcher,
+        ServerSettings serverSettings = default)
     {
-        private readonly List<RpcTcpConnection> connections = new List<RpcTcpConnection>();
-        private readonly IPAddress ipAddress;
-        private readonly ILogger logger;
-        private readonly int portMapperPort;
-        private readonly int program;
-        private readonly Action<ReceivedRpcCall> receivedCallDispatcher;
-        private readonly Socket server;
-        private readonly int[] versions;
+        serverSettings ??= new ServerSettings();
 
-        private Thread acceptingThread;
-        private bool isDisposed;
-        private int port;
-        private volatile bool stopAccepting;
+        _serverSettings = serverSettings;
+        _program = program;
+        _versions = versions;
+        _receivedCallDispatcher = receivedCallDispatcher;
+        _logger = serverSettings.Logger;
+        _ipAddress = ipAddress;
+        _port = port;
+        _portMapperPort = serverSettings.PortMapperPort;
+        _server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+    }
 
-        public RpcTcpServer(
-            IPAddress ipAddress,
-            int program,
-            int[] versions,
-            Action<ReceivedRpcCall> receivedCallDispatcher,
-            ServerSettings serverSettings = default)
+    public int Start()
+    {
+        if (_isDisposed)
         {
-            this.program = program;
-            this.versions = versions;
-            this.receivedCallDispatcher = receivedCallDispatcher;
-            this.logger = serverSettings?.Logger;
-            this.ipAddress = ipAddress;
-            this.port = serverSettings?.Port ?? 0;
-            this.portMapperPort = serverSettings?.PortMapperPort ?? PortMapperConstants.PortMapperPort;
-            this.server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            throw new ObjectDisposedException(nameof(RpcUdpServer));
         }
 
-        public void Start()
+        if (_acceptingThread != null)
         {
-            if (this.isDisposed)
+            return _port;
+        }
+
+        try
+        {
+            _server.Bind(new IPEndPoint(_ipAddress, _port));
+            _server.Listen(int.MaxValue);
+        }
+        catch (SocketException e)
+        {
+            throw new RpcException($"Could not start TCP listener. Socket error: {e.SocketErrorCode}.");
+        }
+
+        if (_port == 0)
+        {
+            if (_server.LocalEndPoint is not IPEndPoint localEndPoint)
             {
-                throw new ObjectDisposedException(nameof(RpcUdpServer));
+                throw new InvalidOperationException("Could not find local endpoint for server socket.");
             }
 
-            if (this.acceptingThread != null)
-            {
-                return;
-            }
+            _port = localEndPoint.Port;
 
-            try
+            if (_program != PortMapperConstants.PortMapperProgram)
             {
-                this.server.Bind(new IPEndPoint(this.ipAddress, this.port));
-                this.server.Listen(int.MaxValue);
-            }
-            catch (SocketException e)
-            {
-                throw new RpcException($"Could not start TCP listener. Socket error: {e.SocketErrorCode}.");
-            }
-
-            if (this.port == 0)
-            {
-                this.port = ((IPEndPoint)this.server.LocalEndPoint).Port;
-                lock (this.connections)
+                lock (_connections)
                 {
-                    var clientSettings = new PortMapperClientSettings { Port = this.portMapperPort };
-                    foreach (int version in this.versions)
+                    var clientSettings = new ClientSettings
+                    {
+                        Logger = _serverSettings.Logger,
+                        ReceiveTimeout = _serverSettings.ReceiveTimeout,
+                        SendTimeout = _serverSettings.SendTimeout
+                    };
+                    foreach (int version in _versions)
                     {
                         PortMapperUtilities.UnsetAndSetPort(
-                            Protocol.Tcp,
-                            this.port,
-                            this.program,
+                            ProtocolKind.Tcp,
+                            _portMapperPort,
+                            _port,
+                            _program,
                             version,
                             clientSettings);
                     }
                 }
             }
-
-            this.logger?.Info(
-                $"{Utilities.ConvertToString(Protocol.Tcp)} Server listening on {this.server.LocalEndPoint}...");
-
-            this.acceptingThread = new Thread(this.Accepting) { Name = $"RpcNet TCP Accept {this.port}" };
-            this.acceptingThread.Start();
         }
 
-        public void Dispose()
+        _logger?.Info($"{Utilities.ConvertToString(Protocol.Tcp)} Server listening on {_server.LocalEndPoint}...");
+
+        _acceptingThread = new Thread(Accepting)
         {
-            this.stopAccepting = true;
+            IsBackground = true,
+            Name = $"RpcNet TCP Server Thread for Port {_port}"
+        };
+        _acceptingThread.Start();
+        return _port;
+    }
+
+    public void Dispose()
+    {
+        _stopAccepting = true;
+        try
+        {
+            // Necessary for Linux. Dispose doesn't abort synchronous calls
+            _server.Shutdown(SocketShutdown.Both);
+        }
+        catch
+        {
+            // Ignored
+        }
+
+        _server.Dispose();
+
+        lock (_connections)
+        {
+            foreach (RpcTcpConnection connection in _connections.Values)
+            {
+                connection.Dispose();
+            }
+
+            _connections.Clear();
+        }
+
+        Interlocked.Exchange(ref _acceptingThread, null)?.Join();
+        _isDisposed = true;
+    }
+
+    private void Accepting()
+    {
+        var sockets = new List<Socket>();
+        while (!_stopAccepting)
+        {
             try
             {
-                // Necessary for Linux. Dispose doesn't abort synchronous calls
-                this.server.Shutdown(SocketShutdown.Both);
-            }
-            catch
-            {
-                // Ignored
-            }
-
-            this.server.Dispose();
-
-            lock (this.connections)
-            {
-                foreach (RpcTcpConnection connection in this.connections)
+                sockets.Clear();
+                lock (_connections)
                 {
-                    connection.Dispose();
+                    foreach (Socket socket in _connections.Keys)
+                    {
+                        sockets.Add(socket);
+                    }
                 }
 
-                this.connections.Clear();
-            }
+                sockets.Add(_server);
 
-            Interlocked.Exchange(ref this.acceptingThread, null)?.Join();
-            this.isDisposed = true;
-        }
+                Socket.Select(sockets, null, null, 1000000);
 
-        private void Accepting()
-        {
-            while (!this.stopAccepting)
-            {
-                try
+                lock (_connections)
                 {
-                    Socket tcpClient = this.server.Accept();
-                    lock (this.connections)
+                    for (int i = sockets.Count - 1; i >= 0; i--)
                     {
-                        this.connections.Add(
-                            new RpcTcpConnection(
-                                tcpClient,
-                                this.program,
-                                this.versions,
-                                this.receivedCallDispatcher,
-                                this.logger));
-
-                        for (int i = this.connections.Count - 1; i >= 0; i--)
+                        if (sockets[i] == _server)
                         {
-                            RpcTcpConnection connection = this.connections[i];
-                            if (connection.IsFinished)
+                            Socket tcpClient = _server.Accept();
+                            var connection = new RpcTcpConnection(
+                                tcpClient,
+                                _program,
+                                _versions,
+                                _receivedCallDispatcher,
+                                _logger);
+
+                            _connections.Add(tcpClient, connection);
+                        }
+                        else
+                        {
+                            RpcTcpConnection connection = _connections[sockets[i]];
+                            if (!connection.Handle())
                             {
                                 connection.Dispose();
-                                this.connections.RemoveAt(i);
+                                _connections.Remove(sockets[i]);
                             }
                         }
                     }
                 }
-                catch (SocketException e)
-                {
-                    this.logger?.Error($"Could not accept TCP client. Socket error: {e.SocketErrorCode}");
-                }
-                catch (Exception e)
-                {
-                    this.logger?.Error($"The following error occurred while accepting TCP clients: {e}");
-                }
+            }
+            catch (SocketException e)
+            {
+                _logger?.Error($"Could not accept TCP client. Socket error: {e.SocketErrorCode}");
+            }
+            catch (Exception e)
+            {
+                _logger?.Error($"The following error occurred while accepting TCP clients: {e}");
             }
         }
     }

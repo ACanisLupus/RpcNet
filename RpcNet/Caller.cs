@@ -1,19 +1,20 @@
-namespace RpcNet
+// Copyright by Artur Wolf
+
+namespace RpcNet;
+
+using System.Net;
+using Internal;
+
+public class Caller
 {
-    using System.Net;
-    using RpcNet.Internal;
-
-    public class Caller
+    public Caller(IPEndPoint ipEndPoint, Protocol protocol)
     {
-        public Caller(IPEndPoint ipEndPoint, Protocol protocol)
-        {
-            this.IpEndPoint = ipEndPoint;
-            this.Protocol = protocol;
-        }
-
-        public IPEndPoint IpEndPoint { get; }
-        public Protocol Protocol { get; }
-
-        public override string ToString() => $"{Utilities.ConvertToString(this.Protocol)}:{this.IpEndPoint}";
+        IpEndPoint = ipEndPoint;
+        Protocol = protocol;
     }
+
+    public IPEndPoint IpEndPoint { get; }
+    public Protocol Protocol { get; }
+
+    public override string ToString() => $"{Utilities.ConvertToString(Protocol)}:{IpEndPoint}";
 }

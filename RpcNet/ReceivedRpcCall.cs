@@ -1,151 +1,155 @@
-namespace RpcNet
+// Copyright by Artur Wolf
+
+namespace RpcNet;
+
+using Internal;
+
+public class ReceivedRpcCall
 {
-    using System;
-    using System.Linq;
-    using RpcNet.Internal;
+    private readonly uint _highVersion;
+    private readonly uint _lowVersion;
+    private readonly int _program;
+    private readonly Action<ReceivedRpcCall> _receivedCallDispatcher;
+    private readonly IXdrReader _xdrReader;
+    private readonly IXdrWriter _xdrWriter;
 
-    public class ReceivedRpcCall
+    private uint _xid;
+
+    internal ReceivedRpcCall(
+        int program,
+        int[] versions,
+        INetworkReader networkReader,
+        INetworkWriter networkWriter,
+        Action<ReceivedRpcCall> receivedCallDispatcher)
     {
-        private readonly uint highVersion;
-        private readonly uint lowVersion;
-        private readonly int program;
-        private readonly Action<ReceivedRpcCall> receivedCallDispatcher;
-        private readonly IXdrReader xdrReader;
-        private readonly IXdrWriter xdrWriter;
-
-        private uint xid;
-
-        internal ReceivedRpcCall(
-            int program,
-            int[] versions,
-            INetworkReader networkReader,
-            INetworkWriter networkWriter,
-            Action<ReceivedRpcCall> receivedCallDispatcher)
-        {
-            this.program = program;
-            this.receivedCallDispatcher = receivedCallDispatcher;
-            this.lowVersion = (uint)versions.Min();
-            this.highVersion = (uint)versions.Max();
-            this.xdrReader = new XdrReader(networkReader);
-            this.xdrWriter = new XdrWriter(networkWriter);
-        }
-
-        public uint Version { get; private set; }
-        public uint Procedure { get; private set; }
-        public Caller Caller { get; private set; }
-
-        public void RetrieveCall(IXdrReadable argument) => argument.ReadFrom(this.xdrReader);
-
-        public void Reply(IXdrWritable result)
-        {
-            RpcMessage reply = this.GenerateReply(AcceptStatus.Success);
-            reply.WriteTo(this.xdrWriter);
-            result.WriteTo(this.xdrWriter);
-        }
-
-        public void ProcedureUnavailable()
-        {
-            RpcMessage reply = this.GenerateReply(AcceptStatus.ProcedureUnavailable);
-            reply.WriteTo(this.xdrWriter);
-        }
-
-        public void ProgramMismatch()
-        {
-            RpcMessage reply = this.GenerateProgramMismatch(this.lowVersion, this.highVersion);
-            reply.WriteTo(this.xdrWriter);
-        }
-
-        internal void HandleCall(Caller clientInfo)
-        {
-            var rpcMessage = new RpcMessage(this.xdrReader);
-            this.xid = rpcMessage.Xid;
-            if (rpcMessage.Body.MessageType != MessageType.Call)
-            {
-                throw new RpcException(
-                    $"Message type should be {nameof(MessageType.Call)} but was {rpcMessage.Body.MessageType}.");
-            }
-
-            if (rpcMessage.Body.CallBody.RpcVersion != 2)
-            {
-                RpcMessage reply = this.GenerateRpcVersionMismatch(2, 2);
-                reply.WriteTo(this.xdrWriter);
-                return;
-            }
-
-            if (rpcMessage.Body.CallBody.Program != this.program)
-            {
-                RpcMessage reply = this.GenerateReply(AcceptStatus.ProgramUnavailable);
-                reply.WriteTo(this.xdrWriter);
-                return;
-            }
-
-            this.Version = rpcMessage.Body.CallBody.Version;
-            this.Procedure = rpcMessage.Body.CallBody.Procedure;
-            this.Caller = clientInfo;
-
-            this.receivedCallDispatcher(this);
-        }
-
-        private RpcMessage GenerateReply(ReplyBody replyBody) =>
-            new RpcMessage
-            {
-                Xid = this.xid,
-                Body = new Body
-                {
-                    MessageType = MessageType.Reply,
-                    ReplyBody = replyBody
-                }
-            };
-
-        private RpcMessage GenerateReply(RejectedReply rejectedReply) =>
-            this.GenerateReply(
-                new ReplyBody
-                {
-                    ReplyStatus = ReplyStatus.Denied,
-                    RejectedReply = rejectedReply
-                });
-
-        private RpcMessage GenerateRpcVersionMismatch(uint low, uint high) =>
-            this.GenerateReply(
-                new RejectedReply
-                {
-                    RejectStatus = RejectStatus.RpcVersionMismatch,
-                    MismatchInfo = new MismatchInfo
-                    {
-                        High = high,
-                        Low = low
-                    }
-                });
-
-        private RpcMessage GenerateReply(ReplyData replyData) =>
-            this.GenerateReply(
-                new ReplyBody
-                {
-                    ReplyStatus = ReplyStatus.Accepted,
-                    AcceptedReply = new AcceptedReply
-                    {
-                        Verifier = new OpaqueAuthentication
-                        {
-                            AuthenticationFlavor = AuthenticationFlavor.None,
-                            Body = new byte[0]
-                        },
-                        ReplyData = replyData
-                    }
-                });
-
-        private RpcMessage GenerateReply(AcceptStatus acceptStatus) =>
-            this.GenerateReply(new ReplyData { AcceptStatus = acceptStatus });
-
-        private RpcMessage GenerateProgramMismatch(uint low, uint high) =>
-            this.GenerateReply(
-                new ReplyData
-                {
-                    AcceptStatus = AcceptStatus.ProgramMismatch,
-                    MismatchInfo = new MismatchInfo
-                    {
-                        Low = low,
-                        High = high
-                    }
-                });
+        _program = program;
+        _receivedCallDispatcher = receivedCallDispatcher;
+        _lowVersion = (uint)versions.Min();
+        _highVersion = (uint)versions.Max();
+        _xdrReader = new XdrReader(networkReader);
+        _xdrWriter = new XdrWriter(networkWriter);
     }
+
+    public uint Version { get; private set; }
+    public uint Procedure { get; private set; }
+    public Caller Caller { get; private set; }
+
+    public void RetrieveCall(IXdrDataType argument) => argument.ReadFrom(_xdrReader);
+
+    public void Reply(IXdrDataType result)
+    {
+        RpcMessage reply = GenerateReply(AcceptStatus.Success);
+        reply.WriteTo(_xdrWriter);
+        result.WriteTo(_xdrWriter);
+    }
+
+    public void ProcedureUnavailable()
+    {
+        RpcMessage reply = GenerateReply(AcceptStatus.ProcedureUnavailable);
+        reply.WriteTo(_xdrWriter);
+    }
+
+    public void SystemError()
+    {
+        RpcMessage reply = GenerateReply(AcceptStatus.SystemError);
+        reply.WriteTo(_xdrWriter);
+    }
+
+    public void ProgramMismatch()
+    {
+        RpcMessage reply = GenerateProgramMismatch(_lowVersion, _highVersion);
+        reply.WriteTo(_xdrWriter);
+    }
+
+    internal void HandleCall(Caller clientInfo)
+    {
+        var rpcMessage = new RpcMessage(_xdrReader);
+        _xid = rpcMessage.Xid;
+        if (rpcMessage.Body.MessageType != MessageType.Call)
+        {
+            throw new RpcException(
+                $"Message type should be {nameof(MessageType.Call)} but was {rpcMessage.Body.MessageType}.");
+        }
+
+        if (rpcMessage.Body.CallBody.RpcVersion != 2)
+        {
+            RpcMessage reply = GenerateRpcVersionMismatch(2, 2);
+            reply.WriteTo(_xdrWriter);
+            return;
+        }
+
+        if (rpcMessage.Body.CallBody.Program != _program)
+        {
+            RpcMessage reply = GenerateReply(AcceptStatus.ProgramUnavailable);
+            reply.WriteTo(_xdrWriter);
+            return;
+        }
+
+        Version = rpcMessage.Body.CallBody.Version;
+        Procedure = rpcMessage.Body.CallBody.Procedure;
+        Caller = clientInfo;
+
+        _receivedCallDispatcher(this);
+    }
+
+    private RpcMessage GenerateReply(ReplyBody replyBody) =>
+        new()
+        {
+            Xid = _xid,
+            Body =
+            {
+                MessageType = MessageType.Reply,
+                ReplyBody = replyBody
+            }
+        };
+
+    private RpcMessage GenerateReply(RejectedReply rejectedReply) =>
+        GenerateReply(
+            new ReplyBody
+            {
+                ReplyStatus = ReplyStatus.Denied,
+                RejectedReply = rejectedReply
+            });
+
+    private RpcMessage GenerateRpcVersionMismatch(uint low, uint high) => GenerateReply(
+        new RejectedReply
+        {
+            RejectStatus = RejectStatus.RpcVersionMismatch,
+            MismatchInfo = new MismatchInfo
+            {
+                High = high,
+                Low = low
+            }
+        });
+
+    private RpcMessage GenerateReply(ReplyData replyData) =>
+        GenerateReply(
+            new ReplyBody
+            {
+                ReplyStatus = ReplyStatus.Accepted,
+                AcceptedReply = new AcceptedReply
+                {
+                    Verifier = new OpaqueAuthentication
+                    {
+                        AuthenticationFlavor = AuthenticationFlavor.None,
+                        Body = Array.Empty<byte>()
+                    },
+                    ReplyData = replyData
+                }
+            });
+
+    private RpcMessage GenerateReply(AcceptStatus acceptStatus) =>
+        GenerateReply(new ReplyData { AcceptStatus = acceptStatus });
+
+    private RpcMessage GenerateProgramMismatch(uint low, uint high) =>
+        GenerateReply(
+            new ReplyData
+            {
+                AcceptStatus = AcceptStatus.ProgramMismatch,
+                MismatchInfo = new MismatchInfo
+                {
+                    Low = low,
+                    High = high
+                }
+            });
 }

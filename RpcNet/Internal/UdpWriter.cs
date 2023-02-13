@@ -1,57 +1,57 @@
-namespace RpcNet.Internal
+// Copyright by Artur Wolf
+
+namespace RpcNet.Internal;
+
+using System.Net;
+using System.Net.Sockets;
+
+// Public for tests
+public class UdpWriter : INetworkWriter
 {
-    using System;
-    using System.Net;
-    using System.Net.Sockets;
+    private readonly byte[] _buffer;
+    private readonly Socket _udpClient;
 
-    // Public for tests
-    public class UdpWriter : INetworkWriter
+    private int _writeIndex;
+
+    public UdpWriter(Socket udpClient) : this(udpClient, 65536)
     {
-        private readonly byte[] buffer;
-        private readonly Socket udpClient;
+    }
 
-        private int writeIndex;
-
-        public UdpWriter(Socket udpClient) : this(udpClient, 65536)
+    public UdpWriter(Socket udpClient, int bufferSize)
+    {
+        if ((bufferSize < sizeof(int)) || ((bufferSize % 4) != 0))
         {
+            throw new ArgumentOutOfRangeException(nameof(bufferSize));
         }
 
-        public UdpWriter(Socket udpClient, int bufferSize)
-        {
-            if ((bufferSize < sizeof(int)) || ((bufferSize % 4) != 0))
-            {
-                throw new ArgumentOutOfRangeException(nameof(bufferSize));
-            }
+        _udpClient = udpClient;
+        _buffer = new byte[bufferSize];
+    }
 
-            this.udpClient = udpClient;
-            this.buffer = new byte[bufferSize];
+    public void BeginWriting() => _writeIndex = 0;
+
+    public NetworkWriteResult EndWriting(IPEndPoint remoteEndPoint)
+    {
+        try
+        {
+            _udpClient.SendTo(_buffer, _writeIndex, SocketFlags.None, remoteEndPoint);
+            return new NetworkWriteResult(SocketError.Success);
+        }
+        catch (SocketException e)
+        {
+            return new NetworkWriteResult(e.SocketErrorCode);
+        }
+    }
+
+    public Span<byte> Reserve(int length)
+    {
+        if ((_writeIndex + length) > _buffer.Length)
+        {
+            throw new RpcException("UDP buffer overflow.");
         }
 
-        public void BeginWriting() => this.writeIndex = 0;
-
-        public NetworkWriteResult EndWriting(IPEndPoint remoteEndPoint)
-        {
-            try
-            {
-                this.udpClient.SendTo(this.buffer, this.writeIndex, SocketFlags.None, remoteEndPoint);
-                return new NetworkWriteResult(SocketError.Success);
-            }
-            catch (SocketException e)
-            {
-                return new NetworkWriteResult(e.SocketErrorCode);
-            }
-        }
-
-        public Span<byte> Reserve(int length)
-        {
-            if ((this.writeIndex + length) > this.buffer.Length)
-            {
-                throw new RpcException("UDP buffer overflow.");
-            }
-
-            Span<byte> span = this.buffer.AsSpan(this.writeIndex, length);
-            this.writeIndex += length;
-            return span;
-        }
+        Span<byte> span = _buffer.AsSpan(_writeIndex, length);
+        _writeIndex += length;
+        return span;
     }
 }

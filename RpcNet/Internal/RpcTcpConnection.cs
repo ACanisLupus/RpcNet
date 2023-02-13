@@ -1,101 +1,71 @@
-namespace RpcNet.Internal
+// Copyright by Artur Wolf
+
+namespace RpcNet.Internal;
+
+using System.Net;
+using System.Net.Sockets;
+
+// Public for tests
+public class RpcTcpConnection : IDisposable
 {
-    using System;
-    using System.Net;
-    using System.Net.Sockets;
-    using System.Threading;
+    private readonly Caller _caller;
+    private readonly ILogger _logger;
+    private readonly TcpReader _reader;
+    private readonly ReceivedRpcCall _receivedCall;
+    private readonly IPEndPoint _remoteIpEndPoint;
+    private readonly Socket _tcpClient;
+    private readonly TcpWriter _writer;
 
-    // Public for tests
-    public class RpcTcpConnection : IDisposable
+    public RpcTcpConnection(
+        Socket tcpClient,
+        int program,
+        int[] versions,
+        Action<ReceivedRpcCall> receivedCallDispatcher,
+        ILogger logger = default)
     {
-        private readonly Caller caller;
-        private readonly ILogger logger;
-        private readonly TcpReader reader;
-        private readonly ReceivedRpcCall receivedCall;
-        private readonly Thread receivingThread;
-        private readonly IPEndPoint remoteIpEndPoint;
-        private readonly Socket tcpClient;
-        private readonly TcpWriter writer;
+        _tcpClient = tcpClient;
+        _remoteIpEndPoint = (IPEndPoint)tcpClient.RemoteEndPoint;
+        _caller = new Caller(_remoteIpEndPoint, Protocol.Tcp);
+        _reader = new TcpReader(tcpClient, logger);
+        _writer = new TcpWriter(tcpClient, logger);
+        _logger = logger;
 
-        private volatile bool stopReceiving;
+        _receivedCall = new ReceivedRpcCall(
+            program,
+            versions,
+            _reader,
+            _writer,
+            receivedCallDispatcher);
+    }
 
-        public RpcTcpConnection(
-            Socket tcpClient,
-            int program,
-            int[] versions,
-            Action<ReceivedRpcCall> receivedCallDispatcher,
-            ILogger logger = default)
+    public void Dispose() => _tcpClient.Dispose();
+
+    public bool Handle()
+    {
+        NetworkReadResult readResult = _reader.BeginReading();
+        if (readResult.HasError)
         {
-            this.tcpClient = tcpClient;
-            this.remoteIpEndPoint = (IPEndPoint)tcpClient.RemoteEndPoint;
-            this.caller = new Caller(this.remoteIpEndPoint, Protocol.Tcp);
-            this.reader = new TcpReader(tcpClient, logger);
-            this.writer = new TcpWriter(tcpClient, logger);
-            this.logger = logger;
-
-            this.receivedCall = new ReceivedRpcCall(
-                program,
-                versions,
-                this.reader,
-                this.writer,
-                receivedCallDispatcher);
-
-            this.receivingThread = new Thread(this.Receiving)
-                { IsBackground = true, Name = $"RpcNet TCP Connection {this.remoteIpEndPoint}" };
-            this.receivingThread.Start();
+            _logger?.Trace($"Could not read data from {_caller}. Socket error: {readResult.SocketError}.");
+            return false;
         }
 
-        public bool IsFinished { get; private set; }
-
-        public void Dispose()
+        if (readResult.IsDisconnected)
         {
-            this.stopReceiving = true;
-            this.tcpClient.Dispose();
-            this.receivingThread.Join();
+            _logger?.Trace($"{_caller} disconnected.");
+            return false;
         }
 
-        private void Receiving()
+        _writer.BeginWriting();
+        _receivedCall.HandleCall(_caller);
+        _reader.EndReading();
+
+        NetworkWriteResult writeResult = _writer.EndWriting(_remoteIpEndPoint);
+        if (writeResult.HasError)
         {
-            try
-            {
-                while (!this.stopReceiving)
-                {
-                    NetworkReadResult readResult = this.reader.BeginReading();
-                    if (readResult.HasError)
-                    {
-                        this.logger?.Trace(
-                            $"Could not read data from {this.caller}. " +
-                            $"Socket error: {readResult.SocketError}.");
-                        this.IsFinished = true;
-                        return;
-                    }
-
-                    if (readResult.IsDisconnected)
-                    {
-                        this.logger?.Trace($"{this.caller} disconnected.");
-                        this.IsFinished = true;
-                        return;
-                    }
-
-                    this.writer.BeginWriting();
-                    this.receivedCall.HandleCall(this.caller);
-                    this.reader.EndReading();
-
-                    NetworkWriteResult writeResult = this.writer.EndWriting(this.remoteIpEndPoint);
-                    if (writeResult.HasError)
-                    {
-                        this.logger?.Trace(
-                            $"Could not write data to {this.caller}. " +
-                            $"Socket error: {writeResult.SocketError}.");
-                        this.IsFinished = true;
-                        return;
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                this.logger?.Error($"Unexpected exception in connection to {this.caller}: {e}");
-            }
+            _logger?.Trace($"Could not write data to {_caller}. Socket error: {writeResult.SocketError}.");
+            return false;
         }
+
+        return true;
     }
 }

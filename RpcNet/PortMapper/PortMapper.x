@@ -13,11 +13,13 @@ struct Mapping {
   int Port;
 };
 
-// struct* cannot be generated yet. Therefore the workaround with MappingNodeHead
-//struct* MappingNode {
-//  Mapping Mapping;
-//  MappingNode Next;
-//};
+/*
+struct* cannot be generated yet. Therefore the workaround with MappingNodeHead
+struct* MappingNode {
+  Mapping Mapping;
+  MappingNode Next;
+};
+*/
 
 struct MappingNodeHead {
   MappingNode* MappingNode;

@@ -1,56 +1,56 @@
-namespace Test
+// Copyright by Artur Wolf
+
+namespace Test;
+
+using System.Net;
+using RpcNet.Internal;
+
+internal class StubNetwork : INetworkReader, INetworkWriter
 {
-    using System;
-    using System.Net;
-    using RpcNet.Internal;
+    private readonly byte[] _buffer = new byte[65536];
+    private readonly int _maxReadLength;
+    private readonly int _maxReserveLength;
 
-    internal class StubNetwork : INetworkReader, INetworkWriter
+    public StubNetwork(int maxReadLength, int maxReserveLength)
     {
-        private readonly byte[] buffer = new byte[65536];
-        private readonly int maxReadLength;
-        private readonly int maxReserveLength;
+        _maxReadLength = maxReadLength;
+        _maxReserveLength = maxReserveLength;
+    }
 
-        public StubNetwork(int maxReadLength, int maxReserveLength)
-        {
-            this.maxReadLength = maxReadLength;
-            this.maxReserveLength = maxReserveLength;
-        }
+    public int ReadIndex { get; private set; }
+    public int WriteIndex { get; private set; }
 
-        public int ReadIndex { get; private set; }
-        public int WriteIndex { get; private set; }
+    public NetworkReadResult BeginReading() => new();
 
-        public NetworkReadResult BeginReading() => new NetworkReadResult();
+    public void EndReading()
+    {
+    }
 
-        public void EndReading()
-        {
-        }
+    public void BeginWriting()
+    {
+    }
 
-        public void BeginWriting()
-        {
-        }
+    public NetworkWriteResult EndWriting(IPEndPoint remoteIpEndPoint) => new();
 
-        public NetworkWriteResult EndWriting(IPEndPoint remoteIpEndPoint) => new NetworkWriteResult();
+    public void Reset()
+    {
+        ReadIndex = 0;
+        WriteIndex = 0;
+    }
 
-        public void Reset()
-        {
-            this.ReadIndex = 0;
-            this.WriteIndex = 0;
-        }
+    public ReadOnlySpan<byte> Read(int length)
+    {
+        length = Math.Min(length, _maxReadLength);
+        Span<byte> span = _buffer.AsSpan(ReadIndex, length);
+        ReadIndex += length;
+        return span;
+    }
 
-        public ReadOnlySpan<byte> Read(int length)
-        {
-            length = Math.Min(length, this.maxReadLength);
-            Span<byte> span = this.buffer.AsSpan(this.ReadIndex, length);
-            this.ReadIndex += length;
-            return span;
-        }
-
-        public Span<byte> Reserve(int length)
-        {
-            length = Math.Min(length, this.maxReserveLength);
-            Span<byte> span = this.buffer.AsSpan(this.WriteIndex, length);
-            this.WriteIndex += length;
-            return span;
-        }
+    public Span<byte> Reserve(int length)
+    {
+        length = Math.Min(length, _maxReserveLength);
+        Span<byte> span = _buffer.AsSpan(WriteIndex, length);
+        WriteIndex += length;
+        return span;
     }
 }

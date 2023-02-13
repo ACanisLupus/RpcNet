@@ -1,107 +1,107 @@
-namespace Test
+// Copyright by Artur Wolf
+
+namespace Test;
+
+using System.Net;
+using System.Net.Sockets;
+using NUnit.Framework;
+using RpcNet.Internal;
+
+[TestFixture]
+internal class TestTcpReaderWriter
 {
-    using System.Net;
-    using System.Net.Sockets;
-    using System.Threading.Tasks;
-    using NUnit.Framework;
-    using RpcNet.Internal;
+    private TcpListener _listener;
+    private TcpReader _reader;
+    private TcpClient _readerTcpClient;
+    private TcpWriter _writer;
+    private TcpClient _writerTcpClient;
 
-    [TestFixture]
-    internal class TestTcpReaderWriter
+    [SetUp]
+    public void SetUp()
     {
-        private TcpListener listener;
-        private TcpReader reader;
-        private TcpClient readerTcpClient;
-        private TcpWriter writer;
-        private TcpClient writerTcpClient;
+        _listener = new TcpListener(IPAddress.Loopback, 0);
+        _listener.Start();
+        int port = ((IPEndPoint)_listener.Server.LocalEndPoint).Port;
+        _readerTcpClient = new TcpClient();
+        Task task = Task.Run(() => _writerTcpClient = _listener.AcceptTcpClient());
+        _readerTcpClient.Connect(IPAddress.Loopback, port);
+        task.GetAwaiter().GetResult();
+        _reader = new TcpReader(_readerTcpClient.Client);
+        _writer = new TcpWriter(_writerTcpClient.Client);
+        _listener.Stop();
+    }
 
-        [SetUp]
-        public void SetUp()
-        {
-            this.listener = new TcpListener(IPAddress.Loopback, 0);
-            this.listener.Start();
-            int port = ((IPEndPoint)this.listener.Server.LocalEndPoint).Port;
-            this.readerTcpClient = new TcpClient();
-            Task task = Task.Run(() => this.writerTcpClient = this.listener.AcceptTcpClient());
-            this.readerTcpClient.Connect(IPAddress.Loopback, port);
-            task.GetAwaiter().GetResult();
-            this.reader = new TcpReader(this.readerTcpClient.Client);
-            this.writer = new TcpWriter(this.writerTcpClient.Client);
-            this.listener.Stop();
-        }
+    [TearDown]
+    public void TearDown()
+    {
+        _readerTcpClient.Dispose();
+        _writerTcpClient.Dispose();
+    }
 
-        [TearDown]
-        public void TearDown()
-        {
-            this.readerTcpClient.Dispose();
-            this.writerTcpClient.Dispose();
-        }
+    [Test]
+    [TestCase(32, 32)]
+    [TestCase(32, 8)]
+    [TestCase(8, 32)]
+    [TestCase(8, 8)]
+    [TestCase(12, 8)]
+    [TestCase(8, 12)]
+    public void ReadAndWriteMultipleFragments(int maxReadLength, int maxReserveLength)
+    {
+        _reader = new TcpReader(_readerTcpClient.Client, maxReadLength);
+        _writer = new TcpWriter(_writerTcpClient.Client, maxReserveLength);
 
-        [Test]
-        [TestCase(32, 32)]
-        [TestCase(32, 8)]
-        [TestCase(8, 32)]
-        [TestCase(8, 8)]
-        [TestCase(12, 8)]
-        [TestCase(8, 12)]
-        public void ReadAndWriteMultipleFragments(int maxReadLength, int maxReserveLength)
-        {
-            this.reader = new TcpReader(this.readerTcpClient.Client, maxReadLength);
-            this.writer = new TcpWriter(this.writerTcpClient.Client, maxReserveLength);
+        var xdrReader = new XdrReader(_reader);
+        var xdrWriter = new XdrWriter(_writer);
 
-            var xdrReader = new XdrReader(this.reader);
-            var xdrWriter = new XdrWriter(this.writer);
+        byte[] value = TestXdr.GenerateByteTestData(17);
 
-            byte[] value = TestXdr.GenerateByteTestData(17);
+        _writer.BeginWriting();
+        xdrWriter.WriteOpaque(value);
+        xdrWriter.Write(42);
+        NetworkWriteResult writeResult = _writer.EndWriting(null);
+        Assert.That(writeResult.SocketError, Is.EqualTo(SocketError.Success));
 
-            this.writer.BeginWriting();
-            xdrWriter.WriteVariableLengthOpaque(value);
-            xdrWriter.Write(42);
-            NetworkWriteResult writeResult = this.writer.EndWriting(null);
-            Assert.That(writeResult.SocketError, Is.EqualTo(SocketError.Success));
+        NetworkReadResult readResult = _reader.BeginReading();
+        Assert.That(readResult.SocketError, Is.EqualTo(SocketError.Success));
+        Assert.That(xdrReader.ReadOpaque(), Is.EqualTo(value));
+        Assert.That(xdrReader.ReadInt32(), Is.EqualTo(42));
+        _reader.EndReading();
+    }
 
-            NetworkReadResult readResult = this.reader.BeginReading();
-            Assert.That(readResult.SocketError, Is.EqualTo(SocketError.Success));
-            Assert.That(xdrReader.ReadOpaque(), Is.EqualTo(value));
-            Assert.That(xdrReader.ReadInt(), Is.EqualTo(42));
-            this.reader.EndReading();
-        }
+    [Test]
+    [TestCase(32, 32)]
+    [TestCase(32, 8)]
+    [TestCase(8, 32)]
+    [TestCase(8, 8)]
+    [TestCase(12, 8)]
+    [TestCase(8, 12)]
+    public void ReadAndWriteMultipleFragmentsThreaded(int maxReadLength, int maxReserveLength)
+    {
+        _reader = new TcpReader(_readerTcpClient.Client, maxReadLength);
+        _writer = new TcpWriter(_writerTcpClient.Client, maxReserveLength);
 
-        [Test]
-        [TestCase(32, 32)]
-        [TestCase(32, 8)]
-        [TestCase(8, 32)]
-        [TestCase(8, 8)]
-        [TestCase(12, 8)]
-        [TestCase(8, 12)]
-        public void ReadAndWriteMultipleFragmentsThreaded(int maxReadLength, int maxReserveLength)
-        {
-            this.reader = new TcpReader(this.readerTcpClient.Client, maxReadLength);
-            this.writer = new TcpWriter(this.writerTcpClient.Client, maxReserveLength);
+        _writerTcpClient.Client.SendBufferSize = 1;
 
-            this.writerTcpClient.Client.SendBufferSize = 1;
+        var xdrReader = new XdrReader(_reader);
+        var xdrWriter = new XdrWriter(_writer);
 
-            var xdrReader = new XdrReader(this.reader);
-            var xdrWriter = new XdrWriter(this.writer);
+        byte[] value = TestXdr.GenerateByteTestData(17);
 
-            byte[] value = TestXdr.GenerateByteTestData(17);
+        var task = Task.Run(
+            () =>
+            {
+                NetworkReadResult readResult = _reader.BeginReading();
+                Assert.That(readResult.SocketError, Is.EqualTo(SocketError.Success));
+                Assert.That(xdrReader.ReadOpaque(), Is.EqualTo(value));
+                Assert.That(xdrReader.ReadInt32(), Is.EqualTo(42));
+                _reader.EndReading();
+            });
 
-            var task = Task.Run(
-                () =>
-                {
-                    NetworkReadResult readResult = this.reader.BeginReading();
-                    Assert.That(readResult.SocketError, Is.EqualTo(SocketError.Success));
-                    Assert.That(xdrReader.ReadOpaque(), Is.EqualTo(value));
-                    Assert.That(xdrReader.ReadInt(), Is.EqualTo(42));
-                    this.reader.EndReading();
-                });
+        _writer.BeginWriting();
+        xdrWriter.WriteOpaque(value);
+        xdrWriter.Write(42);
+        _writer.EndWriting(null);
 
-            this.writer.BeginWriting();
-            xdrWriter.WriteVariableLengthOpaque(value);
-            xdrWriter.Write(42);
-            this.writer.EndWriting(null);
-
-            task.Wait();
-        }
+        task.Wait();
     }
 }

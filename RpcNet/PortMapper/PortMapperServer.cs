@@ -1,176 +1,135 @@
-namespace RpcNet.PortMapper
+// Copyright by Artur Wolf
+
+namespace RpcNet.PortMapper;
+
+using System.Net;
+
+public class PortMapperServer : PortMapperServerStub
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Net;
-    using RpcNet.Internal;
-
-    public class PortMapperServer : IDisposable
+    private static readonly CallResult _callResult = new()
     {
-        private readonly PortMapperServerImpl server;
+        Port = 0,
+        Result = Array.Empty<byte>()
+    };
 
-        public PortMapperServer(
-            Protocol protocol,
-            IPAddress ipAddress,
-            PortMapperServerSettings portMapperServerSettings = default)
+    private readonly List<Mapping> _mappings = new();
+
+    public PortMapperServer(
+        Protocol protocol,
+        IPAddress ipAddress,
+        int port = PortMapperConstants.PortMapperPort,
+        ServerSettings serverSettings = default) : base(
+        protocol,
+        ipAddress,
+        port,
+        serverSettings)
+    {
+        lock (_mappings)
         {
-            var settings = new ServerSettings();
-            if (portMapperServerSettings != null)
+            if (protocol.HasFlag(Protocol.Tcp))
             {
-                settings.Port = portMapperServerSettings.Port;
-                settings.ReceiveTimeout = portMapperServerSettings.ReceiveTimeout;
-                settings.SendTimeout = portMapperServerSettings.SendTimeout;
-                settings.Logger = portMapperServerSettings.Logger;
-            }
-
-            if (settings.Port == 0)
-            {
-                settings.Port = PortMapperConstants.PortMapperPort;
-            }
-
-            this.server = new PortMapperServerImpl(protocol, ipAddress, settings);
-        }
-
-        public void Start() => this.server.Start();
-
-        public void Dispose() => this.server.Dispose();
-
-        private class PortMapperServerImpl : PortMapperServerStub
-        {
-            private readonly ILogger logger;
-            private readonly List<Internal.Mapping> mappings = new List<Internal.Mapping>();
-
-            public PortMapperServerImpl(Protocol protocol, IPAddress ipAddress, ServerSettings serverSettings) : base(
-                protocol,
-                ipAddress,
-                serverSettings)
-            {
-                this.logger = serverSettings?.Logger;
-
-                lock (this.mappings)
-                {
-                    if (protocol.HasFlag(Protocol.Tcp))
+                _mappings.Add(
+                    new Mapping
                     {
-                        this.mappings.Add(
-                            new Internal.Mapping
-                            {
-                                Port = serverSettings?.Port ?? PortMapperConstants.PortMapperPort,
-                                Program = PortMapperConstants.PortMapperProgram,
-                                Protocol = ProtocolKind.Tcp,
-                                Version = PortMapperConstants.PortMapperVersion
-                            });
-                    }
-
-                    if (protocol.HasFlag(Protocol.Udp))
-                    {
-                        this.mappings.Add(
-                            new Internal.Mapping
-                            {
-                                Port = serverSettings?.Port ?? PortMapperConstants.PortMapperPort,
-                                Program = PortMapperConstants.PortMapperProgram,
-                                Protocol = ProtocolKind.Udp,
-                                Version = PortMapperConstants.PortMapperVersion
-                            });
-                    }
-                }
+                        Port = port,
+                        Program = PortMapperConstants.PortMapperProgram,
+                        Protocol = ProtocolKind.Tcp,
+                        Version = PortMapperConstants.PortMapperVersion
+                    });
             }
 
-            public override void Ping_2(Caller caller) => this.logger?.Info($"{caller} PING");
-
-            public override bool Set_2(Caller caller, Internal.Mapping mapping)
+            if (protocol.HasFlag(Protocol.Udp))
             {
-                this.logger?.Info($"{caller} SET   {ToLogString(mapping)}");
-                lock (this.mappings)
-                {
-                    if (this.mappings.Any(m => IsProgramAndVersionAndProtocolEqual(m, mapping)))
+                _mappings.Add(
+                    new Mapping
                     {
-                        return false;
-                    }
-
-                    this.mappings.Add(mapping);
-                    return true;
-                }
+                        Port = port,
+                        Program = PortMapperConstants.PortMapperProgram,
+                        Protocol = ProtocolKind.Udp,
+                        Version = PortMapperConstants.PortMapperVersion
+                    });
             }
-
-            public override bool Unset_2(Caller caller, Internal.Mapping mapping)
-            {
-                this.logger?.Info($"{caller} UNSET {ToLogString(mapping)}");
-                lock (this.mappings)
-                {
-                    Equal equal = IsProgramAndVersionAndProtocolEqual;
-                    if (mapping.Protocol == ProtocolKind.Unknown)
-                    {
-                        equal = IsProgramAndVersionEqual;
-                    }
-
-                    return this.mappings.RemoveAll(tmpMapping => equal(tmpMapping, mapping)) > 0;
-                }
-            }
-
-            public override int GetPort_2(Caller caller, Internal.Mapping mapping)
-            {
-                this.logger?.Info($"{caller} GET   {ToLogString(mapping)}");
-                lock (this.mappings)
-                {
-                    Internal.Mapping found =
-                        this.mappings.FirstOrDefault(m => IsProgramAndVersionAndProtocolEqual(m, mapping));
-                    if (found != null)
-                    {
-                        return found.Port;
-                    }
-
-                    return 0;
-                }
-            }
-
-            public override MappingNodeHead Dump_2(Caller caller)
-            {
-                this.logger?.Info($"{caller} DUMP");
-                lock (this.mappings)
-                {
-                    var mappingNodeNullable = new MappingNodeHead();
-
-                    MappingNode currentNode = null;
-                    foreach (Internal.Mapping mapping in this.mappings)
-                    {
-                        if (mappingNodeNullable.MappingNode == null)
-                        {
-                            mappingNodeNullable.MappingNode = new MappingNode { Mapping = mapping };
-                            currentNode = mappingNodeNullable.MappingNode;
-                        }
-                        else if (currentNode != null)
-                        {
-                            var mappingNode = new MappingNode { Mapping = mapping };
-
-                            currentNode.Next = mappingNode;
-                            currentNode = mappingNode;
-                        }
-                    }
-
-                    return mappingNodeNullable;
-                }
-            }
-
-            public override CallResult Call_2(Caller caller, CallArguments arg1)
-            {
-                this.logger?.Info($"{caller} CALL");
-                return new CallResult();
-            }
-
-            private static bool IsProgramAndVersionEqual(Internal.Mapping mapping1, Internal.Mapping mapping2) =>
-                (mapping1.Program == mapping2.Program) && (mapping1.Version == mapping2.Version);
-
-            private static bool IsProgramAndVersionAndProtocolEqual(
-                Internal.Mapping mapping1,
-                Internal.Mapping mapping2) =>
-                IsProgramAndVersionEqual(mapping1, mapping2) && (mapping1.Protocol == mapping2.Protocol);
-
-            private static string ToLogString(Internal.Mapping mapping) =>
-                $"(Port: {mapping.Port}, Program: {mapping.Program}, " +
-                $"Protocol: {mapping.Protocol}, Version: {mapping.Version})";
-
-            private delegate bool Equal(Internal.Mapping mapping1, Internal.Mapping mapping2);
         }
     }
+
+    public override void Ping_2(Caller caller)
+    {
+    }
+
+    public override bool Set_2(Caller caller, Mapping mapping)
+    {
+        lock (_mappings)
+        {
+            if (_mappings.Any(m => IsProgramAndVersionAndProtocolEqual(m, mapping)))
+            {
+                return false;
+            }
+
+            _mappings.Add(mapping);
+            return true;
+        }
+    }
+
+    public override bool Unset_2(Caller caller, Mapping mapping)
+    {
+        lock (_mappings)
+        {
+            Equal equal = IsProgramAndVersionAndProtocolEqual;
+            if (mapping.Protocol == ProtocolKind.Unknown)
+            {
+                equal = IsProgramAndVersionEqual;
+            }
+
+            return _mappings.RemoveAll(tmpMapping => equal(tmpMapping, mapping)) > 0;
+        }
+    }
+
+    public override int GetPort_2(Caller caller, Mapping mapping)
+    {
+        lock (_mappings)
+        {
+            Mapping found =
+                _mappings.FirstOrDefault(m => IsProgramAndVersionAndProtocolEqual(m, mapping));
+            return found?.Port ?? 0;
+        }
+    }
+
+    public override MappingNodeHead Dump_2(Caller caller)
+    {
+        lock (_mappings)
+        {
+            var mappingNodeNullable = new MappingNodeHead();
+
+            MappingNode currentNode = null;
+            foreach (Mapping mapping in _mappings)
+            {
+                if (mappingNodeNullable.MappingNode == null)
+                {
+                    mappingNodeNullable.MappingNode = new MappingNode { Mapping = mapping };
+                    currentNode = mappingNodeNullable.MappingNode;
+                }
+                else if (currentNode != null)
+                {
+                    var mappingNode = new MappingNode { Mapping = mapping };
+
+                    currentNode.Next = mappingNode;
+                    currentNode = mappingNode;
+                }
+            }
+
+            return mappingNodeNullable;
+        }
+    }
+
+    public override CallResult Call_2(Caller caller, CallArguments callArguments) => _callResult;
+
+    private static bool IsProgramAndVersionEqual(Mapping mapping1, Mapping mapping2) =>
+        (mapping1.Program == mapping2.Program) && (mapping1.Version == mapping2.Version);
+
+    private static bool IsProgramAndVersionAndProtocolEqual(
+        Mapping mapping1,
+        Mapping mapping2) =>
+        IsProgramAndVersionEqual(mapping1, mapping2) && (mapping1.Protocol == mapping2.Protocol);
+
+    private delegate bool Equal(Mapping mapping1, Mapping mapping2);
 }

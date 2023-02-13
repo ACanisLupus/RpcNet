@@ -1,12 +1,11 @@
-namespace RpcNet.Internal
-{
-    using System;
+// Copyright by Artur Wolf
 
-    // Public for tests
-    public interface INetworkReader
-    {
-        NetworkReadResult BeginReading();
-        void EndReading();
-        ReadOnlySpan<byte> Read(int length);
-    }
+namespace RpcNet.Internal;
+
+// Public for tests
+public interface INetworkReader
+{
+    NetworkReadResult BeginReading();
+    void EndReading();
+    ReadOnlySpan<byte> Read(int length);
 }

@@ -1,21 +1,28 @@
-namespace Test
+// Copyright by Artur Wolf
+
+namespace Test;
+
+using System.Net;
+using RpcNet;
+using TestService;
+
+internal class TestServer : TestServiceServerStub
 {
-    using System.Net;
-    using RpcNet;
-    using TestService;
-
-    internal class TestServer : TestServiceServerStub
+    public TestServer(Protocol protocol, IPAddress ipAddress, int port, ServerSettings serverSettings = null) : base(
+        protocol,
+        ipAddress,
+        port,
+        serverSettings)
     {
-        public TestServer(Protocol protocol, IPAddress ipAddress, ServerSettings serverSettings = null) : base(
-            protocol,
-            ipAddress,
-            serverSettings)
-        {
-        }
-
-        public override PingStruct Ping_1(Caller caller, PingStruct arg1) => arg1;
-        public override MyStruct TestMyStruct_1(Caller caller, MyStruct arg1) => arg1;
-        public override PingStruct Ping2_2(Caller caller, PingStruct arg1) => arg1;
-        public override MyStruct TestMyStruct2_2(Caller caller, MyStruct arg1) => arg1;
     }
+
+    public override void VoidVoid1_1(Caller caller) => throw new NotImplementedException();
+
+    public override void VoidVoid2_1(Caller caller) => throw new NotImplementedException();
+
+    public override int IntInt1_1(Caller caller, int value) => value;
+
+    public override int IntInt2_1(Caller caller, int int32) => throw new NotImplementedException();
+
+    public override SimpleStruct SimpleStructSimpleStruct_2(Caller caller, SimpleStruct value) => value;
 }

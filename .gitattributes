@@ -1,0 +1,12 @@
+* text=auto
+
+*.csproj text eol=crlf
+*.props text eol=crlf
+*.resx text eol=crlf
+*.sln text eol=crlf
+*.targets text eol=crlf
+
+*.bat text eol=lf
+*.cs text eol=lf
+*.g4 text eol=lf
+*.x text eol=lf

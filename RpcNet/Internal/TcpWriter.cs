@@ -1,97 +1,89 @@
-namespace RpcNet.Internal
+// Copyright by Artur Wolf
+
+namespace RpcNet.Internal;
+
+using System.Net;
+using System.Net.Sockets;
+
+// Public for tests
+public class TcpWriter : INetworkWriter
 {
-    using System;
-    using System.Net;
-    using System.Net.Sockets;
+    private const int TcpHeaderLength = 4;
 
-    // Public for tests
-    public class TcpWriter : INetworkWriter
+    private readonly byte[] _buffer;
+    private readonly ILogger _logger;
+
+    private Socket _tcpClient;
+    private int _writeIndex;
+
+    public TcpWriter(Socket tcpClient, ILogger logger = default) : this(tcpClient, 65536, logger)
     {
-        private const int TcpHeaderLength = 4;
+    }
 
-        private readonly byte[] buffer;
-        private readonly ILogger logger;
-
-        private Socket tcpClient;
-        private int writeIndex;
-
-        public TcpWriter(Socket tcpClient, ILogger logger = default) : this(tcpClient, 65536, logger)
+    public TcpWriter(Socket tcpClient, int bufferSize, ILogger logger = default)
+    {
+        if ((bufferSize < (TcpHeaderLength + sizeof(int))) || ((bufferSize % 4) != 0))
         {
+            throw new ArgumentOutOfRangeException(nameof(bufferSize));
         }
 
-        public TcpWriter(Socket tcpClient, int bufferSize, ILogger logger = default)
+        _logger = logger;
+
+        Reset(tcpClient);
+        _buffer = new byte[bufferSize];
+    }
+
+    public void Reset(Socket tcpClient) => _tcpClient = tcpClient;
+    public void BeginWriting() => _writeIndex = TcpHeaderLength;
+    public NetworkWriteResult EndWriting(IPEndPoint remoteEndPoint) => FlushPacket(true);
+
+    public Span<byte> Reserve(int length)
+    {
+        int maxLength = _buffer.Length - _writeIndex;
+
+        // Integers (4 bytes) and padding bytes (> 1 and < 4 bytes) must not be sent fragmented
+        if ((maxLength < length) && (maxLength < sizeof(int)))
         {
-            if ((bufferSize < (TcpHeaderLength + sizeof(int))) || ((bufferSize % 4) != 0))
-            {
-                throw new ArgumentOutOfRangeException(nameof(bufferSize));
-            }
-
-            this.logger = logger;
-
-            this.Reset(tcpClient);
-            this.buffer = new byte[bufferSize];
+            FlushPacket(false);
+            maxLength = _buffer.Length - _writeIndex;
         }
 
-        public void Reset(Socket tcpClient) => this.tcpClient = tcpClient;
+        int reservedLength = Math.Min(length, maxLength);
 
-        public void BeginWriting() => this.writeIndex = TcpHeaderLength;
+        Span<byte> span = _buffer.AsSpan(_writeIndex, reservedLength);
+        _writeIndex += reservedLength;
+        return span;
+    }
 
-        public NetworkWriteResult EndWriting(IPEndPoint remoteEndPoint) => this.FlushPacket(true);
+    private NetworkWriteResult FlushPacket(bool lastPacket)
+    {
+        int length = _writeIndex - TcpHeaderLength;
 
-        public Span<byte> Reserve(int length)
+        // Last fragment sets first bit to 1
+        int lengthToDecode = lastPacket ? length | unchecked((int)0x80000000) : length;
+
+        Utilities.WriteBytesBigEndian(_buffer.AsSpan(), lengthToDecode);
+
+        SocketError socketError;
+        try
         {
-            int maxLength = this.buffer.Length - this.writeIndex;
-
-            // Integers (4 bytes) and padding bytes (> 1 and < 4 bytes) must not be sent fragmented
-            if ((maxLength < length) && (maxLength < sizeof(int)))
-            {
-                this.FlushPacket(false);
-                maxLength = this.buffer.Length - this.writeIndex;
-            }
-
-            int reservedLength = Math.Min(length, maxLength);
-
-            Span<byte> span = this.buffer.AsSpan(this.writeIndex, reservedLength);
-            this.writeIndex += reservedLength;
-            return span;
+            _tcpClient.Send(_buffer, 0, length + TcpHeaderLength, SocketFlags.None, out socketError);
+        }
+        catch (SocketException exception)
+        {
+            return new NetworkWriteResult(exception.SocketErrorCode);
+        }
+        catch (Exception exception)
+        {
+            _logger?.Error($"Unexpected error while sending TCP data to {_tcpClient?.RemoteEndPoint}: {exception}");
+            return new NetworkWriteResult(SocketError.SocketError);
         }
 
-        private NetworkWriteResult FlushPacket(bool lastPacket)
+        if (socketError == SocketError.Success)
         {
-            int length = this.writeIndex - TcpHeaderLength;
-
-            // Last fragment sets first bit to 1
-            int lengthToDecode = lastPacket ? length | unchecked((int)0x80000000) : length;
-
-            Utilities.WriteBytesBigEndian(this.buffer.AsSpan(), lengthToDecode);
-
-            SocketError socketError;
-            try
-            {
-                this.tcpClient.Send(
-                    this.buffer,
-                    0,
-                    length + TcpHeaderLength,
-                    SocketFlags.None,
-                    out socketError);
-            }
-            catch (SocketException exception)
-            {
-                return new NetworkWriteResult(exception.SocketErrorCode);
-            }
-            catch (Exception exception)
-            {
-                this.logger?.Error(
-                    $"Unexpected error while sending TCP data to {this.tcpClient?.RemoteEndPoint}: {exception}");
-                return new NetworkWriteResult(SocketError.SocketError);
-            }
-
-            if (socketError == SocketError.Success)
-            {
-                this.BeginWriting();
-            }
-
-            return new NetworkWriteResult(socketError);
+            BeginWriting();
         }
+
+        return new NetworkWriteResult(socketError);
     }
 }

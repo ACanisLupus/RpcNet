@@ -1,219 +1,51 @@
-namespace RpcNet.Internal
+// Copyright by Artur Wolf
+
+namespace RpcNet.Internal;
+
+using System.Text;
+
+// Public for tests
+public class XdrReader : IXdrReader
 {
-    using System;
-    using System.Text;
+    private readonly Encoding _encoding = Encoding.UTF8;
+    private readonly INetworkReader _networkReader;
 
-    // Public for tests
-    public class XdrReader : IXdrReader
+    public XdrReader(INetworkReader networkReader) => _networkReader = networkReader;
+
+    public long ReadInt64() => ((long)ReadInt32() << 32) | (ReadInt32() & 0xffffffff);
+    public ulong ReadUInt64() => (ulong)ReadInt64();
+    public int ReadInt32() => Utilities.ToInt32BigEndian(_networkReader.Read(sizeof(int)));
+    public uint ReadUInt32() => (uint)ReadInt32();
+    public short ReadInt16() => (short)ReadInt32();
+    public ushort ReadUInt16() => (ushort)ReadInt32();
+    public sbyte ReadInt8() => (sbyte)ReadInt32();
+    public byte ReadUInt8() => (byte)ReadInt32();
+    public bool ReadBool() => ReadInt32() != 0;
+    public float ReadFloat32() => BitConverter.Int32BitsToSingle(ReadInt32());
+    public double ReadFloat64() => BitConverter.Int64BitsToDouble(ReadInt64());
+    public string ReadString() => _encoding.GetString(ReadOpaque());
+
+    public void ReadOpaque(byte[] array)
     {
-        private readonly Encoding encoding = Encoding.UTF8;
-        private readonly INetworkReader networkReader;
+        int length = array.Length;
+        int padding = Utilities.CalculateXdrPadding(length);
+        int writeIndex = 0;
 
-        public XdrReader(INetworkReader networkReader)
+        while (length > 0)
         {
-            this.networkReader = networkReader;
+            ReadOnlySpan<byte> span = _networkReader.Read(length);
+            span.CopyTo(array.AsSpan(writeIndex, span.Length));
+            writeIndex += span.Length;
+            length -= span.Length;
         }
 
-        public long ReadLong() => ((long)this.ReadInt() << 32) | (this.ReadInt() & 0xffffffff);
-        public ulong ReadULong() => (ulong)this.ReadLong();
-        public int ReadInt() => Utilities.ToInt32BigEndian(this.networkReader.Read(sizeof(int)));
-        public uint ReadUInt() => (uint)this.ReadInt();
-        public short ReadShort() => (short)this.ReadInt();
-        public ushort ReadUShort() => (ushort)this.ReadInt();
-        public sbyte ReadSByte() => (sbyte)this.ReadInt();
-        public byte ReadByte() => (byte)this.ReadInt();
-        public bool ReadBool() => this.ReadInt() != 0;
-        public float ReadFloat() => Utilities.Int32BitsToSingle(this.ReadInt());
-        public double ReadDouble() => BitConverter.Int64BitsToDouble(this.ReadLong());
-        public string ReadString() => this.encoding.GetString(this.ReadOpaque());
+        _ = _networkReader.Read(padding);
+    }
 
-        public void ReadOpaque(byte[] array)
-        {
-            int length = array.Length;
-            int padding = Utilities.CalculateXdrPadding(length);
-            int writeIndex = 0;
-
-            while (length > 0)
-            {
-                ReadOnlySpan<byte> span = this.networkReader.Read(length);
-                span.CopyTo(array.AsSpan(writeIndex, span.Length));
-                writeIndex += span.Length;
-                length -= span.Length;
-            }
-
-            _ = this.networkReader.Read(padding);
-        }
-
-        public void ReadBoolArray(bool[] array)
-        {
-            for (int i = 0; i < array.Length; i++)
-            {
-                array[i] = this.ReadBool();
-            }
-        }
-
-        public void ReadByteArray(byte[] array)
-        {
-            for (int i = 0; i < array.Length; i++)
-            {
-                array[i] = this.ReadByte();
-            }
-        }
-
-        public void ReadDoubleArray(double[] array)
-        {
-            for (int i = 0; i < array.Length; i++)
-            {
-                array[i] = this.ReadDouble();
-            }
-        }
-
-        public void ReadFloatArray(float[] array)
-        {
-            for (int i = 0; i < array.Length; i++)
-            {
-                array[i] = this.ReadFloat();
-            }
-        }
-
-        public void ReadIntArray(int[] array)
-        {
-            for (int i = 0; i < array.Length; i++)
-            {
-                array[i] = this.ReadInt();
-            }
-        }
-
-        public void ReadLongArray(long[] array)
-        {
-            for (int i = 0; i < array.Length; i++)
-            {
-                array[i] = this.ReadLong();
-            }
-        }
-
-        public void ReadSByteArray(sbyte[] array)
-        {
-            for (int i = 0; i < array.Length; i++)
-            {
-                array[i] = this.ReadSByte();
-            }
-        }
-
-        public void ReadShortArray(short[] array)
-        {
-            for (int i = 0; i < array.Length; i++)
-            {
-                array[i] = this.ReadShort();
-            }
-        }
-
-        public void ReadUIntArray(uint[] array)
-        {
-            for (int i = 0; i < array.Length; i++)
-            {
-                array[i] = this.ReadUInt();
-            }
-        }
-
-        public void ReadULongArray(ulong[] array)
-        {
-            for (int i = 0; i < array.Length; i++)
-            {
-                array[i] = this.ReadULong();
-            }
-        }
-
-        public void ReadUShortArray(ushort[] array)
-        {
-            for (int i = 0; i < array.Length; i++)
-            {
-                array[i] = this.ReadUShort();
-            }
-        }
-
-        public byte[] ReadOpaque()
-        {
-            byte[] array = new byte[this.ReadInt()];
-            this.ReadOpaque(array);
-            return array;
-        }
-
-        public bool[] ReadBoolArray()
-        {
-            bool[] array = new bool[this.ReadInt()];
-            this.ReadBoolArray(array);
-            return array;
-        }
-
-        public byte[] ReadByteArray()
-        {
-            byte[] array = new byte[this.ReadInt()];
-            this.ReadByteArray(array);
-            return array;
-        }
-
-        public double[] ReadDoubleArray()
-        {
-            double[] array = new double[this.ReadInt()];
-            this.ReadDoubleArray(array);
-            return array;
-        }
-
-        public float[] ReadFloatArray()
-        {
-            float[] array = new float[this.ReadInt()];
-            this.ReadFloatArray(array);
-            return array;
-        }
-
-        public int[] ReadIntArray()
-        {
-            int[] array = new int[this.ReadInt()];
-            this.ReadIntArray(array);
-            return array;
-        }
-
-        public long[] ReadLongArray()
-        {
-            long[] array = new long[this.ReadInt()];
-            this.ReadLongArray(array);
-            return array;
-        }
-
-        public sbyte[] ReadSByteArray()
-        {
-            sbyte[] array = new sbyte[this.ReadInt()];
-            this.ReadSByteArray(array);
-            return array;
-        }
-
-        public short[] ReadShortArray()
-        {
-            short[] array = new short[this.ReadInt()];
-            this.ReadShortArray(array);
-            return array;
-        }
-
-        public uint[] ReadUIntArray()
-        {
-            uint[] array = new uint[this.ReadInt()];
-            this.ReadUIntArray(array);
-            return array;
-        }
-
-        public ulong[] ReadULongArray()
-        {
-            ulong[] array = new ulong[this.ReadInt()];
-            this.ReadULongArray(array);
-            return array;
-        }
-
-        public ushort[] ReadUShortArray()
-        {
-            ushort[] array = new ushort[this.ReadInt()];
-            this.ReadUShortArray(array);
-            return array;
-        }
+    public byte[] ReadOpaque()
+    {
+        byte[] array = new byte[ReadInt32()];
+        ReadOpaque(array);
+        return array;
     }
 }

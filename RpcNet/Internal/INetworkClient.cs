@@ -1,13 +1,12 @@
-namespace RpcNet.Internal
+// Copyright by Artur Wolf
+
+namespace RpcNet.Internal;
+
+// Public for tests
+public interface INetworkClient : IDisposable
 {
-    using System;
+    TimeSpan ReceiveTimeout { get; set; }
+    TimeSpan SendTimeout { get; set; }
 
-    // Public for tests
-    public interface INetworkClient : IDisposable
-    {
-        TimeSpan ReceiveTimeout { get; set; }
-        TimeSpan SendTimeout { get; set; }
-
-        void Call(int procedure, int version, IXdrWritable argument, IXdrReadable result);
-    }
+    void Call(int procedure, int version, IXdrDataType argument, IXdrDataType result);
 }

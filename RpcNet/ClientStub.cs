@@ -1,58 +1,64 @@
-namespace RpcNet
+// Copyright by Artur Wolf
+
+namespace RpcNet;
+
+using System.Net;
+using Internal;
+
+public abstract class ClientStub : IDisposable
 {
-    using System;
-    using System.Net;
-    using RpcNet.Internal;
+    protected readonly XdrVoid Void = new();
+    protected readonly ClientSettings Settings;
 
-    public abstract class ClientStub : IDisposable
+    private readonly INetworkClient _networkClient;
+
+    protected ClientStub(
+        Protocol protocol,
+        IPAddress ipAddress,
+        int port,
+        int program,
+        int version,
+        ClientSettings clientSettings = default)
     {
-        private readonly INetworkClient networkClient;
-
-        protected ClientStub(
-            Protocol protocol,
-            IPAddress ipAddress,
-            int program,
-            int version,
-            ClientSettings clientSettings = default)
+        if (ipAddress == null)
         {
-            if (ipAddress == null)
-            {
-                throw new ArgumentNullException(nameof(ipAddress));
-            }
-
-            switch (protocol)
-            {
-                case Protocol.Tcp:
-                    this.networkClient = new RpcTcpClient(ipAddress, program, version, clientSettings);
-                    break;
-                case Protocol.Udp:
-                    this.networkClient = new RpcUdpClient(ipAddress, program, version, clientSettings);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(protocol));
-            }
+            throw new ArgumentNullException(nameof(ipAddress));
         }
 
-        public TimeSpan ReceiveTimeout
-        {
-            get => this.networkClient.ReceiveTimeout;
-            set => this.networkClient.ReceiveTimeout = value;
-        }
+        Settings = clientSettings;
 
-        public TimeSpan SendTimeout
+        switch (protocol)
         {
-            get => this.networkClient.SendTimeout;
-            set => this.networkClient.SendTimeout = value;
+            case Protocol.Tcp:
+                _networkClient = new RpcTcpClient(ipAddress, port, program, version, clientSettings);
+                break;
+            case Protocol.Udp:
+                _networkClient = new RpcUdpClient(ipAddress, port, program, version, clientSettings);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(protocol));
         }
-
-        public void Call(int procedure, int version, IXdrWritable argument, IXdrReadable result)
-        {
-            lock (this.networkClient)
-            {
-                this.networkClient.Call(procedure, version, argument, result);
-            }
-        }
-
-        public void Dispose() => this.networkClient.Dispose();
     }
+
+    public TimeSpan ReceiveTimeout
+    {
+        get => _networkClient.ReceiveTimeout;
+        set => _networkClient.ReceiveTimeout = value;
+    }
+
+    public TimeSpan SendTimeout
+    {
+        get => _networkClient.SendTimeout;
+        set => _networkClient.SendTimeout = value;
+    }
+
+    public void Call(int procedure, int version, IXdrDataType argument, IXdrDataType result)
+    {
+        lock (_networkClient)
+        {
+            _networkClient.Call(procedure, version, argument, result);
+        }
+    }
+
+    public void Dispose() => _networkClient.Dispose();
 }

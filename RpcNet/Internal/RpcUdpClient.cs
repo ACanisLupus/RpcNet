@@ -1,56 +1,67 @@
-namespace RpcNet.Internal
+// Copyright by Artur Wolf
+
+namespace RpcNet.Internal;
+
+using System.Net;
+using System.Net.Sockets;
+using PortMapper;
+
+// Public for tests
+public class RpcUdpClient : INetworkClient
 {
-    using System;
-    using System.Net;
-    using System.Net.Sockets;
-    using RpcNet.PortMapper;
+    private readonly RpcCall _call;
+    private readonly Socket _client;
 
-    // Public for tests
-    public class RpcUdpClient : INetworkClient
+    public RpcUdpClient(
+        IPAddress ipAddress,
+        int port,
+        int program,
+        int version,
+        ClientSettings clientSettings = default)
     {
-        private readonly RpcCall call;
-        private readonly Socket client;
+        clientSettings ??= new ClientSettings();
 
-        public RpcUdpClient(
-            IPAddress ipAddress,
-            int program,
-            int version,
-            ClientSettings clientSettings = default)
+        if (port == 0)
         {
-            int port = clientSettings?.Port ?? 0;
-            if (port == 0)
+            if (program == PortMapperConstants.PortMapperProgram)
             {
-                var portMapperClientSettings = new PortMapperClientSettings
-                {
-                    Port = clientSettings?.PortMapperPort ?? PortMapperConstants.PortMapperPort
-                };
-                port = PortMapperUtilities.GetPort(Protocol.Udp, ipAddress, program, version, portMapperClientSettings);
+                port = PortMapperConstants.PortMapperPort;
             }
-
-            var remoteIpEndPoint = new IPEndPoint(ipAddress, port);
-            this.client = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            this.ReceiveTimeout = clientSettings?.ReceiveTimeout ?? Utilities.DefaultClientReceiveTimeout;
-            this.SendTimeout = clientSettings?.SendTimeout ?? Utilities.DefaultClientSendTimeout;
-            var reader = new UdpReader(this.client);
-            var writer = new UdpWriter(this.client);
-            this.call = new RpcCall(program, remoteIpEndPoint, reader, writer, null, clientSettings?.Logger);
+            else
+            {
+                port = PortMapperUtilities.GetPort(
+                    ProtocolKind.Udp,
+                    ipAddress,
+                    clientSettings.PortMapperPort,
+                    program,
+                    version,
+                    clientSettings);
+            }
         }
 
-        public TimeSpan ReceiveTimeout
-        {
-            get => Utilities.GetReceiveTimeout(this.client);
-            set => Utilities.SetReceiveTimeout(this.client, value);
-        }
-
-        public TimeSpan SendTimeout
-        {
-            get => Utilities.GetSendTimeout(this.client);
-            set => Utilities.SetSendTimeout(this.client, value);
-        }
-
-        public void Call(int procedure, int version, IXdrWritable argument, IXdrReadable result) =>
-            this.call.SendCall(procedure, version, argument, result);
-
-        public void Dispose() => this.client.Dispose();
+        var remoteIpEndPoint = new IPEndPoint(ipAddress, port);
+        _client = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+        ReceiveTimeout = clientSettings.ReceiveTimeout;
+        SendTimeout = clientSettings.SendTimeout;
+        var reader = new UdpReader(_client);
+        var writer = new UdpWriter(_client);
+        _call = new RpcCall(program, remoteIpEndPoint, reader, writer, null, clientSettings.Logger);
     }
+
+    public TimeSpan ReceiveTimeout
+    {
+        get => Utilities.GetReceiveTimeout(_client);
+        set => Utilities.SetReceiveTimeout(_client, value);
+    }
+
+    public TimeSpan SendTimeout
+    {
+        get => Utilities.GetSendTimeout(_client);
+        set => Utilities.SetSendTimeout(_client, value);
+    }
+
+    public void Call(int procedure, int version, IXdrDataType argument, IXdrDataType result) =>
+        _call.SendCall(procedure, version, argument, result);
+
+    public void Dispose() => _client.Dispose();
 }
