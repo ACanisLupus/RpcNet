@@ -4,6 +4,17 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
+
+    <Version>2.0.0</Version>
+
+    <PackageId>RpcNetGen</PackageId>
+    <Authors>Artur Wolf</Authors>
+    <Description>RPC implementation for .NET</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/ACanisLupus/RpcNet</RepositoryUrl>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <IsPackable>true</IsPackable>
+    <PackAsTool>True</PackAsTool>
   </PropertyGroup>
 
   <ItemGroup>
