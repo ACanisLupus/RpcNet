@@ -4,7 +4,6 @@ namespace RpcNet.Internal;
 
 using System.Net;
 using System.Net.Sockets;
-using System.Runtime.InteropServices;
 
 // Public for tests
 public class UdpReader : INetworkReader
@@ -31,7 +30,7 @@ public class UdpReader : INetworkReader
 
         // See
         // https://stackoverflow.com/questions/7201862/an-existing-connection-was-forcibly-closed-by-the-remote-host
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        if (OperatingSystem.IsWindows())
         {
             const uint IocIn = 0x80000000;
             const uint IocVendor = 0x18000000;
