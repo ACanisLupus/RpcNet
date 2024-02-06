@@ -8,10 +8,11 @@ using RpcNet;
 using RpcNet.PortMapper;
 
 [TestFixture]
-internal class TestPortMapper
+internal sealed class TestPortMapper
 {
-    private int _portMapperPort;
+    private readonly IPAddress _ipAddress = IPAddress.Loopback;
 
+    private int _portMapperPort;
     private PortMapperServer _server;
 
     [SetUp]
@@ -19,7 +20,7 @@ internal class TestPortMapper
     {
         _portMapperPort = 0;
         var settings = new ServerSettings { Logger = new TestLogger("Port Mapper") };
-        _server = new PortMapperServer(Protocol.TcpAndUdp, IPAddress.Any, _portMapperPort, settings);
+        _server = new PortMapperServer(Protocol.TcpAndUdp, _ipAddress, _portMapperPort, settings);
         _server.Start();
         _portMapperPort = _server.TcpPort;
     }
@@ -34,23 +35,10 @@ internal class TestPortMapper
     [TestCase(4720, 4721, ProtocolKind.Udp, 4721)]
     public void TestSetAndGet(int port, int program, ProtocolKind protocol, int version)
     {
-        using var client = new PortMapperClient(Protocol.Tcp, IPAddress.Loopback, _portMapperPort);
-        client.Set_2(
-            new Mapping
-            {
-                Port = port,
-                Program = program,
-                Protocol = protocol,
-                Version = version
-            });
+        using var client = new PortMapperClient(Protocol.Tcp, _ipAddress, _portMapperPort);
+        client.Set_2(new Mapping2 { Port = port, ProgramNumber = program, Protocol = protocol, VersionNumber = version });
 
-        int receivedPort = client.GetPort_2(
-            new Mapping
-            {
-                Protocol = protocol,
-                Program = program,
-                Version = version
-            });
+        int receivedPort = client.GetPort_2(new Mapping2 { Protocol = protocol, ProgramNumber = program, VersionNumber = version });
 
         Assert.That(receivedPort, Is.EqualTo(port));
     }
@@ -60,21 +48,10 @@ internal class TestPortMapper
     [TestCase(1, 2, 3, 42, 3)]
     public void TestSetAndWrongGet(int port, int program, int version, int program2, int version2)
     {
-        using var client = new PortMapperClient(Protocol.Tcp, IPAddress.Loopback, _portMapperPort);
-        client.Set_2(
-            new Mapping
-            {
-                Port = port,
-                Program = program,
-                Version = version
-            });
+        using var client = new PortMapperClient(Protocol.Tcp, _ipAddress, _portMapperPort);
+        client.Set_2(new Mapping2 { Port = port, ProgramNumber = program, VersionNumber = version });
 
-        int receivedPort = client.GetPort_2(
-            new Mapping
-            {
-                Program = program2,
-                Version = version2
-            });
+        int receivedPort = client.GetPort_2(new Mapping2 { ProgramNumber = program2, VersionNumber = version2 });
 
         Assert.That(receivedPort, Is.EqualTo(0));
     }

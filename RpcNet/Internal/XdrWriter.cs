@@ -5,7 +5,7 @@ namespace RpcNet.Internal;
 using System.Text;
 
 // Public for tests
-public class XdrWriter : IXdrWriter
+public sealed class XdrWriter : IXdrWriter
 {
     private readonly Encoding _encoding = Encoding.UTF8;
     private readonly INetworkWriter _networkWriter;
@@ -55,7 +55,7 @@ public class XdrWriter : IXdrWriter
     public void Write(string? value)
     {
         int length = value?.Length ?? 0;
-        if ((value == null) || (length == 0))
+        if ((value is null) || (length == 0))
         {
             Write(length);
             return;

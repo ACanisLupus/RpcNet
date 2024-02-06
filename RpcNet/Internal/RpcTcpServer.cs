@@ -7,7 +7,7 @@ using System.Net.Sockets;
 using PortMapper;
 
 // Public for tests
-public class RpcTcpServer : IDisposable
+public sealed class RpcTcpServer : IDisposable
 {
     private readonly Dictionary<Socket, RpcTcpConnection> _connections = new();
     private readonly IPAddress _ipAddress;
@@ -42,17 +42,28 @@ public class RpcTcpServer : IDisposable
         _ipAddress = ipAddress;
         _port = port;
         _portMapperPort = serverSettings.PortMapperPort;
-        _server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        _server = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+        if (ipAddress.AddressFamily == AddressFamily.InterNetworkV6)
+        {
+            try
+            {
+                _server.DualMode = true;
+            }
+            catch (SocketException e)
+            {
+                _logger?.Error($"Could not enable dual mode. Socket error code: {e.SocketErrorCode}. Only IPv6 is available.");
+            }
+        }
     }
 
     public int Start()
     {
         if (_isDisposed)
         {
-            throw new ObjectDisposedException(nameof(RpcUdpServer));
+            throw new ObjectDisposedException(nameof(RpcTcpServer));
         }
 
-        if (_acceptingThread != null)
+        if (_acceptingThread is not null)
         {
             return _port;
         }
@@ -76,25 +87,17 @@ public class RpcTcpServer : IDisposable
 
             _port = localEndPoint.Port;
 
-            if (_program != PortMapperConstants.PortMapperProgram)
+            if ((_program != PortMapperConstants.PortMapperProgram) && (_portMapperPort != 0))
             {
                 lock (_connections)
                 {
                     var clientSettings = new ClientSettings
                     {
-                        Logger = _serverSettings.Logger,
-                        ReceiveTimeout = _serverSettings.ReceiveTimeout,
-                        SendTimeout = _serverSettings.SendTimeout
+                        Logger = _serverSettings.Logger, ReceiveTimeout = _serverSettings.ReceiveTimeout, SendTimeout = _serverSettings.SendTimeout
                     };
                     foreach (int version in _versions)
                     {
-                        PortMapperUtilities.UnsetAndSetPort(
-                            ProtocolKind.Tcp,
-                            _portMapperPort,
-                            _port,
-                            _program,
-                            version,
-                            clientSettings);
+                        PortMapperUtilities.UnsetAndSetPort(ProtocolKind.Tcp, _portMapperPort, _port, _program, version, clientSettings);
                     }
                 }
             }
@@ -102,11 +105,7 @@ public class RpcTcpServer : IDisposable
 
         _logger?.Info($"{Utilities.ConvertToString(Protocol.Tcp)} Server listening on {_server.LocalEndPoint}...");
 
-        _acceptingThread = new Thread(Accepting)
-        {
-            IsBackground = true,
-            Name = $"RpcNet TCP Server Thread for Port {_port}"
-        };
+        _acceptingThread = new Thread(Accepting) { IsBackground = true, Name = $"RpcNet TCP Server Thread for Port {_port}" };
         _acceptingThread.Start();
         return _port;
     }
@@ -150,6 +149,8 @@ public class RpcTcpServer : IDisposable
                 sockets.Clear();
                 lock (_connections)
                 {
+                    // + 1 for the server
+                    sockets.Capacity = _connections.Count + 1;
                     foreach (Socket socket in _connections.Keys)
                     {
                         sockets.Add(socket);
@@ -167,12 +168,7 @@ public class RpcTcpServer : IDisposable
                         if (sockets[i] == _server)
                         {
                             Socket tcpClient = _server.Accept();
-                            var connection = new RpcTcpConnection(
-                                tcpClient,
-                                _program,
-                                _versions,
-                                _receivedCallDispatcher,
-                                _logger);
+                            var connection = new RpcTcpConnection(tcpClient, _program, _versions, _receivedCallDispatcher, _logger);
 
                             _connections.Add(tcpClient, connection);
                         }
@@ -182,7 +178,7 @@ public class RpcTcpServer : IDisposable
                             if (!connection.Handle())
                             {
                                 connection.Dispose();
-                                _connections.Remove(sockets[i]);
+                                _ = _connections.Remove(sockets[i]);
                             }
                         }
                     }
@@ -190,11 +186,17 @@ public class RpcTcpServer : IDisposable
             }
             catch (SocketException e)
             {
-                _logger?.Error($"Could not accept TCP client. Socket error: {e.SocketErrorCode}");
+                if (!_stopAccepting)
+                {
+                    _logger?.Error($"Could not accept TCP client. Socket error: {e.SocketErrorCode}");
+                }
             }
             catch (Exception e)
             {
-                _logger?.Error($"The following error occurred while accepting TCP clients: {e}");
+                if (!_stopAccepting)
+                {
+                    _logger?.Error($"The following error occurred while accepting TCP clients: {e}");
+                }
             }
         }
     }

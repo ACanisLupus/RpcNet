@@ -7,7 +7,7 @@ using System.Net.Sockets;
 using PortMapper;
 
 // Public for tests
-public class RpcTcpClient : INetworkClient
+public sealed class RpcTcpClient : INetworkClient
 {
     private readonly RpcCall _call;
     private readonly IPEndPoint _remoteIpEndPoint;
@@ -16,12 +16,7 @@ public class RpcTcpClient : INetworkClient
 
     private Socket _client;
 
-    public RpcTcpClient(
-        IPAddress ipAddress,
-        int port,
-        int program,
-        int version,
-        ClientSettings? clientSettings = default)
+    public RpcTcpClient(IPAddress ipAddress, int port, int program, int version, ClientSettings? clientSettings = default)
     {
         clientSettings ??= new ClientSettings();
 
@@ -50,13 +45,7 @@ public class RpcTcpClient : INetworkClient
         EstablishConnection();
         _tcpReader = new TcpReader(_client, clientSettings.Logger);
         _tcpWriter = new TcpWriter(_client, clientSettings.Logger);
-        _call = new RpcCall(
-            program,
-            _remoteIpEndPoint,
-            _tcpReader,
-            _tcpWriter,
-            ReestablishConnection,
-            clientSettings.Logger);
+        _call = new RpcCall(program, _remoteIpEndPoint, _tcpReader, _tcpWriter, ReestablishConnection, clientSettings.Logger);
     }
 
     public TimeSpan ReceiveTimeout
@@ -71,9 +60,7 @@ public class RpcTcpClient : INetworkClient
         set => Utilities.SetSendTimeout(_client, value);
     }
 
-    public void Call(int procedure, int version, IXdrDataType argument, IXdrDataType result) =>
-        _call.SendCall(procedure, version, argument, result);
-
+    public void Call(int procedure, int version, IXdrDataType argument, IXdrDataType result) => _call.SendCall(procedure, version, argument, result);
     public void Dispose() => _client.Dispose();
 
     private void EstablishConnection()

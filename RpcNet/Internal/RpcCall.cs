@@ -4,7 +4,7 @@ namespace RpcNet.Internal;
 
 using System.Net;
 
-internal class RpcCall
+internal sealed class RpcCall
 {
     private readonly ILogger? _logger;
     private readonly INetworkReader _networkReader;
@@ -37,18 +37,10 @@ internal class RpcCall
                 MessageType = MessageType.Call,
                 CallBody =
                 {
-                    RpcVersion = 2,
+                    RpcVersion = Utilities.RpcVersion,
                     Program = (uint)program,
-                    Credential =
-                    {
-                        AuthenticationFlavor = AuthenticationFlavor.None,
-                        Body = Array.Empty<byte>()
-                    },
-                    Verifier =
-                    {
-                        AuthenticationFlavor = AuthenticationFlavor.None,
-                        Body = Array.Empty<byte>()
-                    }
+                    Credential = { AuthenticationFlavor = AuthenticationFlavor.None, Body = Array.Empty<byte>() },
+                    Verifier = { AuthenticationFlavor = AuthenticationFlavor.None, Body = Array.Empty<byte>() }
                 }
             }
         };
@@ -75,13 +67,6 @@ internal class RpcCall
 
             if (!ReceiveReply(result, out errorMessage))
             {
-                if (i == 0)
-                {
-                    _logger?.Error(errorMessage + " Retrying...");
-                    _reestablishConnection?.Invoke();
-                    continue;
-                }
-
                 errorMessage ??= "Unknown error.";
                 throw new RpcException(errorMessage);
             }
@@ -103,16 +88,14 @@ internal class RpcCall
         NetworkWriteResult writeResult = _networkWriter.EndWriting(_remoteIpEndPoint);
         if (writeResult.HasError)
         {
-            errorMessage =
-                $"Could not send message to {_remoteIpEndPoint}. Socket error: {writeResult.SocketError}.";
+            errorMessage = $"Could not send message to {_remoteIpEndPoint}. Socket error: {writeResult.SocketError}.";
             return false;
         }
 
         NetworkReadResult readResult = _networkReader.BeginReading();
         if (readResult.HasError)
         {
-            errorMessage =
-                $"Could not receive reply from {_remoteIpEndPoint}. Socket error: {readResult.SocketError}.";
+            errorMessage = $"Could not receive reply from {_remoteIpEndPoint}. Socket error: {readResult.SocketError}.";
             return false;
         }
 

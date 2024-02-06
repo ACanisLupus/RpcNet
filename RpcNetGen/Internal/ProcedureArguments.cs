@@ -11,11 +11,11 @@ internal class ProcedureArguments
     private Struct _tempParsedStructForClient;
     private Struct _tempParsedStructForServer;
 
-    public ProcedureArguments(RpcParser.ArgumentsContext arguments, string procedureName)
+    public ProcedureArguments(string constantsClassName, RpcParser.ArgumentsContext arguments, string procedureName)
     {
         _procedureName = procedureName;
 
-        if (arguments == null)
+        if (arguments is null)
         {
             IsSingleVoid = true;
             return;
@@ -23,17 +23,17 @@ internal class ProcedureArguments
 
         arguments.Check();
 
-        if (arguments.@void() != null)
+        if (arguments.@void() is not null)
         {
             arguments.@void().Check();
             IsSingleVoid = true;
         }
-        else if (arguments.argumentList() != null)
+        else if (arguments.argumentList() is not null)
         {
             arguments.argumentList().Check();
             foreach (RpcParser.DeclarationContext declaration in arguments.argumentList().declaration())
             {
-                _arguments.Add(new Declaration(declaration, () => false));
+                _arguments.Add(new Declaration(constantsClassName, declaration, () => false));
             }
         }
         else
@@ -87,11 +87,8 @@ internal class ProcedureArguments
         }
     }
 
-    public void DumpStructForClient(XdrFileWriter writer, int indent) =>
-        _tempParsedStructForClient?.Dump(writer, indent);
-
-    public void DumpStructForServer(XdrFileWriter writer, int indent) =>
-        _tempParsedStructForServer?.Dump(writer, indent);
+    public void DumpStructForClient(XdrFileWriter writer, int indent) => _tempParsedStructForClient?.Dump(writer, indent);
+    public void DumpStructForServer(XdrFileWriter writer, int indent) => _tempParsedStructForServer?.Dump(writer, indent);
 
     public string GetArgumentsForClient()
     {

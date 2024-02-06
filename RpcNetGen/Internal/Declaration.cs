@@ -4,40 +4,43 @@ namespace RpcNetGen.Internal;
 
 internal class Declaration
 {
+    private readonly string _constantsClassName;
     private readonly Func<bool> _isLinkedList;
 
-    public Declaration(RpcParser.DeclarationContext declaration, Func<bool> isLinkedList)
+    public Declaration(string constantsClassName, RpcParser.DeclarationContext declaration, Func<bool> isLinkedList)
     {
         declaration.Check();
 
+        _constantsClassName = constantsClassName;
         _isLinkedList = isLinkedList;
 
-        if (declaration.opaque() != null)
+        if (declaration.opaque() is not null)
         {
             declaration.opaque().Check();
             DataType = DataType.CreateOpaque();
             Identifier = declaration.opaque().Identifier()?.GetText() ?? DataType.Name;
+            IsArray = true;
         }
-        else if (declaration.@string() != null)
+        else if (declaration.@string() is not null)
         {
             declaration.@string().Check();
             DataType = DataType.CreateString();
             Identifier = declaration.@string().Identifier()?.GetText() ?? DataType.Name;
         }
-        else if (declaration.scalar() != null)
+        else if (declaration.scalar() is not null)
         {
             declaration.scalar().Check();
             DataType = new DataType(declaration.scalar().dataType());
             Identifier = declaration.scalar().Identifier()?.GetText() ?? DataType.Name;
         }
-        else if (declaration.pointer() != null)
+        else if (declaration.pointer() is not null)
         {
             declaration.pointer().Check();
             DataType = new DataType(declaration.pointer().dataType());
             Identifier = declaration.pointer().Identifier()?.GetText() ?? DataType.Name;
             IsPointer = true;
         }
-        else if (declaration.array() != null)
+        else if (declaration.array() is not null)
         {
             declaration.array().Check();
             DataType = new DataType(declaration.array().dataType());
@@ -45,7 +48,7 @@ internal class Declaration
             IsArray = true;
             Length = declaration.array().value().GetText();
         }
-        else if (declaration.vector() != null)
+        else if (declaration.vector() is not null)
         {
             declaration.vector().Check();
             DataType = new DataType(declaration.vector().dataType());
@@ -90,15 +93,17 @@ internal class Declaration
         }
         else if (IsVector)
         {
-            writer.WriteLine(
-                indent,
-                $"public List<{DataType.Declaration}> {NameAsProperty} {{ get; set; }} = new List<{DataType.Declaration}>();");
+            writer.WriteLine(indent, $"public List<{DataType.Declaration}> {NameAsProperty} {{ get; set; }} = new List<{DataType.Declaration}>();");
         }
         else if (IsArray)
         {
-            writer.WriteLine(
-                indent,
-                $"public {DataType.Declaration}[] {NameAsProperty} {{ get; set; }} = new {DataType.Declaration}[{Length}];");
+            string length = Length;
+            if (!int.TryParse(length, out _))
+            {
+                length = _constantsClassName + '.' + length;
+            }
+
+            writer.WriteLine(indent, $"public {DataType.Declaration}[] {NameAsProperty} {{ get; set; }} = new {DataType.Declaration}[{length}];");
         }
         else if (IsPointer)
         {
@@ -106,9 +111,7 @@ internal class Declaration
         }
         else if (DataType.Kind == DataTypeKind.CustomType)
         {
-            writer.WriteLine(
-                indent,
-                $"public {DataType.Declaration} {NameAsProperty} {{ get; set; }} = new {DataType.Declaration}();");
+            writer.WriteLine(indent, $"public {DataType.Declaration} {NameAsProperty} {{ get; set; }} = new {DataType.Declaration}();");
         }
         else
         {
@@ -140,7 +143,7 @@ internal class Declaration
         }
         else if (IsVector)
         {
-            writer.WriteLine(indent, $"if ({name} != null)");
+            writer.WriteLine(indent, $"if ({name} is not null)");
             writer.WriteLine(indent, "{");
             writer.WriteLine(indent + 1, $"int _size = {name}.Count;");
             writer.WriteLine(indent + 1, "writer.Write(_size);");
@@ -155,11 +158,11 @@ internal class Declaration
             if (IsLinkedListDeclaration)
             {
                 writer.WriteLine(indent, $"current = {name};");
-                writer.WriteLine(indent, "writer.Write(current != null);");
+                writer.WriteLine(indent, "writer.Write(current is not null);");
             }
             else
             {
-                writer.WriteLine(indent, $"if ({name} != null)");
+                writer.WriteLine(indent, $"if ({name} is not null)");
                 writer.WriteLine(indent, "{");
                 writer.WriteLine(indent + 1, "writer.Write(true);");
                 writer.WriteLine(indent + 1, GetWriteStatement(name));
@@ -298,76 +301,43 @@ internal class Declaration
         return name;
     }
 
-    private string GetToStringStatement(string element)
-    {
-        switch (DataType.Kind)
+    private string GetToStringStatement(string element) =>
+        DataType.Kind switch
         {
-            case DataTypeKind.Simple:
-            case DataTypeKind.Enum:
-                return $"sb.Append({element});";
-            case DataTypeKind.CustomType:
-                return $"{element}.ToString(sb);";
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
-    }
+            DataTypeKind.Simple => $"sb.Append({element});",
+            DataTypeKind.Enum => $"sb.Append({element});",
+            _ => $"{element}.ToString(sb);"
+        };
 
-    private string GetToStringNullableStatement(string element)
-    {
-        switch (DataType.Kind)
+    private string GetToStringNullableStatement(string element) =>
+        DataType.Kind switch
         {
-            case DataTypeKind.Simple:
-            case DataTypeKind.Enum:
-                return $"sb.Append({element});";
-            case DataTypeKind.CustomType:
-                return $"{element}?.ToString(sb);";
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
-    }
+            DataTypeKind.Simple => $"sb.Append({element});",
+            DataTypeKind.Enum => $"sb.Append({element});",
+            _ => $"{element}?.ToString(sb);"
+        };
 
-    private string GetWriteStatement(string element)
-    {
-        switch (DataType.Kind)
+    private string GetWriteStatement(string element) =>
+        DataType.Kind switch
         {
-            case DataTypeKind.Simple:
-                return $"writer.Write({element});";
-            case DataTypeKind.Enum:
-                return $"writer.Write((int){element});";
-            case DataTypeKind.CustomType:
-                return $"{element}.WriteTo(writer);";
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
-    }
+            DataTypeKind.Simple => $"writer.Write({element});",
+            DataTypeKind.Enum => $"writer.Write((int){element});",
+            _ => $"{element}.WriteTo(writer);"
+        };
 
-    private string GetReadStatement(string element)
-    {
-        switch (DataType.Kind)
+    private string GetReadStatement(string element) =>
+        DataType.Kind switch
         {
-            case DataTypeKind.Simple:
-                return $"{element} = reader.Read{DataType.Name}();";
-            case DataTypeKind.Enum:
-                return $"{element} = ({DataType.Name})reader.ReadInt32();";
-            case DataTypeKind.CustomType:
-                return $"{element}.ReadFrom(reader);";
-            default:
-                throw new ArgumentOutOfRangeException(nameof(DataType.Kind), DataType.Kind, "Unknown kind.");
-        }
-    }
+            DataTypeKind.Simple => $"{element} = reader.Read{DataType.Name}();",
+            DataTypeKind.Enum => $"{element} = ({DataType.Name})reader.ReadInt32();",
+            _ => $"{element}.ReadFrom(reader);"
+        };
 
-    private string GetReadExpression()
-    {
-        switch (DataType.Kind)
+    private string GetReadExpression() =>
+        DataType.Kind switch
         {
-            case DataTypeKind.Simple:
-                return $"reader.Read{DataType.Name}()";
-            case DataTypeKind.Enum:
-                return $"({DataType.Name})reader.ReadInt32()";
-            case DataTypeKind.CustomType:
-                return $"new {DataType.Name}(reader)";
-            default:
-                throw new ArgumentOutOfRangeException(nameof(DataType.Kind), DataType.Kind, "Unknown kind.");
-        }
-    }
+            DataTypeKind.Simple => $"reader.Read{DataType.Name}()",
+            DataTypeKind.Enum => $"({DataType.Name})reader.ReadInt32()",
+            _ => $"new {DataType.Name}(reader)"
+        };
 }

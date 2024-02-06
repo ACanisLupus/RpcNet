@@ -79,14 +79,12 @@ internal class Program
     private static int Dump(IPEndPoint ipEndPoint)
     {
         using PortMapperClient client = CreateClient(ipEndPoint);
-        MappingNodeHead mappingNodeHead = client.Dump_2();
-        MappingNode node = mappingNodeHead.MappingNode;
-        while (node != null)
+        MappingNodeHead2 mappingNodeHead = client.Dump_2();
+        MappingNode2 node = mappingNodeHead.Value;
+        while (node is not null)
         {
-            Mapping mapping = node.Mapping;
-            Console.WriteLine(
-                $"Protocol: {mapping.Protocol}, Program: {mapping.Program}, " +
-                $"Version: {mapping.Version}, Port: {mapping.Port}");
+            Mapping2 mapping = node.Mapping;
+            Console.WriteLine(mapping);
             node = node.Next;
         }
 
@@ -106,10 +104,10 @@ internal class Program
 
         using PortMapperClient client = CreateClient(ipEndPoint);
         int result = client.GetPort_2(
-            new Mapping
+            new Mapping2
             {
-                Program = program,
-                Version = version,
+                ProgramNumber = program,
+                VersionNumber = version,
                 Protocol = protocol
             });
 
@@ -131,10 +129,10 @@ internal class Program
 
         using PortMapperClient client = CreateClient(ipEndPoint);
         bool result = client.Set_2(
-            new Mapping
+            new Mapping2
             {
-                Program = program,
-                Version = version,
+                ProgramNumber = program,
+                VersionNumber = version,
                 Protocol = protocol,
                 Port = port
             });
@@ -166,10 +164,10 @@ internal class Program
 
         using PortMapperClient client = CreateClient(ipEndPoint);
         bool result = client.Unset_2(
-            new Mapping
+            new Mapping2
             {
-                Program = program,
-                Version = version,
+                ProgramNumber = program,
+                VersionNumber = version,
                 Protocol = protocol
             });
 

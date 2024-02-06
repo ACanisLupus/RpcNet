@@ -15,7 +15,7 @@ internal class EnumerationValue
 
     public void Dump(XdrFileWriter writer, int indent)
     {
-        if (Value != null)
+        if (Value is not null)
         {
             writer.WriteLine(indent, $"{Name} = {Value},");
         }

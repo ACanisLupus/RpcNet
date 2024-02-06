@@ -6,13 +6,13 @@ using System.Net;
 using System.Net.Sockets;
 
 // Public for tests
-public class UdpReader : INetworkReader
+public sealed class UdpReader : INetworkReader
 {
     private readonly byte[] _buffer;
     private readonly Socket _udpClient;
 
     private int _readIndex;
-    private EndPoint _remoteEndPoint = new IPEndPoint(IPAddress.Loopback, 0);
+    private EndPoint _remoteEndPoint;
     private int _totalLength;
 
     public UdpReader(Socket udpClient) : this(udpClient, 65536)
@@ -27,15 +27,16 @@ public class UdpReader : INetworkReader
         }
 
         _udpClient = udpClient;
+        IPAddress iPAddress = udpClient.AddressFamily == AddressFamily.InterNetworkV6 ? IPAddress.IPv6Loopback : IPAddress.Loopback;
+        _remoteEndPoint = new IPEndPoint(iPAddress, 0);
 
-        // See
-        // https://stackoverflow.com/questions/7201862/an-existing-connection-was-forcibly-closed-by-the-remote-host
+        // See https://stackoverflow.com/questions/7201862/an-existing-connection-was-forcibly-closed-by-the-remote-host
         if (OperatingSystem.IsWindows())
         {
             const uint IocIn = 0x80000000;
             const uint IocVendor = 0x18000000;
             const uint SioUdpConnectionReset = IocIn | IocVendor | 12;
-            _udpClient.IOControl(unchecked((int)SioUdpConnectionReset), new[] { Convert.ToByte(false) }, null);
+            _ = _udpClient.IOControl(unchecked((int)SioUdpConnectionReset), new[] { Convert.ToByte(false) }, null);
         }
 
         _buffer = new byte[bufferSize];
@@ -62,9 +63,10 @@ public class UdpReader : INetworkReader
 
     public void EndReading()
     {
+        // Just read to the end. Obviously, this is an unknown procedure
         if (_readIndex != _totalLength)
         {
-            throw new RpcException("Not all UDP data was read.");
+            _ = Read(_totalLength - _readIndex);
         }
     }
 

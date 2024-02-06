@@ -8,9 +8,8 @@ using NUnit.Framework;
 using RpcNet.Internal;
 
 [TestFixture]
-internal class TestTcpReaderWriter
+internal sealed class TestTcpReaderWriter
 {
-    private TcpListener _listener;
     private TcpReader _reader;
     private TcpClient _readerTcpClient;
     private TcpWriter _writer;
@@ -19,23 +18,27 @@ internal class TestTcpReaderWriter
     [SetUp]
     public void SetUp()
     {
-        _listener = new TcpListener(IPAddress.Loopback, 0);
-        _listener.Start();
-        int port = ((IPEndPoint)_listener.Server.LocalEndPoint).Port;
+        IPAddress ipAddress = IPAddress.Loopback;
+
+        TcpListener listener = new(ipAddress, 0);
+        listener.Start();
+
+        int port = ((IPEndPoint)listener.Server.LocalEndPoint)?.Port ?? throw new InvalidOperationException("Could not find local end point.");
         _readerTcpClient = new TcpClient();
-        Task task = Task.Run(() => _writerTcpClient = _listener.AcceptTcpClient());
-        _readerTcpClient.Connect(IPAddress.Loopback, port);
+        Task task = Task.Run(() => _writerTcpClient = listener.AcceptTcpClient());
+        _readerTcpClient.Connect(ipAddress, port);
         task.GetAwaiter().GetResult();
         _reader = new TcpReader(_readerTcpClient.Client);
         _writer = new TcpWriter(_writerTcpClient.Client);
-        _listener.Stop();
+        
+        listener.Stop();
     }
 
     [TearDown]
     public void TearDown()
     {
-        _readerTcpClient.Dispose();
-        _writerTcpClient.Dispose();
+        _readerTcpClient?.Dispose();
+        _writerTcpClient?.Dispose();
     }
 
     [Test]

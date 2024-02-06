@@ -9,19 +9,15 @@ internal class Procedure
     private readonly ProcedureArguments _procedureArguments;
     private readonly string _versionConstant;
 
-    public Procedure(
-        string version,
-        string versionConstant,
-        RpcParser.ProcedureContext procedureContext,
-        Content content)
+    public Procedure(string constantsClassName, string version, string versionConstant, RpcParser.ProcedureContext procedureContext, Content content)
     {
         _versionConstant = versionConstant;
         Name = procedureContext.Identifier().GetText();
         FullName = Name + "_" + version;
         _argumentConstant = content.AddConstant(Name, content.GetConstant(procedureContext.constant()));
 
-        _procedureArguments = new ProcedureArguments(procedureContext.arguments(), FullName);
-        _procedureResult = new ProcedureResult(procedureContext.@return(), FullName);
+        _procedureArguments = new ProcedureArguments(constantsClassName, procedureContext.arguments(), FullName);
+        _procedureResult = new ProcedureResult(constantsClassName, procedureContext.@return(), FullName);
     }
 
     public string Name { get; }
@@ -39,18 +35,12 @@ internal class Procedure
         _procedureResult.DumpStructForClient(writer, indent);
 
         writer.WriteLine();
-        writer.WriteLine(
-            indent,
-            $"public {_procedureResult.Declaration} {FullName}({_procedureArguments.GetArgumentsForClient()})");
+        writer.WriteLine(indent, $"public {_procedureResult.Declaration} {FullName}({_procedureArguments.GetArgumentsForClient()})");
         writer.WriteLine(indent, "{");
         _procedureArguments.DumpClientArgumentsCreation(writer, indent + 1);
         _procedureResult.DumpClientResultCreation(writer, indent + 1);
-        writer.WriteLine(
-            indent + 1,
-            $"Settings?.Logger?.BeginCall({_versionConstant}, {_argumentConstant}, \"{Name}\", {_procedureArguments.VariableName});");
-        writer.WriteLine(
-            indent + 1,
-            $"Call({_argumentConstant}, {_versionConstant}, {_procedureArguments.VariableName}, {_procedureResult.VariableName});");
+        writer.WriteLine(indent + 1, $"Settings?.Logger?.BeginCall({_versionConstant}, {_argumentConstant}, \"{Name}\", {_procedureArguments.VariableName});");
+        writer.WriteLine(indent + 1, $"Call({_argumentConstant}, {_versionConstant}, {_procedureArguments.VariableName}, {_procedureResult.VariableName});");
         writer.WriteLine(
             indent + 1,
             $"Settings?.Logger?.EndCall({_versionConstant}, {_argumentConstant}, \"{Name}\", {_procedureArguments.VariableName}, {_procedureResult.VariableName});");
@@ -85,9 +75,7 @@ internal class Procedure
         writer.WriteLine(indent, "{");
         _procedureArguments.DumpServerArgumentsCreation(writer, indent + 1);
         writer.WriteLine(indent + 1, $"call.RetrieveCall({_procedureArguments.VariableName});");
-        writer.WriteLine(
-            indent + 1,
-            $"Settings?.Logger?.BeginCall({_versionConstant}, {_argumentConstant}, \"{Name}\", {_procedureArguments.VariableName});");
+        writer.WriteLine(indent + 1, $"Settings?.Logger?.BeginCall({_versionConstant}, {_argumentConstant}, \"{Name}\", {_procedureArguments.VariableName});");
         _procedureResult.DumpServerResultCreation(writer, indent + 1);
         string result = _procedureResult.GetServerResult();
         string arguments = _procedureArguments.GetArgumentsForServer();

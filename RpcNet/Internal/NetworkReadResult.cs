@@ -21,9 +21,6 @@ public readonly struct NetworkReadResult
     public bool HasError => SocketError != SocketError.Success;
 
     public static NetworkReadResult CreateError(SocketError socketError) => new(null, socketError, false);
-
     public static NetworkReadResult CreateDisconnected() => new(null, SocketError.Success, true);
-
-    public static NetworkReadResult CreateSuccess(IPEndPoint? remoteIpEndPoint = default) =>
-        new(remoteIpEndPoint, SocketError.Success, false);
+    public static NetworkReadResult CreateSuccess(IPEndPoint? remoteIpEndPoint = default) => new(remoteIpEndPoint, SocketError.Success, false);
 }

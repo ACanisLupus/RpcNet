@@ -6,7 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 
 // Public for tests
-public class TcpWriter : INetworkWriter
+public sealed class TcpWriter : INetworkWriter
 {
     private const int TcpHeaderLength = 4;
 
@@ -35,7 +35,7 @@ public class TcpWriter : INetworkWriter
 
     public void Reset(Socket tcpClient) => _tcpClient = tcpClient;
     public void BeginWriting() => _writeIndex = TcpHeaderLength;
-    public NetworkWriteResult EndWriting(IPEndPoint remoteEndPoint) => FlushPacket(true);
+    public NetworkWriteResult EndWriting(IPEndPoint? remoteEndPoint) => FlushPacket(true);
 
     public Span<byte> Reserve(int length)
     {

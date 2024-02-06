@@ -27,39 +27,39 @@ internal class Content
         {
             definition.Check();
             ConstContext @const = definition.@const();
-            if (@const != null)
+            if (@const is not null)
             {
                 Add(new Constant(@const, this));
             }
 
             TypedefContext typedef = definition.typedef();
-            if (typedef != null)
+            if (typedef is not null)
             {
-                Add(new Struct(typedef, access));
+                Add(new Struct(ConstantClassName, typedef, access));
             }
 
             EnumContext @enum = definition.@enum();
-            if (@enum != null)
+            if (@enum is not null)
             {
                 Add(new Enumeration(@enum, access, this));
             }
 
             StructContext @struct = definition.@struct();
-            if (@struct != null)
+            if (@struct is not null)
             {
-                Add(new Struct(@struct, access));
+                Add(new Struct(ConstantClassName, @struct, access));
             }
 
             UnionContext union = definition.union();
-            if (union != null)
+            if (union is not null)
             {
-                Add(new Union(union, access, this));
+                Add(new Union(ConstantClassName, union, access, this));
             }
         }
 
         foreach (ProgramContext program in rpcSpecificationContext.program())
         {
-            _parsedServices.Add(new Service(program, access, this));
+            _parsedServices.Add(new Service(ConstantClassName, program, access, this));
         }
 
         foreach (Struct parsedStruct in _parsedStructs.Values)
@@ -84,48 +84,44 @@ internal class Content
     public void Add(Constant parsedConstant)
     {
         string name = parsedConstant.Name;
-        if (_knownElements.Contains(name))
+        if (!_knownElements.Add(name))
         {
             throw new ParserException($"'{name}' is already used.");
         }
 
-        _knownElements.Add(name);
         _parsedConstants[name] = parsedConstant;
     }
 
     public void Add(Enumeration parsedEnum)
     {
         string name = parsedEnum.Name;
-        if (_knownElements.Contains(name))
+        if (!_knownElements.Add(name))
         {
             throw new ParserException($"'{name}' is already used.");
         }
 
-        _knownElements.Add(name);
         _parsedEnums[name] = parsedEnum;
     }
 
     public void Add(Struct parsedStruct)
     {
         string name = parsedStruct.Name;
-        if (_knownElements.Contains(name))
+        if (!_knownElements.Add(name))
         {
             throw new ParserException($"'{name}' is already used.");
         }
 
-        _knownElements.Add(name);
         _parsedStructs[name] = parsedStruct;
     }
 
     public void Add(Union parsedUnion)
     {
         string name = parsedUnion.Name;
-        if (_knownElements.Contains(name))
+        if (!_knownElements.Add(name))
         {
             throw new ParserException($"'{name}' is already used.");
         }
 
-        _knownElements.Add(name);
         _parsedUnions[name] = parsedUnion;
     }
 
@@ -136,19 +132,19 @@ internal class Content
 
     public string GetValue(ValueContext valueContext)
     {
-        if (valueContext == null)
+        if (valueContext is null)
         {
             return null;
         }
 
         ConstantContext constantContext = valueContext.constant();
-        if (constantContext != null)
+        if (constantContext is not null)
         {
             return GetConstant(constantContext);
         }
 
         ITerminalNode identifier = valueContext.Identifier();
-        if (identifier != null)
+        if (identifier is not null)
         {
             return identifier.GetText();
         }
@@ -159,19 +155,19 @@ internal class Content
     public string GetConstant(ConstantContext @const)
     {
         ITerminalNode decimalValue = @const.Decimal();
-        if (decimalValue != null)
+        if (decimalValue is not null)
         {
             return decimalValue.Symbol.Text;
         }
 
         ITerminalNode octalValue = @const.Octal();
-        if (octalValue != null)
+        if (octalValue is not null)
         {
             return octalValue.Symbol.Text;
         }
 
         ITerminalNode hexadecimalValue = @const.Hexadecimal();
-        if (hexadecimalValue != null)
+        if (hexadecimalValue is not null)
         {
             return hexadecimalValue.Symbol.Text;
         }
@@ -183,24 +179,31 @@ internal class Content
     {
         string fullName = $"{ConstantClassName}.{name}";
         var constant = new Constant(name, value);
-        _parsedConstants.Add(name, constant);
+        if (_parsedConstants.TryGetValue(name, out Constant existingConstant))
+        {
+            if (!existingConstant.Equals(constant))
+            {
+                throw new InvalidOperationException($"Cannot add constant {constant}. Existing constant {existingConstant} already added.");
+            }
+        }
+        else
+        {
+            _parsedConstants.Add(name, constant);
+        }
+
         return fullName;
     }
 
     public void Dump(XdrFileWriter writer, int indent)
     {
-        writer.WriteLine(
-            indent,
-            "//------------------------------------------------------------------------------");
+        writer.WriteLine(indent, "//------------------------------------------------------------------------------");
         writer.WriteLine(indent, "// <auto-generated>");
         writer.WriteLine(indent, "//     This code was generated by RpcNetGen 1.0.0.");
         writer.WriteLine(indent, "//");
         writer.WriteLine(indent, "//     Changes to this file may cause incorrect behavior and will be lost if");
         writer.WriteLine(indent, "//     the code is regenerated.");
         writer.WriteLine(indent, "// </auto-generated>");
-        writer.WriteLine(
-            indent,
-            "//------------------------------------------------------------------------------");
+        writer.WriteLine(indent, "//------------------------------------------------------------------------------");
         writer.WriteLine();
         writer.WriteLine(indent, $"namespace {_namespaceName}");
         writer.WriteLine(indent, "{");

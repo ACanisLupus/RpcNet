@@ -17,14 +17,12 @@ namespace TestService
 
     internal static class TestServiceConstants
     {
-        public const int IntInt1 = 3;
-        public const int IntInt2 = 4;
-        public const int SimpleStructSimpleStruct = 7;
-        public const int TestServiceProgram = 0x020406080;
+        public const int Echo = 2;
+        public const int SimpleStructSimpleStruct = 3;
+        public const int TestServiceProgram = 0x20406080;
         public const int TestServiceVersion = 1;
         public const int TestServiceVersion2 = 2;
-        public const int VoidVoid1 = 1;
-        public const int VoidVoid2 = 2;
+        public const int ThrowsException = 1;
     }
 
     internal enum SimpleEnum
@@ -80,7 +78,7 @@ namespace TestService
             writer.Write(Float64Value);
             SimpleStructValue.WriteTo(writer);
             writer.Write((int)SimpleEnumValue);
-            if (UInt8DynamicArray != null)
+            if (UInt8DynamicArray is not null)
             {
                 int _size = UInt8DynamicArray.Count;
                 writer.Write(_size);
@@ -89,7 +87,7 @@ namespace TestService
                     writer.Write(UInt8DynamicArray[_idx]);
                 }
             }
-            if (SimpleStructDynamicArray != null)
+            if (SimpleStructDynamicArray is not null)
             {
                 int _size = SimpleStructDynamicArray.Count;
                 writer.Write(_size);
@@ -98,7 +96,7 @@ namespace TestService
                     SimpleStructDynamicArray[_idx].WriteTo(writer);
                 }
             }
-            if (SimpleEnumDynamicArray != null)
+            if (SimpleEnumDynamicArray is not null)
             {
                 int _size = SimpleEnumDynamicArray.Count;
                 writer.Write(_size);
@@ -372,25 +370,16 @@ namespace TestService
         {
         }
 
-        public void VoidVoid1_1()
+        public void ThrowsException_1()
         {
             var args = Void;
             var result = Void;
-            Settings?.Logger?.BeginCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.VoidVoid1, "VoidVoid1", args);
-            Call(TestServiceConstants.VoidVoid1, TestServiceConstants.TestServiceVersion, args, result);
-            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.VoidVoid1, "VoidVoid1", args, result);
+            Settings?.Logger?.BeginCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.ThrowsException, "ThrowsException", args);
+            Call(TestServiceConstants.ThrowsException, TestServiceConstants.TestServiceVersion, args, result);
+            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.ThrowsException, "ThrowsException", args, result);
         }
 
-        public void VoidVoid2_1()
-        {
-            var args = Void;
-            var result = Void;
-            Settings?.Logger?.BeginCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.VoidVoid2, "VoidVoid2", args);
-            Call(TestServiceConstants.VoidVoid2, TestServiceConstants.TestServiceVersion, args, result);
-            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.VoidVoid2, "VoidVoid2", args, result);
-        }
-
-        private class IntInt1_1_Arguments : IXdrDataType
+        private class Echo_1_Arguments : IXdrDataType
         {
             public int Value { get; set; }
 
@@ -420,7 +409,7 @@ namespace TestService
             }
         }
 
-        private class IntInt1_1_Result : IXdrDataType
+        private class Echo_1_Result : IXdrDataType
         {
             public int Value { get; set; }
 
@@ -450,89 +439,16 @@ namespace TestService
             }
         }
 
-        public int IntInt1_1(int value)
+        public int Echo_1(int value)
         {
-            var args = new IntInt1_1_Arguments
+            var args = new Echo_1_Arguments
             {
                 Value = value,
             };
-            var result = new IntInt1_1_Result();
-            Settings?.Logger?.BeginCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.IntInt1, "IntInt1", args);
-            Call(TestServiceConstants.IntInt1, TestServiceConstants.TestServiceVersion, args, result);
-            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.IntInt1, "IntInt1", args, result);
-            return result.Value;
-        }
-
-        private class IntInt2_1_Arguments : IXdrDataType
-        {
-            public int Int32 { get; set; }
-
-            public void WriteTo(IXdrWriter writer)
-            {
-                writer.Write(Int32);
-            }
-
-            public void ReadFrom(IXdrReader reader)
-            {
-                Int32 = reader.ReadInt32();
-            }
-
-            public void ToString(StringBuilder sb)
-            {
-                sb.Append("{");
-                sb.Append(" Int32 = ");
-                sb.Append(Int32);
-                sb.Append(" }");
-            }
-
-            public override string ToString()
-            {
-                var sb = new StringBuilder();
-                ToString(sb);
-                return sb.ToString();
-            }
-        }
-
-        private class IntInt2_1_Result : IXdrDataType
-        {
-            public int Value { get; set; }
-
-            public void WriteTo(IXdrWriter writer)
-            {
-                writer.Write(Value);
-            }
-
-            public void ReadFrom(IXdrReader reader)
-            {
-                Value = reader.ReadInt32();
-            }
-
-            public void ToString(StringBuilder sb)
-            {
-                sb.Append("{");
-                sb.Append(" Value = ");
-                sb.Append(Value);
-                sb.Append(" }");
-            }
-
-            public override string ToString()
-            {
-                var sb = new StringBuilder();
-                ToString(sb);
-                return sb.ToString();
-            }
-        }
-
-        public int IntInt2_1(int int32)
-        {
-            var args = new IntInt2_1_Arguments
-            {
-                Int32 = int32,
-            };
-            var result = new IntInt2_1_Result();
-            Settings?.Logger?.BeginCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.IntInt2, "IntInt2", args);
-            Call(TestServiceConstants.IntInt2, TestServiceConstants.TestServiceVersion, args, result);
-            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.IntInt2, "IntInt2", args, result);
+            var result = new Echo_1_Result();
+            Settings?.Logger?.BeginCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.Echo, "Echo", args);
+            Call(TestServiceConstants.Echo, TestServiceConstants.TestServiceVersion, args, result);
+            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.Echo, "Echo", args, result);
             return result.Value;
         }
 
@@ -553,7 +469,7 @@ namespace TestService
         {
         }
 
-        private class IntInt1_1_Arguments : IXdrDataType
+        private class Echo_1_Arguments : IXdrDataType
         {
             public int Value { get; set; }
 
@@ -583,7 +499,7 @@ namespace TestService
             }
         }
 
-        private class IntInt1_1_Result : IXdrDataType
+        private class Echo_1_Result : IXdrDataType
         {
             public int Value { get; set; }
 
@@ -613,70 +529,8 @@ namespace TestService
             }
         }
 
-        private class IntInt2_1_Arguments : IXdrDataType
-        {
-            public int Int32 { get; set; }
-
-            public void WriteTo(IXdrWriter writer)
-            {
-                writer.Write(Int32);
-            }
-
-            public void ReadFrom(IXdrReader reader)
-            {
-                Int32 = reader.ReadInt32();
-            }
-
-            public void ToString(StringBuilder sb)
-            {
-                sb.Append("{");
-                sb.Append(" Int32 = ");
-                sb.Append(Int32);
-                sb.Append(" }");
-            }
-
-            public override string ToString()
-            {
-                var sb = new StringBuilder();
-                ToString(sb);
-                return sb.ToString();
-            }
-        }
-
-        private class IntInt2_1_Result : IXdrDataType
-        {
-            public int Value { get; set; }
-
-            public void WriteTo(IXdrWriter writer)
-            {
-                writer.Write(Value);
-            }
-
-            public void ReadFrom(IXdrReader reader)
-            {
-                Value = reader.ReadInt32();
-            }
-
-            public void ToString(StringBuilder sb)
-            {
-                sb.Append("{");
-                sb.Append(" Value = ");
-                sb.Append(Value);
-                sb.Append(" }");
-            }
-
-            public override string ToString()
-            {
-                var sb = new StringBuilder();
-                ToString(sb);
-                return sb.ToString();
-            }
-        }
-
-        public abstract void VoidVoid1_1(Caller caller);
-        public abstract void VoidVoid2_1(Caller caller);
-        public abstract int IntInt1_1(Caller caller, int value);
-        public abstract int IntInt2_1(Caller caller, int int32);
+        public abstract void ThrowsException_1(Caller caller);
+        public abstract int Echo_1(Caller caller, int value);
         public abstract SimpleStruct SimpleStructSimpleStruct_2(Caller caller, SimpleStruct value);
 
         protected override void DispatchReceivedCall(ReceivedRpcCall call)
@@ -685,87 +539,48 @@ namespace TestService
             {
                 switch (call.Procedure)
                 {
-                    case TestServiceConstants.VoidVoid1:
+                    case TestServiceConstants.ThrowsException:
                     {
                         var args = Void;
                         call.RetrieveCall(args);
-                        Settings?.Logger?.BeginCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.VoidVoid1, "VoidVoid1", args);
+                        Settings?.Logger?.BeginCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.ThrowsException, "ThrowsException", args);
                         var result = Void;
                         try
                         {
-                            VoidVoid1_1(call.Caller);
-                            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.VoidVoid1, "VoidVoid1", args, result);
+                            ThrowsException_1(call.Caller);
+                            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.ThrowsException, "ThrowsException", args, result);
                             call.Reply(result);
                         }
                         catch (Exception exception) when (!(exception is RpcException))
                         {
-                            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.VoidVoid1, "VoidVoid1", args, exception);
+                            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.ThrowsException, "ThrowsException", args, exception);
                             call.SystemError();
                             return;
                         }
                         break;
                     }
-                    case TestServiceConstants.VoidVoid2:
+                    case TestServiceConstants.Echo:
                     {
-                        var args = Void;
+                        var args = new Echo_1_Arguments();
                         call.RetrieveCall(args);
-                        Settings?.Logger?.BeginCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.VoidVoid2, "VoidVoid2", args);
-                        var result = Void;
+                        Settings?.Logger?.BeginCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.Echo, "Echo", args);
+                        var result = new Echo_1_Result();
                         try
                         {
-                            VoidVoid2_1(call.Caller);
-                            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.VoidVoid2, "VoidVoid2", args, result);
+                            result.Value = Echo_1(call.Caller, args.Value);
+                            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.Echo, "Echo", args, result);
                             call.Reply(result);
                         }
                         catch (Exception exception) when (!(exception is RpcException))
                         {
-                            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.VoidVoid2, "VoidVoid2", args, exception);
-                            call.SystemError();
-                            return;
-                        }
-                        break;
-                    }
-                    case TestServiceConstants.IntInt1:
-                    {
-                        var args = new IntInt1_1_Arguments();
-                        call.RetrieveCall(args);
-                        Settings?.Logger?.BeginCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.IntInt1, "IntInt1", args);
-                        var result = new IntInt1_1_Result();
-                        try
-                        {
-                            result.Value = IntInt1_1(call.Caller, args.Value);
-                            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.IntInt1, "IntInt1", args, result);
-                            call.Reply(result);
-                        }
-                        catch (Exception exception) when (!(exception is RpcException))
-                        {
-                            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.IntInt1, "IntInt1", args, exception);
-                            call.SystemError();
-                            return;
-                        }
-                        break;
-                    }
-                    case TestServiceConstants.IntInt2:
-                    {
-                        var args = new IntInt2_1_Arguments();
-                        call.RetrieveCall(args);
-                        Settings?.Logger?.BeginCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.IntInt2, "IntInt2", args);
-                        var result = new IntInt2_1_Result();
-                        try
-                        {
-                            result.Value = IntInt2_1(call.Caller, args.Int32);
-                            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.IntInt2, "IntInt2", args, result);
-                            call.Reply(result);
-                        }
-                        catch (Exception exception) when (!(exception is RpcException))
-                        {
-                            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.IntInt2, "IntInt2", args, exception);
+                            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.Echo, "Echo", args, exception);
                             call.SystemError();
                             return;
                         }
                         break;
                     }
                     default:
+                        Settings?.Logger?.Error($"Procedure unavailable (Version: {call.Version}, Procedure: {call.Procedure}).");
                         call.ProcedureUnavailable();
                         break;
                 }
@@ -794,12 +609,14 @@ namespace TestService
                         break;
                     }
                     default:
+                        Settings?.Logger?.Error($"Procedure unavailable (Version: {call.Version}, Procedure: {call.Procedure}).");
                         call.ProcedureUnavailable();
                         break;
                 }
             }
             else
             {
+                Settings?.Logger?.Error($"Program mismatch (Version: {call.Version}).");
                 call.ProgramMismatch();
             }
         }

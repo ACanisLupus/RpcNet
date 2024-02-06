@@ -9,7 +9,7 @@ using RpcNet;
 using RpcNet.Internal;
 
 [TestFixture]
-internal class TestUdpReaderWriter
+internal sealed class TestUdpReaderWriter
 {
     private UdpClient _client;
     private UdpReader _reader;
@@ -20,12 +20,14 @@ internal class TestUdpReaderWriter
     [SetUp]
     public void SetUp()
     {
-        _server = new UdpClient(0);
+        IPAddress iPAddress = IPAddress.Loopback;
+        
+        _server = new UdpClient(0, iPAddress.AddressFamily);
 
-        int port = ((IPEndPoint)_server.Client.LocalEndPoint).Port;
-        _remoteIpEndPoint = new IPEndPoint(IPAddress.Loopback, port);
+        int port = ((IPEndPoint)_server.Client.LocalEndPoint)?.Port ?? throw new InvalidOperationException("Could not find local end point.");
+        _remoteIpEndPoint = new IPEndPoint(iPAddress, port);
 
-        _client = new UdpClient();
+        _client = new UdpClient(iPAddress.AddressFamily);
 
         _reader = new UdpReader(_server.Client, 100);
         _writer = new UdpWriter(_client.Client, 100);
@@ -57,8 +59,8 @@ internal class TestUdpReaderWriter
 
         Assert.That(readResult.SocketError, Is.EqualTo(SocketError.Success));
         Assert.That(readResult.IsDisconnected, Is.EqualTo(false));
-        Assert.That(readResult.RemoteIpEndPoint.Address, Is.EqualTo(_remoteIpEndPoint.Address));
-        Assert.That(readResult.RemoteIpEndPoint.Port, Is.Not.EqualTo(_remoteIpEndPoint.Port));
+        Assert.That(readResult.RemoteIpEndPoint?.Address, Is.EqualTo(_remoteIpEndPoint.Address));
+        Assert.That(readResult.RemoteIpEndPoint?.Port, Is.Not.EqualTo(_remoteIpEndPoint.Port));
 
         ReadOnlySpan<byte> readSpan = _reader.Read(length);
         _reader.EndReading();

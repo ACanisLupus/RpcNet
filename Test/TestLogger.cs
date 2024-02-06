@@ -4,7 +4,7 @@ namespace Test;
 
 using RpcNet;
 
-internal class TestLogger : ILogger
+internal sealed class TestLogger : ILogger
 {
     private readonly string _name;
 
@@ -13,9 +13,7 @@ internal class TestLogger : ILogger
     public void Trace(string entry) => Console.WriteLine($"[{_name}] [TRACE] {entry}");
     public void Info(string entry) => Console.WriteLine($"[{_name}] [INFO]  {entry}");
     public void Error(string entry) => Console.WriteLine($"[{_name}] [ERROR] {entry}");
-
-    public void BeginCall(int version, int procedure, string method, IXdrDataType arguments) =>
-        Console.WriteLine($"[{_name}] [BEGIN] {method}({arguments})");
+    public void BeginCall(int version, int procedure, string method, IXdrDataType arguments) => Console.WriteLine($"[{_name}] [BEGIN] {method}({arguments})");
 
     public void EndCall(int version, int procedure, string method, IXdrDataType arguments, IXdrDataType result) =>
         Console.WriteLine($"[{_name}] [END]   {method}({arguments}): {result}");

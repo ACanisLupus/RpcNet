@@ -9,12 +9,13 @@ using RpcNet.Internal;
 using TestService;
 
 [TestFixture]
-internal class TestUdpClientServer : TestBase
+internal sealed class TestUdpClientServer
 {
     [Test]
     public void SendAndReceiveData()
     {
         IPAddress ipAddress = IPAddress.Loopback;
+
         const int Program = 12;
         const int Version = 13;
         const int Procedure = 14;
@@ -34,7 +35,7 @@ internal class TestUdpClientServer : TestBase
         var serverSettings = new ServerSettings
         {
             Logger = new TestLogger("UDP Server"),
-            PortMapperPort = PortMapperPort
+            PortMapperPort = 0 // Don't register at port mapper
         };
 
         using var server = new RpcUdpServer(ipAddress, 0, Program, new[] { Version }, Dispatcher, serverSettings);

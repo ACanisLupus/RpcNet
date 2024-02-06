@@ -7,7 +7,7 @@ using System.Net.Sockets;
 using PortMapper;
 
 // Public for tests
-public class RpcUdpServer : IDisposable
+public sealed class RpcUdpServer : IDisposable
 {
     private readonly ILogger? _logger;
     private readonly int _port;
@@ -31,7 +31,19 @@ public class RpcUdpServer : IDisposable
         serverSettings ??= new ServerSettings();
 
         _port = port;
-        _server = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+        _server = new Socket(ipAddress.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
+        if (ipAddress.AddressFamily == AddressFamily.InterNetworkV6)
+        {
+            try
+            {
+                _server.DualMode = true;
+            }
+            catch (SocketException e)
+            {
+                _logger?.Error($"Could not enable dual mode. Socket error code: {e.SocketErrorCode}. Only IPv6 is available.");
+            }
+        }
+
         _server.Bind(new IPEndPoint(ipAddress, _port));
 
         _reader = new UdpReader(_server);
@@ -50,23 +62,15 @@ public class RpcUdpServer : IDisposable
 
             _port = localEndPoint.Port;
 
-            if (program != PortMapperConstants.PortMapperProgram)
+            if ((program != PortMapperConstants.PortMapperProgram) && (serverSettings.PortMapperPort != 0))
             {
                 var clientSettings = new ClientSettings
                 {
-                    Logger = serverSettings.Logger,
-                    ReceiveTimeout = serverSettings.ReceiveTimeout,
-                    SendTimeout = serverSettings.SendTimeout
+                    Logger = serverSettings.Logger, ReceiveTimeout = serverSettings.ReceiveTimeout, SendTimeout = serverSettings.SendTimeout
                 };
                 foreach (int version in versions)
                 {
-                    PortMapperUtilities.UnsetAndSetPort(
-                        ProtocolKind.Udp,
-                        serverSettings.PortMapperPort,
-                        _port,
-                        program,
-                        version,
-                        clientSettings);
+                    PortMapperUtilities.UnsetAndSetPort(ProtocolKind.Udp, serverSettings.PortMapperPort, _port, program, version, clientSettings);
                 }
             }
         }
@@ -81,16 +85,12 @@ public class RpcUdpServer : IDisposable
             throw new ObjectDisposedException(nameof(RpcUdpServer));
         }
 
-        if (_receivingThread != null)
+        if (_receivingThread is not null)
         {
             return _port;
         }
 
-        _receivingThread = new Thread(HandlingUdpCalls)
-        {
-            IsBackground = true,
-            Name = $"RpcNet UDP Server Thread for Port {_port}"
-        };
+        _receivingThread = new Thread(HandlingUdpCalls) { IsBackground = true, Name = $"RpcNet UDP Server Thread for Port {_port}" };
         _receivingThread.Start();
         return _port;
     }
@@ -122,7 +122,11 @@ public class RpcUdpServer : IDisposable
                 NetworkReadResult result = _reader.BeginReading();
                 if (result.HasError)
                 {
-                    _logger?.Trace($"Could not read UDP data. Socket error: {result.SocketError}.");
+                    if (!_stopReceiving)
+                    {
+                        _logger?.Trace($"Could not read UDP data. Socket error: {result.SocketError}.");
+                    }
+
                     continue;
                 }
 
@@ -133,7 +137,7 @@ public class RpcUdpServer : IDisposable
                 }
 
                 IPEndPoint? remoteIpEndPoint = result.RemoteIpEndPoint;
-                if (remoteIpEndPoint == null)
+                if (remoteIpEndPoint is null)
                 {
                     // Can this happen?
                     continue;
@@ -146,7 +150,10 @@ public class RpcUdpServer : IDisposable
             }
             catch (Exception e)
             {
-                _logger?.Error($"The following error occurred while processing UDP call: {e}");
+                if (!_stopReceiving)
+                {
+                    _logger?.Error($"The following error occurred while processing UDP call: {e}");
+                }
             }
         }
     }

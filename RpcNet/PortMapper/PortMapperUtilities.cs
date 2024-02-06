@@ -4,7 +4,7 @@ namespace RpcNet.PortMapper;
 
 using System.Net;
 
-internal static class PortMapperUtilities
+public static class PortMapperUtilities
 {
     public static int GetPort(
         ProtocolKind protocol,
@@ -12,16 +12,10 @@ internal static class PortMapperUtilities
         int portMapperPort,
         int program,
         int version,
-        ClientSettings? clientSettings = default)
+        ClientSettings? clientSettings)
     {
         using var portMapperClient = new PortMapperClient(Protocol.Tcp, ipAddress, portMapperPort, clientSettings);
-        return portMapperClient.GetPort_2(
-            new Mapping
-            {
-                Program = program,
-                Protocol = protocol,
-                Version = version
-            });
+        return portMapperClient.GetPort_2(new Mapping2 { ProgramNumber = program, Protocol = protocol, VersionNumber = version });
     }
 
     public static void UnsetAndSetPort(
@@ -30,27 +24,29 @@ internal static class PortMapperUtilities
         int portToSet,
         int program,
         int version,
-        ClientSettings? clientSettings = default)
+        ClientSettings? clientSettings)
     {
-        using var portMapperClient = new PortMapperClient(
-            Protocol.Tcp,
-            IPAddress.Loopback,
-            portMapperPort,
-            clientSettings);
-        portMapperClient.Unset_2(
-            new Mapping
-            {
-                Program = program,
-                Protocol = protocol,
-                Version = version
-            });
-        portMapperClient.Set_2(
-            new Mapping
-            {
-                Port = portToSet,
-                Program = program,
-                Protocol = protocol,
-                Version = version
-            });
+        try
+        {
+            UnsetAndSetPort(IPAddress.Loopback, protocol, portMapperPort, portToSet, program, version, clientSettings);
+        }
+        catch
+        {
+            UnsetAndSetPort(IPAddress.IPv6Loopback, protocol, portMapperPort, portToSet, program, version, clientSettings);
+        }
+    }
+
+    private static void UnsetAndSetPort(
+        IPAddress ipAddress,
+        ProtocolKind protocol,
+        int portMapperPort,
+        int portToSet,
+        int program,
+        int version,
+        ClientSettings? clientSettings)
+    {
+        using var portMapperClient = new PortMapperClient(Protocol.Tcp, ipAddress, portMapperPort, clientSettings);
+        portMapperClient.Unset_2(new Mapping2 { ProgramNumber = program, Protocol = protocol, VersionNumber = version });
+        portMapperClient.Set_2(new Mapping2 { Port = portToSet, ProgramNumber = program, Protocol = protocol, VersionNumber = version });
     }
 }

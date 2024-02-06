@@ -7,14 +7,15 @@ using System.Runtime.CompilerServices;
 
 internal static class Utilities
 {
+    public const uint RpcVersion = 2;
+
     public static readonly TimeSpan DefaultClientReceiveTimeout = TimeSpan.FromSeconds(10);
     public static readonly TimeSpan DefaultClientSendTimeout = TimeSpan.FromSeconds(10);
     public static readonly TimeSpan DefaultServerReceiveTimeout = Timeout.InfiniteTimeSpan;
     public static readonly TimeSpan DefaultServerSendTimeout = TimeSpan.FromSeconds(10);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int ToInt32BigEndian(ReadOnlySpan<byte> value) =>
-        (value[0] << 24) | (value[1] << 16) | (value[2] << 8) | value[3];
+    public static int ToInt32BigEndian(ReadOnlySpan<byte> value) => (value[0] << 24) | (value[1] << 16) | (value[2] << 8) | value[3];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void WriteBytesBigEndian(Span<byte> destination, int value)
@@ -28,20 +29,14 @@ internal static class Utilities
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CalculateXdrPadding(int length) => (4 - (length & 3)) & 3;
 
-    public static string ConvertToString(Protocol protocol)
-    {
-        switch (protocol)
+    public static string ConvertToString(Protocol protocol) =>
+        protocol switch
         {
-            case Protocol.Tcp:
-                return "TCP";
-            case Protocol.Udp:
-                return "UDP";
-            case Protocol.TcpAndUdp:
-                return "TCP and UDP";
-            default:
-                throw new ArgumentOutOfRangeException(nameof(protocol), protocol, null);
-        }
-    }
+            Protocol.Tcp => "TCP",
+            Protocol.Udp => "UDP",
+            Protocol.TcpAndUdp => "TCP and UDP",
+            _ => throw new ArgumentOutOfRangeException(nameof(protocol), protocol, null)
+        };
 
     public static TimeSpan GetReceiveTimeout(Socket socket)
     {
@@ -63,8 +58,7 @@ internal static class Utilities
         }
         catch (SocketException e)
         {
-            throw new RpcException(
-                $"Could not set receive timeout to {timeout}. Socket error: {e.SocketErrorCode}.");
+            throw new RpcException($"Could not set receive timeout to {timeout}. Socket error: {e.SocketErrorCode}.");
         }
     }
 

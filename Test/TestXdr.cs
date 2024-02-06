@@ -7,7 +7,7 @@ using RpcNet;
 using RpcNet.Internal;
 
 [TestFixture]
-internal class TestXdr
+internal sealed class TestXdr
 {
     private readonly IXdrReader _reader;
     private readonly StubNetwork _stubNetwork;

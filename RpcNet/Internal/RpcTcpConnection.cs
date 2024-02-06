@@ -6,7 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 
 // Public for tests
-public class RpcTcpConnection : IDisposable
+public sealed class RpcTcpConnection : IDisposable
 {
     private readonly Caller _caller;
     private readonly ILogger? _logger;
@@ -16,12 +16,7 @@ public class RpcTcpConnection : IDisposable
     private readonly Socket _tcpClient;
     private readonly TcpWriter _writer;
 
-    public RpcTcpConnection(
-        Socket tcpClient,
-        int program,
-        int[] versions,
-        Action<ReceivedRpcCall> receivedCallDispatcher,
-        ILogger? logger = default)
+    public RpcTcpConnection(Socket tcpClient, int program, int[] versions, Action<ReceivedRpcCall> receivedCallDispatcher, ILogger? logger = default)
     {
         _tcpClient = tcpClient;
         if (tcpClient.RemoteEndPoint is not IPEndPoint remoteIpEndPoint)
@@ -35,12 +30,9 @@ public class RpcTcpConnection : IDisposable
         _writer = new TcpWriter(tcpClient, logger);
         _logger = logger;
 
-        _receivedCall = new ReceivedRpcCall(
-            program,
-            versions,
-            _reader,
-            _writer,
-            receivedCallDispatcher);
+        _receivedCall = new ReceivedRpcCall(program, versions, _reader, _writer, receivedCallDispatcher);
+
+        _logger?.Trace($"{_caller} connected.");
     }
 
     public void Dispose() => _tcpClient.Dispose();

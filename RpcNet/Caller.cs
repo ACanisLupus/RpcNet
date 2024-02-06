@@ -5,7 +5,7 @@ namespace RpcNet;
 using System.Net;
 using Internal;
 
-public class Caller
+public sealed class Caller
 {
     public Caller(IPEndPoint ipEndPoint, Protocol protocol)
     {

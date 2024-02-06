@@ -1,37 +1,26 @@
 // Copyright by Artur Wolf
 
-namespace TestClient;
-
 using System.Net;
 using RpcNet;
 using Test;
 using TestService;
 
-internal class Program
+if ((args.Length != 1) || !IPEndPoint.TryParse(args[0], out IPEndPoint? ipEndPoint))
 {
-    private static void Main()
-    {
-        var logger = new TestLogger("Test Client");
-        using (var testTcpClient = new TestServiceClient(
-                   Protocol.Tcp,
-                   IPAddress.Loopback,
-                   0,
-                   new ClientSettings { Logger = logger }))
-        {
-            for (int i = 0; i < 2; i++)
-            {
-                testTcpClient.IntInt1_1(i);
-            }
-        }
+    ipEndPoint = new IPEndPoint(IPAddress.IPv6Any, 0);
+}
 
-        using var testUdpClient = new TestServiceClient(
-            Protocol.Udp,
-            IPAddress.Loopback,
-            0,
-            new ClientSettings { Logger = logger });
-        for (int i = 0; i < 2; i++)
-        {
-            testUdpClient.IntInt1_1(i);
-        }
+var logger = new TestLogger("Test Client");
+using (var testTcpClient = new TestServiceClient(Protocol.Tcp, ipEndPoint.Address, ipEndPoint.Port, new ClientSettings { Logger = logger }))
+{
+    for (int i = 0; i < 2; i++)
+    {
+        _ = testTcpClient.Echo_1(i);
     }
+}
+
+using var testUdpClient = new TestServiceClient(Protocol.Udp, ipEndPoint.Address, ipEndPoint.Port, new ClientSettings { Logger = logger });
+for (int i = 0; i < 2; i++)
+{
+    _ = testUdpClient.Echo_1(i);
 }

@@ -7,7 +7,7 @@ using Test;
 
 if ((args.Length != 1) || !IPEndPoint.TryParse(args[0], out IPEndPoint? ipEndPoint))
 {
-    ipEndPoint = new IPEndPoint(IPAddress.Any, 111);
+    ipEndPoint = new IPEndPoint(IPAddress.IPv6Any, 111);
 }
 
 using var portMapperServer = new PortMapperServer(

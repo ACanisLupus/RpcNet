@@ -10,7 +10,7 @@ internal class Union
     private readonly Declaration _switchDeclaration;
     private readonly List<Declaration> _unionItems = new();
 
-    public Union(RpcParser.UnionContext union, string access, Content content)
+    public Union(string constantsClassName, RpcParser.UnionContext union, string access, Content content)
     {
         _access = access;
         union.Check();
@@ -18,14 +18,14 @@ internal class Union
         Name = union.Identifier().GetText();
 
         RpcParser.DeclarationContext declaration = union.declaration();
-        _switchDeclaration = new Declaration(declaration, () => false);
-        if (union.defaultItem() != null)
+        _switchDeclaration = new Declaration(constantsClassName, declaration, () => false);
+        if (union.defaultItem() is not null)
         {
-            if (union.defaultItem().declaration() != null)
+            if (union.defaultItem().declaration() is not null)
             {
-                _defaultCase = new Declaration(union.defaultItem().declaration(), () => false);
+                _defaultCase = new Declaration(constantsClassName, union.defaultItem().declaration(), () => false);
             }
-            else if (union.defaultItem().@void() != null)
+            else if (union.defaultItem().@void() is not null)
             {
                 _defaultCase = new Declaration(DataType.CreateVoid());
             }
@@ -38,11 +38,11 @@ internal class Union
             string caseName = content.GetValue(@case.value());
             caseName = _switchDeclaration.DataType.Name + "." + caseName;
             _caseNames.Add(caseName);
-            if (@case.unionItem().declaration() != null)
+            if (@case.unionItem().declaration() is not null)
             {
-                _unionItems.Add(new Declaration(@case.unionItem().declaration(), () => false));
+                _unionItems.Add(new Declaration(constantsClassName, @case.unionItem().declaration(), () => false));
             }
-            else if (@case.unionItem().@void() != null)
+            else if (@case.unionItem().@void() is not null)
             {
                 _unionItems.Add(new Declaration(DataType.CreateVoid()));
             }
@@ -97,7 +97,7 @@ internal class Union
             writer.WriteLine(indent + 4, "break;");
         }
 
-        if (_defaultCase != null)
+        if (_defaultCase is not null)
         {
             writer.WriteLine(indent + 3, "default:");
             _defaultCase.DumpWrite(writer, indent + 4);
@@ -120,7 +120,7 @@ internal class Union
             writer.WriteLine(indent + 4, "break;");
         }
 
-        if (_defaultCase != null)
+        if (_defaultCase is not null)
         {
             writer.WriteLine(indent + 3, "default:");
             _defaultCase.DumpRead(writer, indent + 4);
@@ -143,7 +143,7 @@ internal class Union
             writer.WriteLine(indent + 4, "break;");
         }
 
-        if (_defaultCase != null)
+        if (_defaultCase is not null)
         {
             writer.WriteLine(indent + 3, "default:");
             _defaultCase.DumpToString(writer, indent + 4, " ");

@@ -5,7 +5,7 @@ namespace RpcNet.Internal;
 using System.Net.Sockets;
 
 // Public for tests
-public class TcpReader : INetworkReader
+public sealed class TcpReader : INetworkReader
 {
     private const int TcpHeaderLength = 4;
 
@@ -53,9 +53,11 @@ public class TcpReader : INetworkReader
 
     public void EndReading()
     {
-        if ((_packetState != PacketState.Complete) || (_readIndex != _writeIndex))
+        // Just read to the end. Obviously, this is an unknown procedure
+        while ((_packetState != PacketState.Complete) || (_readIndex != _writeIndex))
         {
-            throw new RpcException("Not all TCP data was read.");
+            int length = Math.Max(_writeIndex - _readIndex, 1);
+            _ = Read(length);
         }
     }
 
@@ -64,8 +66,7 @@ public class TcpReader : INetworkReader
         NetworkReadResult networkReadResult = FillBuffer();
         if (networkReadResult.HasError)
         {
-            throw new RpcException(
-                $"Could not receive from TCP stream. Socket error: {networkReadResult.SocketError}.");
+            throw new RpcException($"Could not receive from TCP stream. Socket error: {networkReadResult.SocketError}.");
         }
 
         if (networkReadResult.IsDisconnected)
@@ -170,12 +171,7 @@ public class TcpReader : INetworkReader
         SocketError socketError;
         try
         {
-            receivedLength = _tcpClient.Receive(
-                _buffer,
-                _writeIndex,
-                _buffer.Length - _writeIndex,
-                SocketFlags.None,
-                out socketError);
+            receivedLength = _tcpClient.Receive(_buffer, _writeIndex, _buffer.Length - _writeIndex, SocketFlags.None, out socketError);
         }
         catch (SocketException exception)
         {
@@ -183,8 +179,7 @@ public class TcpReader : INetworkReader
         }
         catch (Exception exception)
         {
-            _logger?.Error(
-                $"Unexpected error while receiving TCP data from {_tcpClient.RemoteEndPoint}: {exception}");
+            _logger?.Error($"Unexpected error while receiving TCP data from {_tcpClient.RemoteEndPoint}: {exception}");
             return NetworkReadResult.CreateError(SocketError.SocketError);
         }
 

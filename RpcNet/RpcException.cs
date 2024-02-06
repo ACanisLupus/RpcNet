@@ -2,7 +2,7 @@
 
 namespace RpcNet;
 
-public class RpcException : Exception
+public sealed class RpcException : Exception
 {
     public RpcException(string message) : base(message)
     {

@@ -12,7 +12,7 @@ internal class Service
     private readonly List<string> _versionConstants = new();
     private readonly Dictionary<string, List<Procedure>> _parsedProceduresPerVersionConstant = new();
 
-    public Service(RpcParser.ProgramContext program, string access, Content content)
+    public Service(string constantsClassName, RpcParser.ProgramContext program, string access, Content content)
     {
         _access = access;
         _name = content.Name;
@@ -31,16 +31,10 @@ internal class Service
 
             foreach (RpcParser.ProcedureContext procedure in version.procedure())
             {
-                var parsedProcedure = new Procedure(
-                    versionConstant,
-                    versionConstantFullName,
-                    procedure,
-                    content);
+                var parsedProcedure = new Procedure(constantsClassName, versionConstant, versionConstantFullName, procedure, content);
                 _parsedProcedures.Add(parsedProcedure);
 
-                if (!_parsedProceduresPerVersionConstant.TryGetValue(
-                        versionConstantFullName,
-                        out List<Procedure> procedureList))
+                if (!_parsedProceduresPerVersionConstant.TryGetValue(versionConstantFullName, out List<Procedure> procedureList))
                 {
                     procedureList = new List<Procedure>();
                     _parsedProceduresPerVersionConstant[versionConstantFullName] = procedureList;
@@ -70,12 +64,8 @@ internal class Service
         writer.WriteLine();
         writer.WriteLine(indent, $"{_access} class {_name}Client : ClientStub");
         writer.WriteLine(indent, "{");
-        writer.WriteLine(
-            indent + 1,
-            $"public {_name}Client(Protocol protocol, IPAddress ipAddress, int port = 0, ClientSettings clientSettings = default) :");
-        writer.WriteLine(
-            indent + 2,
-            $"base(protocol, ipAddress, port, {_programNumberConstant}, {_clientVersionNumber}, clientSettings)");
+        writer.WriteLine(indent + 1, $"public {_name}Client(Protocol protocol, IPAddress ipAddress, int port = 0, ClientSettings clientSettings = default) :");
+        writer.WriteLine(indent + 2, $"base(protocol, ipAddress, port, {_programNumberConstant}, {_clientVersionNumber}, clientSettings)");
         writer.WriteLine(indent + 1, "{");
         writer.WriteLine(indent + 1, "}");
         foreach (Procedure procedure in _parsedProcedures)
@@ -95,9 +85,7 @@ internal class Service
             indent + 1,
             $"public {_name}ServerStub(Protocol protocol, IPAddress ipAddress, int port = 0, ServerSettings serverSettings = default) :");
         string allVersions = string.Join(", ", _versionConstants);
-        writer.WriteLine(
-            indent + 2,
-            $"base(protocol, ipAddress, port, {_programNumberConstant}, new[] {{ {allVersions} }}, serverSettings)");
+        writer.WriteLine(indent + 2, $"base(protocol, ipAddress, port, {_programNumberConstant}, new[] {{ {allVersions} }}, serverSettings)");
         writer.WriteLine(indent + 1, "{");
         writer.WriteLine(indent + 1, "}");
 
@@ -139,6 +127,7 @@ internal class Service
             }
 
             writer.WriteLine(indent + 4, "default:");
+            writer.WriteLine(indent + 5, "Settings?.Logger?.Error($\"Procedure unavailable (Version: {call.Version}, Procedure: {call.Procedure}).\");");
             writer.WriteLine(indent + 5, "call.ProcedureUnavailable();");
             writer.WriteLine(indent + 5, "break;");
             writer.WriteLine(indent + 3, "}");
@@ -148,6 +137,7 @@ internal class Service
         writer.WriteLine(indent + 2, "else");
 
         writer.WriteLine(indent + 2, "{");
+        writer.WriteLine(indent + 3, "Settings?.Logger?.Error($\"Program mismatch (Version: {call.Version}).\");");
         writer.WriteLine(indent + 3, "call.ProgramMismatch();");
         writer.WriteLine(indent + 2, "}");
 

@@ -6,7 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 
 // Public for tests
-public class UdpWriter : INetworkWriter
+public sealed class UdpWriter : INetworkWriter
 {
     private readonly byte[] _buffer;
     private readonly Socket _udpClient;
@@ -30,11 +30,16 @@ public class UdpWriter : INetworkWriter
 
     public void BeginWriting() => _writeIndex = 0;
 
-    public NetworkWriteResult EndWriting(IPEndPoint remoteEndPoint)
+    public NetworkWriteResult EndWriting(IPEndPoint? remoteEndPoint)
     {
+        if (remoteEndPoint is null)
+        {
+            throw new ArgumentNullException(nameof(remoteEndPoint));
+        }
+
         try
         {
-            _udpClient.SendTo(_buffer, _writeIndex, SocketFlags.None, remoteEndPoint);
+            _ = _udpClient.SendTo(_buffer, _writeIndex, SocketFlags.None, remoteEndPoint);
             return new NetworkWriteResult(SocketError.Success);
         }
         catch (SocketException e)
