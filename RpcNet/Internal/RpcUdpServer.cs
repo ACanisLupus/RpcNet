@@ -61,17 +61,19 @@ public sealed class RpcUdpServer : IDisposable
             }
 
             _port = localEndPoint.Port;
+        }
 
-            if ((program != PortMapperConstants.PortMapperProgram) && (serverSettings.PortMapperPort != 0))
+        if ((program != PortMapperConstants.PortMapperProgram) && (serverSettings.PortMapperPort != 0))
+        {
+            var clientSettings = new ClientSettings
             {
-                var clientSettings = new ClientSettings
-                {
-                    Logger = serverSettings.Logger, ReceiveTimeout = serverSettings.ReceiveTimeout, SendTimeout = serverSettings.SendTimeout
-                };
-                foreach (int version in versions)
-                {
-                    PortMapperUtilities.UnsetAndSetPort(ProtocolKind.Udp, serverSettings.PortMapperPort, _port, program, version, clientSettings);
-                }
+                Logger = serverSettings.Logger,
+                ReceiveTimeout = serverSettings.ReceiveTimeout,
+                SendTimeout = serverSettings.SendTimeout
+            };
+            foreach (int version in versions)
+            {
+                PortMapperUtilities.UnsetAndSetPort(ProtocolKind.Udp, serverSettings.PortMapperPort, _port, program, version, clientSettings);
             }
         }
 

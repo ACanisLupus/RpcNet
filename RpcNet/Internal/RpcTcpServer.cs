@@ -86,19 +86,21 @@ public sealed class RpcTcpServer : IDisposable
             }
 
             _port = localEndPoint.Port;
+        }
 
-            if ((_program != PortMapperConstants.PortMapperProgram) && (_portMapperPort != 0))
+        if ((_program != PortMapperConstants.PortMapperProgram) && (_portMapperPort != 0))
+        {
+            lock (_connections)
             {
-                lock (_connections)
+                var clientSettings = new ClientSettings
                 {
-                    var clientSettings = new ClientSettings
-                    {
-                        Logger = _serverSettings.Logger, ReceiveTimeout = _serverSettings.ReceiveTimeout, SendTimeout = _serverSettings.SendTimeout
-                    };
-                    foreach (int version in _versions)
-                    {
-                        PortMapperUtilities.UnsetAndSetPort(ProtocolKind.Tcp, _portMapperPort, _port, _program, version, clientSettings);
-                    }
+                    Logger = _serverSettings.Logger,
+                    ReceiveTimeout = _serverSettings.ReceiveTimeout,
+                    SendTimeout = _serverSettings.SendTimeout
+                };
+                foreach (int version in _versions)
+                {
+                    PortMapperUtilities.UnsetAndSetPort(ProtocolKind.Tcp, _portMapperPort, _port, _program, version, clientSettings);
                 }
             }
         }

@@ -19,7 +19,11 @@ internal sealed class TestPortMapper
     public void SetUp()
     {
         _portMapperPort = 0;
-        var settings = new ServerSettings { Logger = new TestLogger("Port Mapper") };
+        var settings = new ServerSettings
+        {
+            //Logger = new TestLogger("Port Mapper")
+        };
+
         _server = new PortMapperServer(Protocol.TcpAndUdp, _ipAddress, _portMapperPort, settings);
         _server.Start();
         _portMapperPort = _server.TcpPort;
@@ -35,7 +39,11 @@ internal sealed class TestPortMapper
     [TestCase(4720, 4721, ProtocolKind.Udp, 4721)]
     public void TestSetAndGet(int port, int program, ProtocolKind protocol, int version)
     {
-        using var client = new PortMapperClient(Protocol.Tcp, _ipAddress, _portMapperPort);
+        var clientSettings = new ClientSettings
+        {
+            //Logger = new TestLogger("Test Client")
+        };
+        using var client = new PortMapperClient(Protocol.Tcp, _ipAddress, _portMapperPort, clientSettings);
         client.Set_2(new Mapping2 { Port = port, ProgramNumber = program, Protocol = protocol, VersionNumber = version });
 
         int receivedPort = client.GetPort_2(new Mapping2 { Protocol = protocol, ProgramNumber = program, VersionNumber = version });
@@ -48,7 +56,11 @@ internal sealed class TestPortMapper
     [TestCase(1, 2, 3, 42, 3)]
     public void TestSetAndWrongGet(int port, int program, int version, int program2, int version2)
     {
-        using var client = new PortMapperClient(Protocol.Tcp, _ipAddress, _portMapperPort);
+        var clientSettings = new ClientSettings
+        {
+            //Logger = new TestLogger("Test Client")
+        };
+        using var client = new PortMapperClient(Protocol.Tcp, _ipAddress, _portMapperPort, clientSettings);
         client.Set_2(new Mapping2 { Port = port, ProgramNumber = program, VersionNumber = version });
 
         int receivedPort = client.GetPort_2(new Mapping2 { ProgramNumber = program2, VersionNumber = version2 });

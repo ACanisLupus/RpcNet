@@ -44,7 +44,7 @@ public sealed class TcpWriter : INetworkWriter
         // Integers (4 bytes) and padding bytes (> 1 and < 4 bytes) must not be sent fragmented
         if ((maxLength < length) && (maxLength < sizeof(int)))
         {
-            FlushPacket(false);
+            _ = FlushPacket(false);
             maxLength = _buffer.Length - _writeIndex;
         }
 
@@ -67,7 +67,7 @@ public sealed class TcpWriter : INetworkWriter
         SocketError socketError;
         try
         {
-            _tcpClient.Send(_buffer, 0, length + TcpHeaderLength, SocketFlags.None, out socketError);
+            _ = _tcpClient.Send(_buffer, 0, length + TcpHeaderLength, SocketFlags.None, out socketError);
         }
         catch (SocketException exception)
         {

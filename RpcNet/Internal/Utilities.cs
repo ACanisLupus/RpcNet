@@ -2,6 +2,7 @@
 
 namespace RpcNet.Internal;
 
+using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 
@@ -28,6 +29,22 @@ internal static class Utilities
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CalculateXdrPadding(int length) => (4 - (length & 3)) & 3;
+
+    public static IPAddress GetAlternateIpAddress(IPAddress ipAddress)
+    {
+        if (ipAddress.AddressFamily == AddressFamily.InterNetworkV6)
+        {
+            // Try again with IPv4
+            return IPAddress.IsLoopback(ipAddress) ? IPAddress.Loopback : ipAddress.MapToIPv4();
+        }
+        else if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
+        {
+            // Try again with IPv6
+            return IPAddress.IsLoopback(ipAddress) ? IPAddress.IPv6Loopback : ipAddress.MapToIPv6();
+        }
+
+        throw new RpcException($"The following address family is unsupported: {ipAddress.AddressFamily}.");
+    }
 
     public static string ConvertToString(Protocol protocol) =>
         protocol switch

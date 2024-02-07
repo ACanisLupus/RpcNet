@@ -16,7 +16,11 @@ internal sealed class TestErrorHandling
     [SetUp]
     public void SetUp()
     {
-        var serverSettings = new ServerSettings { PortMapperPort = 0, Logger = new TestLogger("Test Server") };
+        var serverSettings = new ServerSettings
+        {
+            PortMapperPort = 0,
+            //Logger = new TestLogger("Test Server")
+        };
 
         _testServer = new TestServer(Protocol.TcpAndUdp, _ipAddress, 0, serverSettings);
         _testServer.Start();
@@ -32,7 +36,10 @@ internal sealed class TestErrorHandling
     {
         int port = protocol == Protocol.Tcp ? _testServer.TcpPort : _testServer.UdpPort;
 
-        var clientSettings = new ClientSettings { Logger = new TestLogger("Test Client") };
+        var clientSettings = new ClientSettings
+        {
+            //Logger = new TestLogger("Test Client")
+        };
 
         using var client = new TestService2Client(protocol, _ipAddress, port, clientSettings);
 
@@ -53,7 +60,10 @@ internal sealed class TestErrorHandling
     {
         int port = protocol == Protocol.Tcp ? _testServer.TcpPort : _testServer.UdpPort;
 
-        var clientSettings = new ClientSettings { Logger = new TestLogger("Test Client") };
+        var clientSettings = new ClientSettings
+        {
+            //Logger = new TestLogger("Test Client")
+        };
 
         using var client = new TestService2Client(protocol, _ipAddress, port, clientSettings);
 
@@ -74,7 +84,10 @@ internal sealed class TestErrorHandling
     {
         int port = protocol == Protocol.Tcp ? _testServer.TcpPort : _testServer.UdpPort;
 
-        var clientSettings = new ClientSettings { Logger = new TestLogger("Test Client") };
+        var clientSettings = new ClientSettings
+        {
+            //Logger = new TestLogger("Test Client")
+        };
 
         using var client = new TestService2Client(protocol, _ipAddress, port, clientSettings);
 

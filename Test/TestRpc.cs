@@ -19,12 +19,19 @@ internal sealed class TestRpc
     [SetUp]
     public void SetUp()
     {
-        var portMapperSettings = new ServerSettings { Logger = new TestLogger("Port Mapper") };
+        var portMapperSettings = new ServerSettings
+        {
+            //Logger = new TestLogger("Port Mapper")
+        };
 
         _portMapperServer = new PortMapperServer(Protocol.Tcp, _ipAddress, 0, portMapperSettings);
         _portMapperServer.Start();
 
-        var serverSettings = new ServerSettings { PortMapperPort = _portMapperServer.TcpPort, Logger = new TestLogger("Test Server") };
+        var serverSettings = new ServerSettings
+        {
+            PortMapperPort = _portMapperServer.TcpPort,
+            //Logger = new TestLogger("Test Server")
+        };
 
         _testServer = new TestServer(Protocol.TcpAndUdp, _ipAddress, 0, serverSettings);
         _testServer.Start();
@@ -42,7 +49,11 @@ internal sealed class TestRpc
     [TestCase(Protocol.Udp)]
     public void OneClient(Protocol protocol)
     {
-        var clientSettings = new ClientSettings { PortMapperPort = _portMapperServer.TcpPort, Logger = new TestLogger("Test Client") };
+        var clientSettings = new ClientSettings
+        {
+            PortMapperPort = _portMapperServer.TcpPort,
+            //Logger = new TestLogger("Test Client")
+        };
         using var client = new TestServiceClient(protocol, _ipAddress, 0, clientSettings);
         SimpleStruct result = client.SimpleStructSimpleStruct_2(new SimpleStruct { Value = 42 });
         Assert.That(result.Value, Is.EqualTo(42));

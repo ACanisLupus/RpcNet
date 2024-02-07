@@ -19,11 +19,14 @@ internal sealed class TestTcpClientServer
         const int Program = 12;
         const int Version = 13;
 
-        var clientSettings = new ClientSettings { Logger = new TestLogger("TCP Client") };
+        var clientSettings = new ClientSettings
+        {
+            //Logger = new TestLogger("TCP Client")
+        };
 
         RpcException exception = Assert.Throws<RpcException>(() => _ = new RpcTcpClient(_ipAddress, 1, Program, Version, clientSettings));
 
-        Assert.That(exception?.Message, Is.EqualTo($"Could not connect to {_ipAddress}:{1}. Socket error: ConnectionRefused."));
+        Assert.That(exception?.Message, Is.EqualTo("Could not connect to [::1]:1. Socket error: ConnectionRefused."));
     }
 
     [Test]
@@ -32,7 +35,10 @@ internal sealed class TestTcpClientServer
         const int Program = 12;
         const int Version = 13;
 
-        var serverSettings = new ServerSettings { Logger = new TestLogger("TCP Server") };
+        var serverSettings = new ServerSettings
+        {
+            //Logger = new TestLogger("TCP Server")
+        };
 
         var server = new RpcTcpServer(_ipAddress, 0, Program, new[] { Version }, _ => { }, serverSettings);
         Assert.DoesNotThrow(() => server.Dispose());
@@ -59,14 +65,17 @@ internal sealed class TestTcpClientServer
 
         var serverSettings = new ServerSettings
         {
-            Logger = new TestLogger("TCP Server"),
+            //Logger = new TestLogger("TCP Server"),
             PortMapperPort = 0 // Don't register at port mapper
         };
 
         using var server = new RpcTcpServer(_ipAddress, 0, Program, new[] { Version }, Dispatcher, serverSettings);
         int port = server.Start();
 
-        var clientSettings = new ClientSettings { Logger = new TestLogger("TCP Client") };
+        var clientSettings = new ClientSettings
+        {
+            //Logger = new TestLogger("TCP Client")
+        };
 
         using var client = new RpcTcpClient(_ipAddress, port, Program, Version, clientSettings);
         var argument = new SimpleStruct { Value = 42 };
