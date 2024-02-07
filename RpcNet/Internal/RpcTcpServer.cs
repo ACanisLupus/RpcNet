@@ -75,7 +75,7 @@ public sealed class RpcTcpServer : IDisposable
         }
         catch (SocketException e)
         {
-            throw new RpcException($"Could not start TCP listener. Socket error: {e.SocketErrorCode}.");
+            throw new RpcException($"Could not start TCP listener. Socket error code: {e.SocketErrorCode}.");
         }
 
         if (_port == 0)
@@ -190,7 +190,7 @@ public sealed class RpcTcpServer : IDisposable
             {
                 if (!_stopAccepting)
                 {
-                    _logger?.Error($"Could not accept TCP client. Socket error: {e.SocketErrorCode}");
+                    _logger?.Error($"Could not accept TCP client. Socket error code: {e.SocketErrorCode}");
                 }
             }
             catch (Exception e)

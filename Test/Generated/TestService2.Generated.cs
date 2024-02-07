@@ -369,9 +369,9 @@ namespace TestService
                             Settings?.Logger?.EndCall(TestService2Constants.TestServiceVersion, TestService2Constants.ThrowsException, "ThrowsException", args, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(TestService2Constants.TestServiceVersion, TestService2Constants.ThrowsException, "ThrowsException", args, exception);
+                            Settings?.Logger?.EndCall(TestService2Constants.TestServiceVersion, TestService2Constants.ThrowsException, "ThrowsException", args, e);
                             call.SystemError();
                             return;
                         }
@@ -389,9 +389,9 @@ namespace TestService
                             Settings?.Logger?.EndCall(TestService2Constants.TestServiceVersion, TestService2Constants.Echo, "Echo", args, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(TestService2Constants.TestServiceVersion, TestService2Constants.Echo, "Echo", args, exception);
+                            Settings?.Logger?.EndCall(TestService2Constants.TestServiceVersion, TestService2Constants.Echo, "Echo", args, e);
                             call.SystemError();
                             return;
                         }
@@ -409,9 +409,9 @@ namespace TestService
                             Settings?.Logger?.EndCall(TestService2Constants.TestServiceVersion, TestService2Constants.NonExistingProcedure, "NonExistingProcedure", args, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(TestService2Constants.TestServiceVersion, TestService2Constants.NonExistingProcedure, "NonExistingProcedure", args, exception);
+                            Settings?.Logger?.EndCall(TestService2Constants.TestServiceVersion, TestService2Constants.NonExistingProcedure, "NonExistingProcedure", args, e);
                             call.SystemError();
                             return;
                         }
@@ -439,9 +439,9 @@ namespace TestService
                             Settings?.Logger?.EndCall(TestService2Constants.NonExistingVersion, TestService2Constants.NonExistingProcedure, "NonExistingProcedure", args, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(TestService2Constants.NonExistingVersion, TestService2Constants.NonExistingProcedure, "NonExistingProcedure", args, exception);
+                            Settings?.Logger?.EndCall(TestService2Constants.NonExistingVersion, TestService2Constants.NonExistingProcedure, "NonExistingProcedure", args, e);
                             call.SystemError();
                             return;
                         }

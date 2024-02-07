@@ -92,11 +92,11 @@ internal class Procedure
             $"Settings?.Logger?.EndCall({_versionConstant}, {_argumentConstant}, \"{Name}\", {_procedureArguments.VariableName}, {_procedureResult.VariableName});");
         writer.WriteLine(indent + 2, "call.Reply(result);");
         writer.WriteLine(indent + 1, "}");
-        writer.WriteLine(indent + 1, "catch (Exception exception) when (!(exception is RpcException))");
+        writer.WriteLine(indent + 1, "catch (Exception e) when (!(e is RpcException))");
         writer.WriteLine(indent + 1, "{");
         writer.WriteLine(
             indent + 2,
-            $"Settings?.Logger?.EndCall({_versionConstant}, {_argumentConstant}, \"{Name}\", {_procedureArguments.VariableName}, exception);");
+            $"Settings?.Logger?.EndCall({_versionConstant}, {_argumentConstant}, \"{Name}\", {_procedureArguments.VariableName}, e);");
         writer.WriteLine(indent + 2, "call.SystemError();");
         writer.WriteLine(indent + 2, "return;");
         writer.WriteLine(indent + 1, "}");

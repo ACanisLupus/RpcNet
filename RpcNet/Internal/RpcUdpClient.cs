@@ -29,7 +29,7 @@ public sealed class RpcUdpClient : INetworkClient
         SendTimeout = clientSettings.SendTimeout;
         var reader = new UdpReader(_client);
         var writer = new UdpWriter(_client);
-        _call = new RpcCall(program, remoteIpEndPoint, reader, writer, null, clientSettings.Logger);
+        _call = new RpcCall(program, remoteIpEndPoint, reader, writer);
     }
 
     public TimeSpan ReceiveTimeout

@@ -2486,9 +2486,9 @@ namespace RpcNet.PortMapper
                             Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Ping, "Ping", args, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Ping, "Ping", args, exception);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Ping, "Ping", args, e);
                             call.SystemError();
                             return;
                         }
@@ -2506,9 +2506,9 @@ namespace RpcNet.PortMapper
                             Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Set, "Set", mapping2, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Set, "Set", mapping2, exception);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Set, "Set", mapping2, e);
                             call.SystemError();
                             return;
                         }
@@ -2526,9 +2526,9 @@ namespace RpcNet.PortMapper
                             Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Unset, "Unset", mapping2, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Unset, "Unset", mapping2, exception);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Unset, "Unset", mapping2, e);
                             call.SystemError();
                             return;
                         }
@@ -2546,9 +2546,9 @@ namespace RpcNet.PortMapper
                             Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.GetPort, "GetPort", mapping2, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.GetPort, "GetPort", mapping2, exception);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.GetPort, "GetPort", mapping2, e);
                             call.SystemError();
                             return;
                         }
@@ -2565,9 +2565,9 @@ namespace RpcNet.PortMapper
                             Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Dump, "Dump", args, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Dump, "Dump", args, exception);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Dump, "Dump", args, e);
                             call.SystemError();
                             return;
                         }
@@ -2584,9 +2584,9 @@ namespace RpcNet.PortMapper
                             Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Call, "Call", callArguments, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Call, "Call", callArguments, exception);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Call, "Call", callArguments, e);
                             call.SystemError();
                             return;
                         }
@@ -2614,9 +2614,9 @@ namespace RpcNet.PortMapper
                             Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.Set, "Set", mapping3, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.Set, "Set", mapping3, exception);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.Set, "Set", mapping3, e);
                             call.SystemError();
                             return;
                         }
@@ -2634,9 +2634,9 @@ namespace RpcNet.PortMapper
                             Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.Unset, "Unset", mapping3, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.Unset, "Unset", mapping3, exception);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.Unset, "Unset", mapping3, e);
                             call.SystemError();
                             return;
                         }
@@ -2654,9 +2654,9 @@ namespace RpcNet.PortMapper
                             Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetAddress, "GetAddress", mapping3, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetAddress, "GetAddress", mapping3, exception);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetAddress, "GetAddress", mapping3, e);
                             call.SystemError();
                             return;
                         }
@@ -2673,9 +2673,9 @@ namespace RpcNet.PortMapper
                             Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.Dump, "Dump", args, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.Dump, "Dump", args, exception);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.Dump, "Dump", args, e);
                             call.SystemError();
                             return;
                         }
@@ -2692,9 +2692,9 @@ namespace RpcNet.PortMapper
                             Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.Call, "Call", callArguments, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.Call, "Call", callArguments, exception);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.Call, "Call", callArguments, e);
                             call.SystemError();
                             return;
                         }
@@ -2712,9 +2712,9 @@ namespace RpcNet.PortMapper
                             Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetTime, "GetTime", args, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetTime, "GetTime", args, exception);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetTime, "GetTime", args, e);
                             call.SystemError();
                             return;
                         }
@@ -2731,9 +2731,9 @@ namespace RpcNet.PortMapper
                             Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress", args, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress", args, exception);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress", args, e);
                             call.SystemError();
                             return;
                         }
@@ -2751,9 +2751,9 @@ namespace RpcNet.PortMapper
                             Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress", networkBuffer, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress", networkBuffer, exception);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress", networkBuffer, e);
                             call.SystemError();
                             return;
                         }
@@ -2781,9 +2781,9 @@ namespace RpcNet.PortMapper
                             Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.Set, "Set", mapping3, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.Set, "Set", mapping3, exception);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.Set, "Set", mapping3, e);
                             call.SystemError();
                             return;
                         }
@@ -2801,9 +2801,9 @@ namespace RpcNet.PortMapper
                             Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.Unset, "Unset", mapping3, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.Unset, "Unset", mapping3, exception);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.Unset, "Unset", mapping3, e);
                             call.SystemError();
                             return;
                         }
@@ -2821,9 +2821,9 @@ namespace RpcNet.PortMapper
                             Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddress, "GetAddress", mapping3, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddress, "GetAddress", mapping3, exception);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddress, "GetAddress", mapping3, e);
                             call.SystemError();
                             return;
                         }
@@ -2840,9 +2840,9 @@ namespace RpcNet.PortMapper
                             Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.Dump, "Dump", args, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.Dump, "Dump", args, exception);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.Dump, "Dump", args, e);
                             call.SystemError();
                             return;
                         }
@@ -2859,9 +2859,9 @@ namespace RpcNet.PortMapper
                             Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.Broadcast, "Broadcast", callArguments, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.Broadcast, "Broadcast", callArguments, exception);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.Broadcast, "Broadcast", callArguments, e);
                             call.SystemError();
                             return;
                         }
@@ -2879,9 +2879,9 @@ namespace RpcNet.PortMapper
                             Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetTime, "GetTime", args, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetTime, "GetTime", args, exception);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetTime, "GetTime", args, e);
                             call.SystemError();
                             return;
                         }
@@ -2898,9 +2898,9 @@ namespace RpcNet.PortMapper
                             Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress", args, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress", args, exception);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress", args, e);
                             call.SystemError();
                             return;
                         }
@@ -2918,9 +2918,9 @@ namespace RpcNet.PortMapper
                             Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress", networkBuffer, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress", networkBuffer, exception);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress", networkBuffer, e);
                             call.SystemError();
                             return;
                         }
@@ -2938,9 +2938,9 @@ namespace RpcNet.PortMapper
                             Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetVersionAddress, "GetVersionAddress", mapping3, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetVersionAddress, "GetVersionAddress", mapping3, exception);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetVersionAddress, "GetVersionAddress", mapping3, e);
                             call.SystemError();
                             return;
                         }
@@ -2957,9 +2957,9 @@ namespace RpcNet.PortMapper
                             Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.IndirectCall, "IndirectCall", callArguments, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.IndirectCall, "IndirectCall", callArguments, exception);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.IndirectCall, "IndirectCall", callArguments, e);
                             call.SystemError();
                             return;
                         }
@@ -2976,9 +2976,9 @@ namespace RpcNet.PortMapper
                             Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddressList, "GetAddressList", mapping3, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddressList, "GetAddressList", mapping3, exception);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddressList, "GetAddressList", mapping3, e);
                             call.SystemError();
                             return;
                         }
@@ -2995,9 +2995,9 @@ namespace RpcNet.PortMapper
                             Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetStatistics, "GetStatistics", args, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetStatistics, "GetStatistics", args, exception);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetStatistics, "GetStatistics", args, e);
                             call.SystemError();
                             return;
                         }

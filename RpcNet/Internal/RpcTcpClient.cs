@@ -10,12 +10,11 @@ using PortMapper;
 public sealed class RpcTcpClient : INetworkClient
 {
     private readonly RpcCall _call;
+    private readonly Socket _client;
     private readonly ClientSettings _clientSettings;
     private readonly IPEndPoint _remoteIpEndPoint;
     private readonly TcpReader _tcpReader;
     private readonly TcpWriter _tcpWriter;
-
-    private Socket _client;
 
     public RpcTcpClient(IPAddress ipAddress, int port, int program, int version, ClientSettings? clientSettings = default)
     {
@@ -46,7 +45,7 @@ public sealed class RpcTcpClient : INetworkClient
 
         _tcpReader = new TcpReader(_client, _clientSettings.Logger);
         _tcpWriter = new TcpWriter(_client, _clientSettings.Logger);
-        _call = new RpcCall(program, _remoteIpEndPoint, _tcpReader, _tcpWriter, ReestablishConnection, _clientSettings.Logger);
+        _call = new RpcCall(program, _remoteIpEndPoint, _tcpReader, _tcpWriter);
     }
 
     public TimeSpan ReceiveTimeout
@@ -79,17 +78,7 @@ public sealed class RpcTcpClient : INetworkClient
         }
         catch (SocketException e)
         {
-            throw new RpcException($"Could not connect to {_remoteIpEndPoint}. Socket error: {e.SocketErrorCode}.");
+            throw new RpcException($"Could not connect to {_remoteIpEndPoint}. Socket error code: {e.SocketErrorCode}.");
         }
-    }
-
-    private void ReestablishConnection()
-    {
-        _client.Close();
-
-        _client = EstablishConnection();
-
-        _tcpReader.Reset(_client);
-        _tcpWriter.Reset(_client);
     }
 }

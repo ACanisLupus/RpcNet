@@ -35,7 +35,7 @@ public sealed class TcpWriter : INetworkWriter
 
     public void Reset(Socket tcpClient) => _tcpClient = tcpClient;
     public void BeginWriting() => _writeIndex = TcpHeaderLength;
-    public NetworkWriteResult EndWriting(IPEndPoint? remoteEndPoint) => FlushPacket(true);
+    public void EndWriting(IPEndPoint remoteEndPoint) => FlushPacket(true);
 
     public Span<byte> Reserve(int length)
     {
@@ -44,7 +44,7 @@ public sealed class TcpWriter : INetworkWriter
         // Integers (4 bytes) and padding bytes (> 1 and < 4 bytes) must not be sent fragmented
         if ((maxLength < length) && (maxLength < sizeof(int)))
         {
-            _ = FlushPacket(false);
+            FlushPacket(false);
             maxLength = _buffer.Length - _writeIndex;
         }
 
@@ -55,7 +55,7 @@ public sealed class TcpWriter : INetworkWriter
         return span;
     }
 
-    private NetworkWriteResult FlushPacket(bool lastPacket)
+    private void FlushPacket(bool lastPacket)
     {
         int length = _writeIndex - TcpHeaderLength;
 
@@ -69,21 +69,14 @@ public sealed class TcpWriter : INetworkWriter
         {
             _ = _tcpClient.Send(_buffer, 0, length + TcpHeaderLength, SocketFlags.None, out socketError);
         }
-        catch (SocketException exception)
+        catch (SocketException e)
         {
-            return new NetworkWriteResult(exception.SocketErrorCode);
-        }
-        catch (Exception exception)
-        {
-            _logger?.Error($"Unexpected error while sending TCP data to {_tcpClient.RemoteEndPoint}: {exception}");
-            return new NetworkWriteResult(SocketError.SocketError);
+            throw new RpcException($"Could not send data to {_tcpClient.RemoteEndPoint}. Socket error code: {e.SocketErrorCode}.");
         }
 
         if (socketError == SocketError.Success)
         {
             BeginWriting();
         }
-
-        return new NetworkWriteResult(socketError);
     }
 }

@@ -26,7 +26,7 @@ internal class TestServer : TestServiceServerStub
 {
     public static long Counter;
 
-    public TestServer(IPAddress ipAddress, int port) : base(Protocol.TcpAndUdp, ipAddress, port)
+    public TestServer(IPAddress ipAddress, int port) : base(Protocol.TcpAndUdp, ipAddress, port, new ServerSettings { PortMapperPort = 0 })
     {
     }
 

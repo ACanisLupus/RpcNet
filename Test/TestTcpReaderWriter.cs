@@ -61,11 +61,11 @@ internal sealed class TestTcpReaderWriter
         _writer.BeginWriting();
         xdrWriter.WriteOpaque(value);
         xdrWriter.Write(42);
-        NetworkWriteResult writeResult = _writer.EndWriting(null);
-        Assert.That(writeResult.SocketError, Is.EqualTo(SocketError.Success));
 
-        NetworkReadResult readResult = _reader.BeginReading();
-        Assert.That(readResult.SocketError, Is.EqualTo(SocketError.Success));
+        Assert.DoesNotThrow(() => _writer.EndWriting(new IPEndPoint(0, 0)));
+
+        Assert.DoesNotThrow(() => _reader.BeginReading());
+
         Assert.That(xdrReader.ReadOpaque(), Is.EqualTo(value));
         Assert.That(xdrReader.ReadInt32(), Is.EqualTo(42));
         _reader.EndReading();
@@ -93,8 +93,8 @@ internal sealed class TestTcpReaderWriter
         var task = Task.Run(
             () =>
             {
-                NetworkReadResult readResult = _reader.BeginReading();
-                Assert.That(readResult.SocketError, Is.EqualTo(SocketError.Success));
+                Assert.DoesNotThrow(() => _reader.BeginReading());
+
                 Assert.That(xdrReader.ReadOpaque(), Is.EqualTo(value));
                 Assert.That(xdrReader.ReadInt32(), Is.EqualTo(42));
                 _reader.EndReading();

@@ -551,9 +551,9 @@ namespace TestService
                             Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.ThrowsException, "ThrowsException", args, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.ThrowsException, "ThrowsException", args, exception);
+                            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.ThrowsException, "ThrowsException", args, e);
                             call.SystemError();
                             return;
                         }
@@ -571,9 +571,9 @@ namespace TestService
                             Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.Echo, "Echo", args, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.Echo, "Echo", args, exception);
+                            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.Echo, "Echo", args, e);
                             call.SystemError();
                             return;
                         }
@@ -600,9 +600,9 @@ namespace TestService
                             Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion2, TestServiceConstants.SimpleStructSimpleStruct, "SimpleStructSimpleStruct", value, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion2, TestServiceConstants.SimpleStructSimpleStruct, "SimpleStructSimpleStruct", value, exception);
+                            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion2, TestServiceConstants.SimpleStructSimpleStruct, "SimpleStructSimpleStruct", value, e);
                             call.SystemError();
                             return;
                         }

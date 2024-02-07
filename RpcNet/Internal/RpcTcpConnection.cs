@@ -32,23 +32,20 @@ public sealed class RpcTcpConnection : IDisposable
 
         _receivedCall = new ReceivedRpcCall(program, versions, _reader, _writer, receivedCallDispatcher);
 
-        _logger?.Trace($"{_caller} connected.");
+        _logger?.Trace($"{remoteIpEndPoint} connected.");
     }
 
     public void Dispose() => _tcpClient.Dispose();
 
     public bool Handle()
     {
-        NetworkReadResult readResult = _reader.BeginReading();
-        if (readResult.HasError)
+        try
         {
-            _logger?.Trace($"Could not read data from {_caller}. Socket error: {readResult.SocketError}.");
-            return false;
+            _ = _reader.BeginReading();
         }
-
-        if (readResult.IsDisconnected)
+        catch (RpcException e)
         {
-            _logger?.Trace($"{_caller} disconnected.");
+            _logger?.Trace(e.Message);
             return false;
         }
 
@@ -56,10 +53,13 @@ public sealed class RpcTcpConnection : IDisposable
         _receivedCall.HandleCall(_caller);
         _reader.EndReading();
 
-        NetworkWriteResult writeResult = _writer.EndWriting(_remoteIpEndPoint);
-        if (writeResult.HasError)
+        try
         {
-            _logger?.Trace($"Could not write data to {_caller}. Socket error: {writeResult.SocketError}.");
+            _writer.EndWriting(_remoteIpEndPoint);
+        }
+        catch (RpcException e)
+        {
+            _logger?.Trace(e.Message);
             return false;
         }
 

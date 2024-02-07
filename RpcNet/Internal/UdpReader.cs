@@ -42,22 +42,17 @@ public sealed class UdpReader : INetworkReader
         _buffer = new byte[bufferSize];
     }
 
-    public NetworkReadResult BeginReading()
+    public IPEndPoint BeginReading()
     {
         _readIndex = 0;
         try
         {
-            _totalLength = _udpClient.ReceiveFrom(_buffer, SocketFlags.None, ref _remoteEndPoint);
-            if (_totalLength == 0)
-            {
-                return NetworkReadResult.CreateDisconnected();
-            }
-
-            return NetworkReadResult.CreateSuccess((IPEndPoint)_remoteEndPoint);
+            _totalLength = _udpClient.ReceiveFrom(_buffer, ref _remoteEndPoint);
+            return (IPEndPoint)_remoteEndPoint;
         }
         catch (SocketException e)
         {
-            return NetworkReadResult.CreateError(e.SocketErrorCode);
+            throw new RpcException($"Could not receive data from UDP socket. Socket error code: {e.SocketErrorCode}.");
         }
     }
 

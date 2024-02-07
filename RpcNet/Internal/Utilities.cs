@@ -43,7 +43,7 @@ internal static class Utilities
             return IPAddress.IsLoopback(ipAddress) ? IPAddress.IPv6Loopback : ipAddress.MapToIPv6();
         }
 
-        throw new RpcException($"The following address family is unsupported: {ipAddress.AddressFamily}.");
+        throw new InvalidOperationException($"The following address family is unsupported: {ipAddress.AddressFamily}.");
     }
 
     public static string ConvertToString(Protocol protocol) =>
@@ -63,7 +63,7 @@ internal static class Utilities
         }
         catch (SocketException e)
         {
-            throw new RpcException($"Could not get receive timeout. Socket error: {e.SocketErrorCode}.");
+            throw new RpcException($"Could not get receive timeout. Socket error code: {e.SocketErrorCode}.");
         }
     }
 
@@ -75,7 +75,7 @@ internal static class Utilities
         }
         catch (SocketException e)
         {
-            throw new RpcException($"Could not set receive timeout to {timeout}. Socket error: {e.SocketErrorCode}.");
+            throw new RpcException($"Could not set receive timeout to {timeout}. Socket error code: {e.SocketErrorCode}.");
         }
     }
 
@@ -87,7 +87,7 @@ internal static class Utilities
         }
         catch (SocketException e)
         {
-            throw new RpcException($"Could not get send timeout. Socket error: {e.SocketErrorCode}.");
+            throw new RpcException($"Could not get send timeout. Socket error code: {e.SocketErrorCode}.");
         }
     }
 
@@ -99,7 +99,7 @@ internal static class Utilities
         }
         catch (SocketException e)
         {
-            throw new RpcException($"Could not set send timeout to {timeout}. Socket error: {e.SocketErrorCode}.");
+            throw new RpcException($"Could not set send timeout to {timeout}. Socket error code: {e.SocketErrorCode}.");
         }
     }
 }

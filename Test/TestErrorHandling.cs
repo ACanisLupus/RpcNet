@@ -46,8 +46,8 @@ internal sealed class TestErrorHandling
         // For TCP, the argument is bigger than the internal buffer size, so that the handling of buffer overflows is checked as well
         byte[] value = protocol == Protocol.Tcp ? new byte[128000] : new byte[100];
 
-        RpcException exception = Assert.Throws<RpcException>(() => client.NonExistingProcedure_1(value));
-        Assert.That(exception?.Message, Is.EqualTo("Call was unsuccessful: ProcedureUnavailable."));
+        RpcException e = Assert.Throws<RpcException>(() => client.NonExistingProcedure_1(value));
+        Assert.That(e?.Message, Is.EqualTo("Call was unsuccessful: ProcedureUnavailable."));
 
         // Make sure the communication works after an error
         Assert.That(client.Echo_1(42), Is.EqualTo(42));
@@ -70,8 +70,8 @@ internal sealed class TestErrorHandling
         // For TCP, the argument is bigger than the internal buffer size, so that the handling of buffer overflows is checked as well
         byte[] value = protocol == Protocol.Tcp ? new byte[128000] : new byte[100];
 
-        RpcException exception = Assert.Throws<RpcException>(() => client.NonExistingProcedure_3(value));
-        Assert.That(exception?.Message, Is.EqualTo("Call was unsuccessful: ProgramMismatch."));
+        RpcException e = Assert.Throws<RpcException>(() => client.NonExistingProcedure_3(value));
+        Assert.That(e?.Message, Is.EqualTo("Call was unsuccessful: ProgramMismatch."));
 
         // Make sure the communication works after an error
         Assert.That(client.Echo_1(42), Is.EqualTo(42));
@@ -91,8 +91,8 @@ internal sealed class TestErrorHandling
 
         using var client = new TestService2Client(protocol, _ipAddress, port, clientSettings);
 
-        RpcException exception = Assert.Throws<RpcException>(() => client.ThrowsException_1());
-        Assert.That(exception?.Message, Is.EqualTo("Call was unsuccessful: SystemError."));
+        RpcException e = Assert.Throws<RpcException>(() => client.ThrowsException_1());
+        Assert.That(e?.Message, Is.EqualTo("Call was unsuccessful: SystemError."));
 
         // Make sure the communication works after an error
         Assert.That(client.Echo_1(42), Is.EqualTo(42));

@@ -121,34 +121,19 @@ public sealed class RpcUdpServer : IDisposable
         {
             try
             {
-                NetworkReadResult result = _reader.BeginReading();
-                if (result.HasError)
-                {
-                    if (!_stopReceiving)
-                    {
-                        _logger?.Trace($"Could not read UDP data. Socket error: {result.SocketError}.");
-                    }
-
-                    continue;
-                }
-
-                if (result.IsDisconnected)
-                {
-                    // Should only happen on dispose
-                    continue;
-                }
-
-                IPEndPoint? remoteIpEndPoint = result.RemoteIpEndPoint;
-                if (remoteIpEndPoint is null)
-                {
-                    // Can this happen?
-                    continue;
-                }
+                IPEndPoint remoteIpEndPoint = _reader.BeginReading();
 
                 _writer.BeginWriting();
                 _receivedCall.HandleCall(new Caller(remoteIpEndPoint, Protocol.Udp));
                 _reader.EndReading();
                 _writer.EndWriting(remoteIpEndPoint);
+            }
+            catch (RpcException e)
+            {
+                if (!_stopReceiving)
+                {
+                    _logger?.Error(e.Message);
+                }
             }
             catch (Exception e)
             {

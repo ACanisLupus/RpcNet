@@ -24,9 +24,9 @@ internal sealed class TestTcpClientServer
             //Logger = new TestLogger("TCP Client")
         };
 
-        RpcException exception = Assert.Throws<RpcException>(() => _ = new RpcTcpClient(_ipAddress, 1, Program, Version, clientSettings));
+        RpcException e = Assert.Throws<RpcException>(() => _ = new RpcTcpClient(_ipAddress, 1, Program, Version, clientSettings));
 
-        Assert.That(exception?.Message, Is.EqualTo("Could not connect to [::1]:1. Socket error: ConnectionRefused."));
+        Assert.That(e?.Message, Is.EqualTo("Could not connect to [::1]:1. Socket error code: ConnectionRefused."));
     }
 
     [Test]

@@ -30,21 +30,15 @@ public sealed class UdpWriter : INetworkWriter
 
     public void BeginWriting() => _writeIndex = 0;
 
-    public NetworkWriteResult EndWriting(IPEndPoint? remoteEndPoint)
+    public void EndWriting(IPEndPoint remoteEndPoint)
     {
-        if (remoteEndPoint is null)
-        {
-            throw new ArgumentNullException(nameof(remoteEndPoint));
-        }
-
         try
         {
             _ = _udpClient.SendTo(_buffer, _writeIndex, SocketFlags.None, remoteEndPoint);
-            return new NetworkWriteResult(SocketError.Success);
         }
         catch (SocketException e)
         {
-            return new NetworkWriteResult(e.SocketErrorCode);
+            throw new RpcException($"Could not send to {remoteEndPoint}. Socket error code: {e.SocketErrorCode}.");
         }
     }
 
