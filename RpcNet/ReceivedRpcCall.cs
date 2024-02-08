@@ -2,7 +2,7 @@
 
 namespace RpcNet;
 
-using Internal;
+using RpcNet.Internal;
 
 public sealed class ReceivedRpcCall
 {
@@ -91,13 +91,34 @@ public sealed class ReceivedRpcCall
         _receivedCallDispatcher(this);
     }
 
-    private RpcMessage GenerateReply(ReplyBody replyBody) => new() { Xid = _xid, Body = { MessageType = MessageType.Reply, ReplyBody = replyBody } };
+    private RpcMessage GenerateReply(ReplyBody replyBody) => new()
+    {
+        Xid = _xid,
+        Body =
+        {
+            MessageType = MessageType.Reply,
+            ReplyBody = replyBody
+        }
+    };
 
     private RpcMessage GenerateReply(RejectedReply rejectedReply) =>
-        GenerateReply(new ReplyBody { ReplyStatus = ReplyStatus.Denied, RejectedReply = rejectedReply });
+        GenerateReply(
+            new ReplyBody
+            {
+                ReplyStatus = ReplyStatus.Denied,
+                RejectedReply = rejectedReply
+            });
 
     private RpcMessage GenerateRpcVersionMismatch(uint low, uint high) => GenerateReply(
-        new RejectedReply { RejectStatus = RejectStatus.RpcVersionMismatch, MismatchInfo = new MismatchInfo { High = high, Low = low } });
+        new RejectedReply
+        {
+            RejectStatus = RejectStatus.RpcVersionMismatch,
+            MismatchInfo = new MismatchInfo
+            {
+                High = high,
+                Low = low
+            }
+        });
 
     private RpcMessage GenerateReply(ReplyData replyData) =>
         GenerateReply(
@@ -106,13 +127,29 @@ public sealed class ReceivedRpcCall
                 ReplyStatus = ReplyStatus.Accepted,
                 AcceptedReply = new AcceptedReply
                 {
-                    Verifier = new OpaqueAuthentication { AuthenticationFlavor = AuthenticationFlavor.None, Body = Array.Empty<byte>() },
+                    Verifier = new OpaqueAuthentication
+                    {
+                        AuthenticationFlavor = AuthenticationFlavor.None,
+                        Body = Array.Empty<byte>()
+                    },
                     ReplyData = replyData
                 }
             });
 
-    private RpcMessage GenerateReply(AcceptStatus acceptStatus) => GenerateReply(new ReplyData { AcceptStatus = acceptStatus });
+    private RpcMessage GenerateReply(AcceptStatus acceptStatus) => GenerateReply(
+        new ReplyData
+        {
+            AcceptStatus = acceptStatus
+        });
 
     private RpcMessage GenerateProgramMismatch(uint low, uint high) => GenerateReply(
-        new ReplyData { AcceptStatus = AcceptStatus.ProgramMismatch, MismatchInfo = new MismatchInfo { Low = low, High = high } });
+        new ReplyData
+        {
+            AcceptStatus = AcceptStatus.ProgramMismatch,
+            MismatchInfo = new MismatchInfo
+            {
+                Low = low,
+                High = high
+            }
+        });
 }

@@ -6,7 +6,11 @@ using System.Net;
 
 public sealed class PortMapperServer : PortMapperServerStub
 {
-    private static readonly CallResult2 _callResult = new() { Port = 0, Result = Array.Empty<byte>() };
+    private static readonly CallResult2 _callResult = new()
+    {
+        Port = 0,
+        Result = Array.Empty<byte>()
+    };
 
     private readonly List<Mapping2> _mappings2 = new();
     private readonly List<Mapping3> _mappings3 = new();
@@ -99,12 +103,18 @@ public sealed class PortMapperServer : PortMapperServerStub
         {
             if (mappingNodeNullable.Value is null)
             {
-                mappingNodeNullable.Value = new MappingNode2 { Mapping = mapping };
+                mappingNodeNullable.Value = new MappingNode2
+                {
+                    Mapping = mapping
+                };
                 currentNode = mappingNodeNullable.Value;
             }
             else if (currentNode is not null)
             {
-                var mappingNode = new MappingNode2 { Mapping = mapping };
+                var mappingNode = new MappingNode2
+                {
+                    Mapping = mapping
+                };
 
                 currentNode.Next = mappingNode;
                 currentNode = mappingNode;
@@ -258,5 +268,6 @@ public sealed class PortMapperServer : PortMapperServerStub
     }
 
     private delegate bool Equal2(Mapping2 firstMapping, Mapping2 secondMapping);
+
     private delegate bool Equal3(Mapping3 firstMapping, Mapping3 secondMapping);
 }

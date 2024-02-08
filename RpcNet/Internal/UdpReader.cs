@@ -36,7 +36,13 @@ public sealed class UdpReader : INetworkReader
             const uint IocIn = 0x80000000;
             const uint IocVendor = 0x18000000;
             const uint SioUdpConnectionReset = IocIn | IocVendor | 12;
-            _ = _udpClient.IOControl(unchecked((int)SioUdpConnectionReset), new[] { Convert.ToByte(false) }, null);
+            _ = _udpClient.IOControl(
+                unchecked((int)SioUdpConnectionReset),
+                new[]
+                {
+                    Convert.ToByte(false)
+                },
+                null);
         }
 
         _buffer = new byte[bufferSize];

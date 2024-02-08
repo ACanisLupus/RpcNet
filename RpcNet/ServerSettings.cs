@@ -2,8 +2,8 @@
 
 namespace RpcNet;
 
-using Internal;
-using PortMapper;
+using RpcNet.Internal;
+using RpcNet.PortMapper;
 
 public sealed class ServerSettings
 {

@@ -31,8 +31,16 @@ internal sealed class RpcCall
                 {
                     RpcVersion = Utilities.RpcVersion,
                     Program = (uint)program,
-                    Credential = { AuthenticationFlavor = AuthenticationFlavor.None, Body = Array.Empty<byte>() },
-                    Verifier = { AuthenticationFlavor = AuthenticationFlavor.None, Body = Array.Empty<byte>() }
+                    Credential =
+                    {
+                        AuthenticationFlavor = AuthenticationFlavor.None,
+                        Body = Array.Empty<byte>()
+                    },
+                    Verifier =
+                    {
+                        AuthenticationFlavor = AuthenticationFlavor.None,
+                        Body = Array.Empty<byte>()
+                    }
                 }
             }
         };

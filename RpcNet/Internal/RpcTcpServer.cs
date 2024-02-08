@@ -4,7 +4,7 @@ namespace RpcNet.Internal;
 
 using System.Net;
 using System.Net.Sockets;
-using PortMapper;
+using RpcNet.PortMapper;
 
 // Public for tests
 public sealed class RpcTcpServer : IDisposable
@@ -100,14 +100,18 @@ public sealed class RpcTcpServer : IDisposable
                 };
                 foreach (int version in _versions)
                 {
-                    PortMapperUtilities.UnsetAndSetPort(ProtocolKind.Tcp, _portMapperPort, _port, _program, version, clientSettings);
+                    PortMapperUtilities.UnsetAndSetPort(_ipAddress.AddressFamily, ProtocolKind.Tcp, _portMapperPort, _port, _program, version, clientSettings);
                 }
             }
         }
 
         _logger?.Info($"{Utilities.ConvertToString(Protocol.Tcp)} Server listening on {_server.LocalEndPoint}...");
 
-        _acceptingThread = new Thread(Accepting) { IsBackground = true, Name = $"RpcNet TCP Server Thread for Port {_port}" };
+        _acceptingThread = new Thread(Accepting)
+        {
+            IsBackground = true,
+            Name = $"RpcNet TCP Server Thread for Port {_port}"
+        };
         _acceptingThread.Start();
         return _port;
     }

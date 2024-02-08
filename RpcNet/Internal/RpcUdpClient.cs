@@ -4,7 +4,7 @@ namespace RpcNet.Internal;
 
 using System.Net;
 using System.Net.Sockets;
-using PortMapper;
+using RpcNet.PortMapper;
 
 // Public for tests
 public sealed class RpcUdpClient : INetworkClient

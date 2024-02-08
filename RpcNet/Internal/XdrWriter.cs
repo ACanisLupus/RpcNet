@@ -55,7 +55,7 @@ public sealed class XdrWriter : IXdrWriter
     public void Write(string? value)
     {
         int length = value?.Length ?? 0;
-        if ((value is null) || (length == 0))
+        if (value is null || (length == 0))
         {
             Write(length);
             return;

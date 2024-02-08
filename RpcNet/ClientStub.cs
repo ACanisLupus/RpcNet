@@ -3,7 +3,7 @@
 namespace RpcNet;
 
 using System.Net;
-using Internal;
+using RpcNet.Internal;
 
 public abstract class ClientStub : IDisposable
 {

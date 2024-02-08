@@ -16,6 +16,11 @@ internal sealed class TestTcpClientServer
     [Test]
     public void ServerIsNotRunning()
     {
+        if (OperatingSystem.IsWindows())
+        {
+            Assert.Ignore("This test takes too long on Windows.");
+        }
+
         const int Program = 12;
         const int Version = 13;
 

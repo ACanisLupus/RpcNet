@@ -37,13 +37,29 @@ internal static class Utilities
             // Try again with IPv4
             return IPAddress.IsLoopback(ipAddress) ? IPAddress.Loopback : ipAddress.MapToIPv4();
         }
-        else if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
+
+        if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
         {
             // Try again with IPv6
             return IPAddress.IsLoopback(ipAddress) ? IPAddress.IPv6Loopback : ipAddress.MapToIPv6();
         }
 
         throw new InvalidOperationException($"The following address family is unsupported: {ipAddress.AddressFamily}.");
+    }
+
+    public static IPAddress GetLoopbackAddress(AddressFamily addressFamily)
+    {
+        if (addressFamily == AddressFamily.InterNetworkV6)
+        {
+            return IPAddress.IPv6Loopback;
+        }
+
+        if (addressFamily == AddressFamily.InterNetwork)
+        {
+            return IPAddress.Loopback;
+        }
+
+        throw new InvalidOperationException($"The following address family is unsupported: {addressFamily}.");
     }
 
     public static string ConvertToString(Protocol protocol) =>

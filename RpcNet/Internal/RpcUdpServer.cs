@@ -4,7 +4,7 @@ namespace RpcNet.Internal;
 
 using System.Net;
 using System.Net.Sockets;
-using PortMapper;
+using RpcNet.PortMapper;
 
 // Public for tests
 public sealed class RpcUdpServer : IDisposable
@@ -73,7 +73,14 @@ public sealed class RpcUdpServer : IDisposable
             };
             foreach (int version in versions)
             {
-                PortMapperUtilities.UnsetAndSetPort(ProtocolKind.Udp, serverSettings.PortMapperPort, _port, program, version, clientSettings);
+                PortMapperUtilities.UnsetAndSetPort(
+                    ipAddress.AddressFamily,
+                    ProtocolKind.Udp,
+                    serverSettings.PortMapperPort,
+                    _port,
+                    program,
+                    version,
+                    clientSettings);
             }
         }
 
@@ -92,7 +99,11 @@ public sealed class RpcUdpServer : IDisposable
             return _port;
         }
 
-        _receivingThread = new Thread(HandlingUdpCalls) { IsBackground = true, Name = $"RpcNet UDP Server Thread for Port {_port}" };
+        _receivingThread = new Thread(HandlingUdpCalls)
+        {
+            IsBackground = true,
+            Name = $"RpcNet UDP Server Thread for Port {_port}"
+        };
         _receivingThread.Start();
         return _port;
     }

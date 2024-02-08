@@ -23,83 +23,23 @@ internal sealed class TestAddressFamilies
     }
 
     [Test]
-    [TestCase("127.0.0.1", "127.0.0.1", "127.0.0.1", Protocol.Tcp)]
-    [TestCase("0.0.0.0", "127.0.0.1", "127.0.0.1", Protocol.Tcp)]
-    [TestCase("127.0.0.1", "0.0.0.0", "127.0.0.1", Protocol.Tcp)]
-    [TestCase("0.0.0.0", "0.0.0.0", "127.0.0.1", Protocol.Tcp)]
-    [TestCase("::1", "127.0.0.1", "127.0.0.1", Protocol.Tcp)]
-    [TestCase("::", "127.0.0.1", "127.0.0.1", Protocol.Tcp)]
-    [TestCase("::1", "0.0.0.0", "127.0.0.1", Protocol.Tcp)]
-    [TestCase("::", "0.0.0.0", "127.0.0.1", Protocol.Tcp)]
-    [TestCase("127.0.0.1", "::1", "127.0.0.1", Protocol.Tcp)]
-    [TestCase("0.0.0.0", "::1", "127.0.0.1", Protocol.Tcp)]
-    [TestCase("127.0.0.1", "::", "127.0.0.1", Protocol.Tcp)]
-    [TestCase("0.0.0.0", "::", "127.0.0.1", Protocol.Tcp)]
-    [TestCase("::1", "::1", "127.0.0.1", Protocol.Tcp)]
-    [TestCase("::", "::1", "127.0.0.1", Protocol.Tcp)]
-    [TestCase("::1", "::", "127.0.0.1", Protocol.Tcp)]
-    [TestCase("::", "::", "127.0.0.1", Protocol.Tcp)]
-    [TestCase("127.0.0.1", "127.0.0.1", "::1", Protocol.Tcp)]
-    [TestCase("0.0.0.0", "127.0.0.1", "::1", Protocol.Tcp)]
-    [TestCase("127.0.0.1", "0.0.0.0", "::1", Protocol.Tcp)]
-    [TestCase("0.0.0.0", "0.0.0.0", "::1", Protocol.Tcp)]
-    [TestCase("::1", "127.0.0.1", "::1", Protocol.Tcp)]
-    [TestCase("::", "127.0.0.1", "::1", Protocol.Tcp)]
-    [TestCase("::1", "0.0.0.0", "::1", Protocol.Tcp)]
-    [TestCase("::", "0.0.0.0", "::1", Protocol.Tcp)]
-    [TestCase("127.0.0.1", "::1", "::1", Protocol.Tcp)]
-    [TestCase("0.0.0.0", "::1", "::1", Protocol.Tcp)]
-    [TestCase("127.0.0.1", "::", "::1", Protocol.Tcp)]
-    [TestCase("0.0.0.0", "::", "::1", Protocol.Tcp)]
-    [TestCase("::1", "::1", "::1", Protocol.Tcp)]
-    [TestCase("::", "::1", "::1", Protocol.Tcp)]
-    [TestCase("::1", "::", "::1", Protocol.Tcp)]
-    [TestCase("::", "::", "::1", Protocol.Tcp)]
-    [TestCase("127.0.0.1", "127.0.0.1", "127.0.0.1", Protocol.Udp)]
-    [TestCase("0.0.0.0", "127.0.0.1", "127.0.0.1", Protocol.Udp)]
-    [TestCase("127.0.0.1", "0.0.0.0", "127.0.0.1", Protocol.Udp)]
-    [TestCase("0.0.0.0", "0.0.0.0", "127.0.0.1", Protocol.Udp)]
-    [TestCase("::1", "127.0.0.1", "127.0.0.1", Protocol.Udp)]
-    [TestCase("::", "127.0.0.1", "127.0.0.1", Protocol.Udp)]
-    [TestCase("::1", "0.0.0.0", "127.0.0.1", Protocol.Udp)]
-    [TestCase("::", "0.0.0.0", "127.0.0.1", Protocol.Udp)]
-    [TestCase("127.0.0.1", "::1", "127.0.0.1", Protocol.Udp)]
-    [TestCase("0.0.0.0", "::1", "127.0.0.1", Protocol.Udp)]
-    [TestCase("127.0.0.1", "::", "127.0.0.1", Protocol.Udp)]
-    [TestCase("0.0.0.0", "::", "127.0.0.1", Protocol.Udp)]
-    [TestCase("::1", "::1", "127.0.0.1", Protocol.Udp)]
-    [TestCase("::", "::1", "127.0.0.1", Protocol.Udp)]
-    [TestCase("::1", "::", "127.0.0.1", Protocol.Udp)]
-    [TestCase("::", "::", "127.0.0.1", Protocol.Udp)]
-    [TestCase("127.0.0.1", "127.0.0.1", "::1", Protocol.Udp)]
-    [TestCase("0.0.0.0", "127.0.0.1", "::1", Protocol.Udp)]
-    [TestCase("127.0.0.1", "0.0.0.0", "::1", Protocol.Udp)]
-    [TestCase("0.0.0.0", "0.0.0.0", "::1", Protocol.Udp)]
-    [TestCase("::1", "127.0.0.1", "::1", Protocol.Udp)]
-    [TestCase("::", "127.0.0.1", "::1", Protocol.Udp)]
-    [TestCase("::1", "0.0.0.0", "::1", Protocol.Udp)]
-    [TestCase("::", "0.0.0.0", "::1", Protocol.Udp)]
-    [TestCase("127.0.0.1", "::1", "::1", Protocol.Udp)]
-    [TestCase("0.0.0.0", "::1", "::1", Protocol.Udp)]
-    [TestCase("127.0.0.1", "::", "::1", Protocol.Udp)]
-    [TestCase("0.0.0.0", "::", "::1", Protocol.Udp)]
-    [TestCase("::1", "::1", "::1", Protocol.Udp)]
-    [TestCase("::", "::1", "::1", Protocol.Udp)]
-    [TestCase("::1", "::", "::1", Protocol.Udp)]
-    [TestCase("::", "::", "::1", Protocol.Udp)]
-    public void AllCombinations(string portMapperAddress, string serverAddress, string clientAddress, Protocol protocol)
+    public void AllCombinations(
+        [Values("127.0.0.1", "0.0.0.0", "::1", "::")] string portMapperAddress,
+        [Values("127.0.0.1", "0.0.0.0", "::1", "::")] string serverAddress,
+        [Values("127.0.0.1", "::1")] string clientAddress,
+        [Values(Protocol.Tcp, Protocol.Udp)] Protocol protocol)
     {
         var portMapperIpAddress = IPAddress.Parse(portMapperAddress);
         var serverIpAddress = IPAddress.Parse(serverAddress);
         var clientIpAddress = IPAddress.Parse(clientAddress);
 
-        FilterNotWorkingTests(serverIpAddress, clientIpAddress, protocol);
+        FilterNotWorkingTests(portMapperIpAddress, serverIpAddress, clientIpAddress, protocol);
 
         SetUp(portMapperIpAddress, serverIpAddress);
 
         var clientSettings = new ClientSettings
         {
-            PortMapperPort = _portMapperServer.TcpPort,
+            PortMapperPort = _portMapperServer.TcpPort
             //Logger = new TestLogger("Test Client")
         };
 
@@ -109,31 +49,39 @@ internal sealed class TestAddressFamilies
         Assert.That(result, Is.EqualTo(42));
     }
 
-    private static void FilterNotWorkingTests(IPAddress serverIpAddress, IPAddress clientIpAddress, Protocol protocol)
+    private static void FilterNotWorkingTests(IPAddress portMapperIpAddress, IPAddress serverIpAddress, IPAddress clientIpAddress, Protocol protocol)
     {
-        // Everything is fine for TCP
-        if (protocol == Protocol.Tcp)
-        {
-            return;
-        }
-
-        if (IsIpv4(serverIpAddress) && IsIpv6(clientIpAddress))
+        if (IsIpv4(serverIpAddress) && IsIpv6(clientIpAddress) && IsUdp(protocol))
         {
             // The same issue occurs for TCP sockets, however, internally the client tries again with the IPv4 address.
             // Since there is no connect for UDP, we would have to run into the timeout. That would take too long
             Assert.Ignore("No retry with IPv4 implemented.");
         }
 
-        if (IsIpv6(serverIpAddress) && IPAddress.IsLoopback(serverIpAddress) && IsIpv4(clientIpAddress) && !OperatingSystem.IsWindows())
+        if (IsIpv6(serverIpAddress) && IPAddress.IsLoopback(serverIpAddress) && IsIpv4(clientIpAddress) && IsUdp(protocol))
         {
             // The same issue occurs for TCP sockets, however, internally the client tries again with the IPv6 address.
             // Since there is no connect for UDP, we would have to run into the timeout. That would take too long
-            Assert.Ignore("Linux does not support dual stack if the server is listening on loopback only.");
+            Assert.Ignore("Dual stack is not working if the server is listening on loopback only.");
+        }
+
+        bool allAddressFamiliesEqual = AllEqual(portMapperIpAddress.AddressFamily, serverIpAddress.AddressFamily, clientIpAddress.AddressFamily);
+        if (OperatingSystem.IsWindows() && !allAddressFamiliesEqual)
+        {
+            if (!IPAddress.IsLoopback(portMapperIpAddress) && IsIpv6(portMapperIpAddress) && !IPAddress.IsLoopback(serverIpAddress) && IsIpv6(serverIpAddress))
+            {
+                // Dual stack. Should be fast enough
+                return;
+            }
+
+            Assert.Ignore("This test takes too long on Windows.");
         }
     }
 
+    private static bool AllEqual(AddressFamily family1, AddressFamily family2, AddressFamily family3) => (family1 == family2) && (family1 == family3);
     private static bool IsIpv6(IPAddress ipAddress) => ipAddress.AddressFamily == AddressFamily.InterNetworkV6;
     private static bool IsIpv4(IPAddress ipAddress) => ipAddress.AddressFamily == AddressFamily.InterNetwork;
+    private static bool IsUdp(Protocol protocol) => protocol == Protocol.Udp;
 
     private void SetUp(IPAddress portMapperIpAddress, IPAddress serverIpAddress)
     {
@@ -147,7 +95,7 @@ internal sealed class TestAddressFamilies
 
         var serverSettings = new ServerSettings
         {
-            PortMapperPort = _portMapperServer.TcpPort,
+            PortMapperPort = _portMapperServer.TcpPort
             //Logger = new TestLogger("Test Server")
         };
 

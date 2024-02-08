@@ -35,10 +35,17 @@ public static class PortMapperUtilities
         ClientSettings? clientSettings)
     {
         using var portMapperClient = new PortMapperClient(Protocol.Tcp, ipAddress, portMapperPort, clientSettings);
-        return portMapperClient.GetPort_2(new Mapping2 { ProgramNumber = program, Protocol = protocol, VersionNumber = version });
+        return portMapperClient.GetPort_2(
+            new Mapping2
+            {
+                ProgramNumber = program,
+                Protocol = protocol,
+                VersionNumber = version
+            });
     }
 
     public static void UnsetAndSetPort(
+        AddressFamily addressFamily,
         ProtocolKind protocol,
         int portMapperPort,
         int portToSet,
@@ -46,13 +53,14 @@ public static class PortMapperUtilities
         int version,
         ClientSettings? clientSettings)
     {
+        IPAddress ipAddress = Utilities.GetLoopbackAddress(addressFamily);
         try
         {
-            UnsetAndSetPortInternal(IPAddress.Loopback, protocol, portMapperPort, portToSet, program, version, clientSettings);
+            UnsetAndSetPortInternal(ipAddress, protocol, portMapperPort, portToSet, program, version, clientSettings);
         }
         catch
         {
-            UnsetAndSetPortInternal(IPAddress.IPv6Loopback, protocol, portMapperPort, portToSet, program, version, clientSettings);
+            UnsetAndSetPortInternal(Utilities.GetAlternateIpAddress(ipAddress), protocol, portMapperPort, portToSet, program, version, clientSettings);
         }
     }
 
@@ -66,7 +74,20 @@ public static class PortMapperUtilities
         ClientSettings? clientSettings)
     {
         using var portMapperClient = new PortMapperClient(Protocol.Tcp, ipAddress, portMapperPort, clientSettings);
-        portMapperClient.Unset_2(new Mapping2 { ProgramNumber = program, Protocol = protocol, VersionNumber = version });
-        portMapperClient.Set_2(new Mapping2 { Port = portToSet, ProgramNumber = program, Protocol = protocol, VersionNumber = version });
+        portMapperClient.Unset_2(
+            new Mapping2
+            {
+                ProgramNumber = program,
+                Protocol = protocol,
+                VersionNumber = version
+            });
+        portMapperClient.Set_2(
+            new Mapping2
+            {
+                Port = portToSet,
+                ProgramNumber = program,
+                Protocol = protocol,
+                VersionNumber = version
+            });
     }
 }

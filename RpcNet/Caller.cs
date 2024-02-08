@@ -3,7 +3,7 @@
 namespace RpcNet;
 
 using System.Net;
-using Internal;
+using RpcNet.Internal;
 
 public sealed class Caller
 {

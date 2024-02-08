@@ -3,7 +3,7 @@
 namespace RpcNet;
 
 using System.Net;
-using Internal;
+using RpcNet.Internal;
 
 public abstract class ServerStub : IDisposable
 {
@@ -22,7 +22,7 @@ public abstract class ServerStub : IDisposable
             throw new ArgumentNullException(nameof(ipAddress));
         }
 
-        if ((versions is null) || (versions.Length == 0))
+        if (versions is null || (versions.Length == 0))
         {
             throw new ArgumentNullException(nameof(versions));
         }
