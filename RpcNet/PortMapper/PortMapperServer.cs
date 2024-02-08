@@ -12,6 +12,7 @@ public sealed class PortMapperServer : PortMapperServerStub
         Result = Array.Empty<byte>()
     };
 
+    private readonly object _lock = new();
     private readonly List<Mapping2> _mappings2 = new();
     private readonly List<Mapping3> _mappings3 = new();
 
@@ -56,110 +57,131 @@ public sealed class PortMapperServer : PortMapperServerStub
 
     public override bool Set_2(Caller caller, Mapping2 mapping)
     {
-        if (_mappings2.Any(m => IsProgramAndVersionAndProtocolEqual(m, mapping)))
+        lock (_lock)
         {
-            return false;
-        }
+            if (_mappings2.Any(m => IsProgramAndVersionAndProtocolEqual(m, mapping)))
+            {
+                return false;
+            }
 
-        _mappings2.Add(mapping);
-        return true;
+            _mappings2.Add(mapping);
+            return true;
+        }
     }
 
     public override bool Unset_2(Caller caller, Mapping2 mapping)
     {
-        Equal2 equal = IsProgramAndVersionAndProtocolEqual;
-        if (mapping.Protocol == ProtocolKind.Unknown)
+        lock (_lock)
         {
-            equal = IsProgramAndVersionEqual;
-        }
+            Equal2 equal = IsProgramAndVersionAndProtocolEqual;
+            if (mapping.Protocol == ProtocolKind.Unknown)
+            {
+                equal = IsProgramAndVersionEqual;
+            }
 
-        return _mappings2.RemoveAll(tmpMapping => equal(tmpMapping, mapping)) > 0;
+            return _mappings2.RemoveAll(tmpMapping => equal(tmpMapping, mapping)) > 0;
+        }
     }
 
     public override int GetPort_2(Caller caller, Mapping2 mapping2)
     {
-        Mapping2? found2 = _mappings2.FirstOrDefault(m => IsProgramAndVersionAndProtocolEqual(m, mapping2));
-        if (found2 is not null)
+        lock (_lock)
         {
-            return found2.Port;
-        }
+            Mapping2? found2 = _mappings2.FirstOrDefault(m => IsProgramAndVersionAndProtocolEqual(m, mapping2));
+            if (found2 is not null)
+            {
+                return found2.Port;
+            }
 
-        Mapping3 mapping3 = Convert(mapping2);
-        Mapping3? found3 = _mappings3.FirstOrDefault(m => IsProgramAndVersionAndProtocolEqual(m, mapping3));
-        if (found3 is not null)
-        {
-            return ConvertUniversalAddressToPort(found3.UniversalAddress);
-        }
+            Mapping3 mapping3 = Convert(mapping2);
+            Mapping3? found3 = _mappings3.FirstOrDefault(m => IsProgramAndVersionAndProtocolEqual(m, mapping3));
+            if (found3 is not null)
+            {
+                return ConvertUniversalAddressToPort(found3.UniversalAddress);
+            }
 
-        return 0;
+            return 0;
+        }
     }
 
     public override MappingNodeHead2 Dump_2(Caller caller)
     {
-        var mappingNodeNullable = new MappingNodeHead2();
-
-        MappingNode2? currentNode = null;
-        foreach (Mapping2 mapping in _mappings2)
+        lock (_lock)
         {
-            if (mappingNodeNullable.Value is null)
-            {
-                mappingNodeNullable.Value = new MappingNode2
-                {
-                    Mapping = mapping
-                };
-                currentNode = mappingNodeNullable.Value;
-            }
-            else if (currentNode is not null)
-            {
-                var mappingNode = new MappingNode2
-                {
-                    Mapping = mapping
-                };
+            var mappingNodeNullable = new MappingNodeHead2();
 
-                currentNode.Next = mappingNode;
-                currentNode = mappingNode;
+            MappingNode2? currentNode = null;
+            foreach (Mapping2 mapping in _mappings2)
+            {
+                if (mappingNodeNullable.Value is null)
+                {
+                    mappingNodeNullable.Value = new MappingNode2
+                    {
+                        Mapping = mapping
+                    };
+                    currentNode = mappingNodeNullable.Value;
+                }
+                else if (currentNode is not null)
+                {
+                    var mappingNode = new MappingNode2
+                    {
+                        Mapping = mapping
+                    };
+
+                    currentNode.Next = mappingNode;
+                    currentNode = mappingNode;
+                }
             }
+
+            return mappingNodeNullable;
         }
-
-        return mappingNodeNullable;
     }
 
     public override CallResult2 Call_2(Caller caller, CallArguments callArguments) => _callResult;
 
     public override bool Set_3(Caller caller, Mapping3 mapping3)
     {
-        if (_mappings3.Any(m => IsProgramAndVersionAndProtocolEqual(m, mapping3)))
+        lock (_lock)
         {
-            return false;
-        }
+            if (_mappings3.Any(m => IsProgramAndVersionAndProtocolEqual(m, mapping3)))
+            {
+                return false;
+            }
 
-        _mappings3.Add(mapping3);
-        return true;
+            _mappings3.Add(mapping3);
+            return true;
+        }
     }
 
     public override bool Unset_3(Caller caller, Mapping3 mapping3)
     {
-        Equal3 equal = IsProgramAndVersionAndProtocolEqual;
+        lock (_lock)
+        {
+            Equal3 equal = IsProgramAndVersionAndProtocolEqual;
 
-        return _mappings3.RemoveAll(tmpMapping => equal(tmpMapping, mapping3)) > 0;
+            return _mappings3.RemoveAll(tmpMapping => equal(tmpMapping, mapping3)) > 0;
+        }
     }
 
     public override string GetAddress_3(Caller caller, Mapping3 mapping3)
     {
-        Mapping3? found3 = _mappings3.FirstOrDefault(m => IsProgramAndVersionAndProtocolEqual(m, mapping3));
-        if (found3 is not null)
+        lock (_lock)
         {
-            return found3.UniversalAddress;
-        }
+            Mapping3? found3 = _mappings3.FirstOrDefault(m => IsProgramAndVersionAndProtocolEqual(m, mapping3));
+            if (found3 is not null)
+            {
+                return found3.UniversalAddress;
+            }
 
-        Mapping2 mapping2 = Convert(mapping3);
-        Mapping2? found2 = _mappings2.FirstOrDefault(m => IsProgramAndVersionAndProtocolEqual(m, mapping2));
-        if (found2 is not null)
-        {
-            return ConvertPortToUniversalAddress(found2.Port);
-        }
+            Mapping2 mapping2 = Convert(mapping3);
+            Mapping2? found2 = _mappings2.FirstOrDefault(m => IsProgramAndVersionAndProtocolEqual(m, mapping2));
+            if (found2 is not null)
+            {
+                return ConvertPortToUniversalAddress(found2.Port);
+            }
 
-        return string.Empty;
+            return string.Empty;
+        }
     }
 
     public override MappingNodeHead3 Dump_3(Caller caller) => throw new NotImplementedException();
