@@ -45,7 +45,16 @@ internal sealed class TestTcpClientServer
             //Logger = new TestLogger("TCP Server")
         };
 
-        var server = new RpcTcpServer(_ipAddress, 0, Program, new[] { Version }, _ => { }, serverSettings);
+        var server = new RpcTcpServer(
+            _ipAddress,
+            0,
+            Program,
+            new[]
+            {
+                Version
+            },
+            _ => { },
+            serverSettings);
         Assert.DoesNotThrow(() => server.Dispose());
     }
 
@@ -74,7 +83,16 @@ internal sealed class TestTcpClientServer
             PortMapperPort = 0 // Don't register at port mapper
         };
 
-        using var server = new RpcTcpServer(_ipAddress, 0, Program, new[] { Version }, Dispatcher, serverSettings);
+        using var server = new RpcTcpServer(
+            _ipAddress,
+            0,
+            Program,
+            new[]
+            {
+                Version
+            },
+            Dispatcher,
+            serverSettings);
         int port = server.Start();
 
         var clientSettings = new ClientSettings
@@ -83,7 +101,10 @@ internal sealed class TestTcpClientServer
         };
 
         using var client = new RpcTcpClient(_ipAddress, port, Program, Version, clientSettings);
-        var argument = new SimpleStruct { Value = 42 };
+        var argument = new SimpleStruct
+        {
+            Value = 42
+        };
         var result = new SimpleStruct();
 
         client.Call(Procedure, Version, argument, result);

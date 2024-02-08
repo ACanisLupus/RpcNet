@@ -38,7 +38,16 @@ internal sealed class TestUdpClientServer
             PortMapperPort = 0 // Don't register at port mapper
         };
 
-        using var server = new RpcUdpServer(ipAddress, 0, Program, new[] { Version }, Dispatcher, serverSettings);
+        using var server = new RpcUdpServer(
+            ipAddress,
+            0,
+            Program,
+            new[]
+            {
+                Version
+            },
+            Dispatcher,
+            serverSettings);
         int port = server.Start();
 
         var clientSettings = new ClientSettings
@@ -47,7 +56,10 @@ internal sealed class TestUdpClientServer
         };
 
         using var client = new RpcUdpClient(ipAddress, port, Program, Version, clientSettings);
-        var argument = new SimpleStruct { Value = 42 };
+        var argument = new SimpleStruct
+        {
+            Value = 42
+        };
         var result = new SimpleStruct();
 
         client.Call(Procedure, Version, argument, result);

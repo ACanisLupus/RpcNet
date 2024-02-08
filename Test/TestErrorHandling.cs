@@ -2,9 +2,9 @@
 
 namespace Test;
 
+using System.Net;
 using NUnit.Framework;
 using RpcNet;
-using System.Net;
 using TestService;
 
 internal sealed class TestErrorHandling
@@ -18,7 +18,7 @@ internal sealed class TestErrorHandling
     {
         var serverSettings = new ServerSettings
         {
-            PortMapperPort = 0,
+            PortMapperPort = 0
             //Logger = new TestLogger("Test Server")
         };
 

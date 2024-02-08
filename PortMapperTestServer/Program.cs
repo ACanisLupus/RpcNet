@@ -14,7 +14,10 @@ using var portMapperServer = new PortMapperServer(
     Protocol.TcpAndUdp,
     ipEndPoint.Address,
     ipEndPoint.Port,
-    new ServerSettings { Logger = new TestLogger("Port Mapper") });
+    new ServerSettings
+    {
+        Logger = new TestLogger("Port Mapper")
+    });
 portMapperServer.Start();
 
 Thread.Sleep(-1);

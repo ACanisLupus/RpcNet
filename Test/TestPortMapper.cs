@@ -44,9 +44,22 @@ internal sealed class TestPortMapper
             //Logger = new TestLogger("Test Client")
         };
         using var client = new PortMapperClient(Protocol.Tcp, _ipAddress, _portMapperPort, clientSettings);
-        client.Set_2(new Mapping2 { Port = port, ProgramNumber = program, Protocol = protocol, VersionNumber = version });
+        client.Set_2(
+            new Mapping2
+            {
+                Port = port,
+                ProgramNumber = program,
+                Protocol = protocol,
+                VersionNumber = version
+            });
 
-        int receivedPort = client.GetPort_2(new Mapping2 { Protocol = protocol, ProgramNumber = program, VersionNumber = version });
+        int receivedPort = client.GetPort_2(
+            new Mapping2
+            {
+                Protocol = protocol,
+                ProgramNumber = program,
+                VersionNumber = version
+            });
 
         Assert.That(receivedPort, Is.EqualTo(port));
     }
@@ -61,9 +74,20 @@ internal sealed class TestPortMapper
             //Logger = new TestLogger("Test Client")
         };
         using var client = new PortMapperClient(Protocol.Tcp, _ipAddress, _portMapperPort, clientSettings);
-        client.Set_2(new Mapping2 { Port = port, ProgramNumber = program, VersionNumber = version });
+        client.Set_2(
+            new Mapping2
+            {
+                Port = port,
+                ProgramNumber = program,
+                VersionNumber = version
+            });
 
-        int receivedPort = client.GetPort_2(new Mapping2 { ProgramNumber = program2, VersionNumber = version2 });
+        int receivedPort = client.GetPort_2(
+            new Mapping2
+            {
+                ProgramNumber = program2,
+                VersionNumber = version2
+            });
 
         Assert.That(receivedPort, Is.EqualTo(0));
     }

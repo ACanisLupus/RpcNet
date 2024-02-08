@@ -36,7 +36,7 @@ internal class Constant : IEquatable<Constant>
             return true;
         }
 
-        return _value == other._value && Name == other.Name;
+        return (_value == other._value) && (Name == other.Name);
     }
 
     public override bool Equals(object obj)

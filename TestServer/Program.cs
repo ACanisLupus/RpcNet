@@ -19,7 +19,14 @@ internal class TestServer : TestServiceServerStub
 {
     private static readonly ILogger _theLogger = new TestLogger("Test Server");
 
-    public TestServer(IPEndPoint ipEndPoint) : base(Protocol.TcpAndUdp, ipEndPoint.Address, ipEndPoint.Port, new ServerSettings { Logger = _theLogger })
+    public TestServer(IPEndPoint ipEndPoint) : base(
+        Protocol.TcpAndUdp,
+        ipEndPoint.Address,
+        ipEndPoint.Port,
+        new ServerSettings
+        {
+            Logger = _theLogger
+        })
     {
     }
 

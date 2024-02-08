@@ -30,7 +30,7 @@ internal sealed class TestTcpReaderWriter
         task.GetAwaiter().GetResult();
         _reader = new TcpReader(_readerTcpClient.Client);
         _writer = new TcpWriter(_writerTcpClient.Client);
-        
+
         listener.Stop();
     }
 
@@ -103,7 +103,7 @@ internal sealed class TestTcpReaderWriter
         _writer.BeginWriting();
         xdrWriter.WriteOpaque(value);
         xdrWriter.Write(42);
-        _writer.EndWriting(null);
+        _writer.EndWriting(new IPEndPoint(0, 0));
 
         task.Wait();
     }
