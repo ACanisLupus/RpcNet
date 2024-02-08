@@ -24,8 +24,10 @@ internal sealed class TestAddressFamilies
 
     [Test]
     public void AllCombinations(
-        [Values("127.0.0.1", "0.0.0.0", "::1", "::")] string portMapperAddress,
-        [Values("127.0.0.1", "0.0.0.0", "::1", "::")] string serverAddress,
+        [Values("127.0.0.1", "0.0.0.0", "::1", "::")]
+        string portMapperAddress,
+        [Values("127.0.0.1", "0.0.0.0", "::1", "::")]
+        string serverAddress,
         [Values("127.0.0.1", "::1")] string clientAddress,
         [Values(Protocol.Tcp, Protocol.Udp)] Protocol protocol)
     {

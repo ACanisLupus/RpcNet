@@ -3,7 +3,7 @@
 namespace RpcNetGen;
 
 using Antlr4.Runtime;
-using Internal;
+using RpcNetGen.Internal;
 
 internal class Program
 {
@@ -26,7 +26,10 @@ internal class Program
 
         var lexer = new RpcLexer(stream);
         var tokens = new CommonTokenStream(lexer);
-        var parser = new RpcParser(tokens) { BuildParseTree = true };
+        var parser = new RpcParser(tokens)
+        {
+            BuildParseTree = true
+        };
 
         RpcParser.RpcSpecificationContext xdrSpecificationContext = parser.rpcSpecification();
         var parsedContent = new Content(arguments.Name, arguments.Namespace, arguments.Public ? "public" : "internal", xdrSpecificationContext);
@@ -38,8 +41,7 @@ internal class Program
         return 0;
     }
 
-    private static void ShowHelp() => Console.WriteLine(
-        "Usage: RpcNetGen [-n <namespace>] [-o <output cs file path>] <input x file path>");
+    private static void ShowHelp() => Console.WriteLine("Usage: RpcNetGen [-n <namespace>] [-o <output cs file path>] <input x file path>");
 
     private static bool Validate(Arguments arguments)
     {

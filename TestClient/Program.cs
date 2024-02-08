@@ -11,7 +11,14 @@ if ((args.Length != 1) || !IPEndPoint.TryParse(args[0], out IPEndPoint? ipEndPoi
 }
 
 var logger = new TestLogger("Test Client");
-using (var testTcpClient = new TestServiceClient(Protocol.Tcp, ipEndPoint.Address, ipEndPoint.Port, new ClientSettings { Logger = logger }))
+using (var testTcpClient = new TestServiceClient(
+           Protocol.Tcp,
+           ipEndPoint.Address,
+           ipEndPoint.Port,
+           new ClientSettings
+           {
+               Logger = logger
+           }))
 {
     for (int i = 0; i < 2; i++)
     {
@@ -19,7 +26,14 @@ using (var testTcpClient = new TestServiceClient(Protocol.Tcp, ipEndPoint.Addres
     }
 }
 
-using var testUdpClient = new TestServiceClient(Protocol.Udp, ipEndPoint.Address, ipEndPoint.Port, new ClientSettings { Logger = logger });
+using var testUdpClient = new TestServiceClient(
+    Protocol.Udp,
+    ipEndPoint.Address,
+    ipEndPoint.Port,
+    new ClientSettings
+    {
+        Logger = logger
+    });
 for (int i = 0; i < 2; i++)
 {
     _ = testUdpClient.Echo_1(i);

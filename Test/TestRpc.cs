@@ -29,7 +29,7 @@ internal sealed class TestRpc
 
         var serverSettings = new ServerSettings
         {
-            PortMapperPort = _portMapperServer.TcpPort,
+            PortMapperPort = _portMapperServer.TcpPort
             //Logger = new TestLogger("Test Server")
         };
 
@@ -51,11 +51,15 @@ internal sealed class TestRpc
     {
         var clientSettings = new ClientSettings
         {
-            PortMapperPort = _portMapperServer.TcpPort,
+            PortMapperPort = _portMapperServer.TcpPort
             //Logger = new TestLogger("Test Client")
         };
         using var client = new TestServiceClient(protocol, _ipAddress, 0, clientSettings);
-        SimpleStruct result = client.SimpleStructSimpleStruct_2(new SimpleStruct { Value = 42 });
+        SimpleStruct result = client.SimpleStructSimpleStruct_2(
+            new SimpleStruct
+            {
+                Value = 42
+            });
         Assert.That(result.Value, Is.EqualTo(42));
     }
 }

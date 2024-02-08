@@ -37,7 +37,13 @@ static void StartActualClients(string protocol)
     {
         Process process = new()
         {
-            StartInfo = { CreateNoWindow = true, UseShellExecute = false, FileName = Environment.ProcessPath!, Arguments = protocol + " " + i }
+            StartInfo =
+            {
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                FileName = Environment.ProcessPath!,
+                Arguments = protocol + " " + i
+            }
         };
         process.Start();
         processes.Add(process);
