@@ -4,7 +4,7 @@ namespace RpcNet;
 
 using System.Text;
 
-public class XdrVoid : IXdrDataType
+public sealed class XdrVoid : IXdrDataType
 {
     public void ReadFrom(IXdrReader reader)
     {

@@ -9,7 +9,7 @@ using RpcNet;
 using RpcNet.Internal;
 
 [TestFixture]
-internal class TestUdpReaderWriter
+internal sealed class TestUdpReaderWriter
 {
     private UdpClient _client;
     private UdpReader _reader;
@@ -20,12 +20,14 @@ internal class TestUdpReaderWriter
     [SetUp]
     public void SetUp()
     {
-        _server = new UdpClient(0);
+        IPAddress iPAddress = IPAddress.Loopback;
 
-        int port = ((IPEndPoint)_server.Client.LocalEndPoint).Port;
-        _remoteIpEndPoint = new IPEndPoint(IPAddress.Loopback, port);
+        _server = new UdpClient(0, iPAddress.AddressFamily);
 
-        _client = new UdpClient();
+        int port = ((IPEndPoint)_server.Client.LocalEndPoint)?.Port ?? throw new InvalidOperationException("Could not find local end point.");
+        _remoteIpEndPoint = new IPEndPoint(iPAddress, port);
+
+        _client = new UdpClient(iPAddress.AddressFamily);
 
         _reader = new UdpReader(_server.Client, 100);
         _writer = new UdpWriter(_client.Client, 100);
@@ -49,16 +51,12 @@ internal class TestUdpReaderWriter
             writeSpan[i] = (byte)i;
         }
 
-        NetworkWriteResult writeResult = _writer.EndWriting(_remoteIpEndPoint);
+        Assert.DoesNotThrow(() => _writer.EndWriting(_remoteIpEndPoint));
 
-        Assert.That(writeResult.SocketError, Is.EqualTo(SocketError.Success));
+        IPEndPoint remoteIdEndPoint = _reader.BeginReading();
 
-        NetworkReadResult readResult = _reader.BeginReading();
-
-        Assert.That(readResult.SocketError, Is.EqualTo(SocketError.Success));
-        Assert.That(readResult.IsDisconnected, Is.EqualTo(false));
-        Assert.That(readResult.RemoteIpEndPoint.Address, Is.EqualTo(_remoteIpEndPoint.Address));
-        Assert.That(readResult.RemoteIpEndPoint.Port, Is.Not.EqualTo(_remoteIpEndPoint.Port));
+        Assert.That(remoteIdEndPoint.Address, Is.EqualTo(_remoteIpEndPoint.Address));
+        Assert.That(remoteIdEndPoint.Port, Is.Not.EqualTo(_remoteIpEndPoint.Port));
 
         ReadOnlySpan<byte> readSpan = _reader.Read(length);
         _reader.EndReading();
@@ -78,13 +76,9 @@ internal class TestUdpReaderWriter
             writeSpan[i] = (byte)i;
         }
 
-        NetworkWriteResult writeResult = _writer.EndWriting(_remoteIpEndPoint);
+        Assert.DoesNotThrow(() => _writer.EndWriting(_remoteIpEndPoint));
 
-        Assert.That(writeResult.SocketError, Is.EqualTo(SocketError.Success));
-
-        NetworkReadResult readResult = _reader.BeginReading();
-
-        Assert.That(readResult.SocketError, Is.EqualTo(SocketError.Success));
+        Assert.DoesNotThrow(() => _reader.BeginReading());
 
         byte[] buffer = new byte[100];
         int index = 0;
@@ -122,11 +116,9 @@ internal class TestUdpReaderWriter
         _writer.BeginWriting();
         _ = _writer.Reserve(10);
 
-        NetworkWriteResult writeResult = _writer.EndWriting(_remoteIpEndPoint);
-        Assert.That(writeResult.SocketError, Is.EqualTo(SocketError.Success));
+        Assert.DoesNotThrow(() => _writer.EndWriting(_remoteIpEndPoint));
 
-        NetworkReadResult readResult = _reader.BeginReading();
-        Assert.That(readResult.SocketError, Is.EqualTo(SocketError.Success));
+        Assert.DoesNotThrow(() => _reader.BeginReading());
 
         for (int i = 0; i < (arguments.Length - 1); i++)
         {
@@ -142,8 +134,8 @@ internal class TestUdpReaderWriter
         var task = Task.Run(() => _reader.BeginReading());
         Thread.Sleep(100);
         _server.Dispose();
-        NetworkReadResult readResult = task.GetAwaiter().GetResult();
-        Assert.That(readResult.SocketError, Is.EqualTo(SocketError.Interrupted));
+        RpcException e = Assert.Throws<RpcException>(() => task.GetAwaiter().GetResult());
+        Assert.That(e.Message, Is.EqualTo("Could not receive data from UDP socket. Socket error code: Interrupted."));
     }
 
     private static void AssertEquals(ReadOnlySpan<byte> one, ReadOnlySpan<byte> two)

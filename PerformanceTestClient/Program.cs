@@ -1,100 +1,87 @@
 // Copyright by Artur Wolf
 
-namespace PerformanceTestClient;
-
 using System.Diagnostics;
 using System.Net;
 using RpcNet;
 using TestService;
 
-internal class Program
+const int CountProcesses = 100;
+const int CountCalls = 10000;
+const int Port = 2223;
+IPAddress ipAddress = IPAddress.Loopback;
+
+if (args.Length == 0)
 {
-    private const int CountProcesses = 100;
-    private const int CountCalls = 100000;
-    private const int Port = 2223;
+    Console.WriteLine($"usage: {Environment.ProcessPath} <TCP|UDP>");
+    return 1;
+}
 
-    private static int Main(string[] args)
+if (args.Length == 1)
+{
+    string protocol = args[0];
+    StartActualClients(protocol);
+    return 0;
+}
+else
+{
+    string protocol = args[0];
+    return CallServer(ipAddress, protocol);
+}
+
+static void StartActualClients(string protocol)
+{
+    var stopwatch = Stopwatch.StartNew();
+
+    List<Process> processes = new(CountProcesses);
+    for (int i = 0; i < CountProcesses; i++)
     {
-        if (args.Length == 0)
+        Process process = new()
         {
-            Console.WriteLine($"usage: {Environment.ProcessPath} <TCP|UDP>");
-            return 1;
-        }
-
-        if (args.Length == 1)
-        {
-            string protocol = args[0];
-            StartActualClients(protocol);
-            return 0;
-        }
-        else
-        {
-            string protocol = args[0];
-            return CallServer(protocol);
-        }
+            StartInfo = { CreateNoWindow = true, UseShellExecute = false, FileName = Environment.ProcessPath!, Arguments = protocol + " " + i }
+        };
+        process.Start();
+        processes.Add(process);
     }
 
-    private static void StartActualClients(string protocol)
+    for (int i = 0; i < CountProcesses; i++)
     {
-        var stopwatch = Stopwatch.StartNew();
-
-        List<Process> processes = new(CountProcesses);
-        for (int i = 0; i < CountProcesses; i++)
-        {
-            Process process = new()
-            {
-                StartInfo =
-                {
-                    CreateNoWindow = true,
-                    UseShellExecute = false,
-                    FileName = Environment.ProcessPath!,
-                    Arguments = protocol + " " + i
-                }
-            };
-            process.Start();
-            processes.Add(process);
-        }
-
-        for (int i = 0; i < CountProcesses; i++)
-        {
-            processes[i].WaitForExit();
-        }
-
-        stopwatch.Stop();
-        Console.WriteLine($"Running {CountProcesses} clients calling {CountCalls} times took {stopwatch.Elapsed}.");
+        processes[i].WaitForExit();
     }
 
-    private static int CallServer(string protocol)
-    {
-        if (protocol.Equals("TCP", StringComparison.OrdinalIgnoreCase))
-        {
-            return CallTcpServer();
-        }
+    stopwatch.Stop();
+    Console.WriteLine($"Running {CountProcesses} clients calling {CountCalls} times took {stopwatch.Elapsed}.");
+}
 
-        return CallUdpServer();
+static int CallServer(IPAddress ipAddress, string protocol)
+{
+    if (protocol.Equals("TCP", StringComparison.OrdinalIgnoreCase))
+    {
+        return CallTcpServer(ipAddress);
     }
 
-    private static int CallTcpServer()
-    {
-        int result = 0;
-        using var testTcpClient = new TestServiceClient(Protocol.Tcp, IPAddress.Loopback, Port);
-        for (int i = 0; i < CountCalls; i++)
-        {
-            result += testTcpClient.IntInt1_1(i);
-        }
+    return CallUdpServer(ipAddress);
+}
 
-        return result;
+static int CallTcpServer(IPAddress ipAddress)
+{
+    int result = 0;
+    using var testTcpClient = new TestServiceClient(Protocol.Tcp, ipAddress, Port);
+    for (int i = 0; i < CountCalls; i++)
+    {
+        result += testTcpClient.Echo_1(i);
     }
 
-    private static int CallUdpServer()
-    {
-        int result = 0;
-        using var testUdpClient = new TestServiceClient(Protocol.Udp, IPAddress.Loopback, Port);
-        for (int i = 0; i < CountCalls; i++)
-        {
-            result += testUdpClient.IntInt1_1(i);
-        }
+    return result;
+}
 
-        return result;
+static int CallUdpServer(IPAddress ipAddress)
+{
+    int result = 0;
+    using var testUdpClient = new TestServiceClient(Protocol.Udp, ipAddress, Port);
+    for (int i = 0; i < CountCalls; i++)
+    {
+        result += testUdpClient.Echo_1(i);
     }
+
+    return result;
 }

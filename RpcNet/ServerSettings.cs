@@ -2,10 +2,10 @@
 
 namespace RpcNet;
 
-using Internal;
-using PortMapper;
+using RpcNet.Internal;
+using RpcNet.PortMapper;
 
-public class ServerSettings
+public sealed class ServerSettings
 {
     public ILogger? Logger { get; set; }
     public int PortMapperPort { get; set; } = PortMapperConstants.PortMapperPort;

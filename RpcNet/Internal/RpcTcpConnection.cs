@@ -6,7 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 
 // Public for tests
-public class RpcTcpConnection : IDisposable
+public sealed class RpcTcpConnection : IDisposable
 {
     private readonly Caller _caller;
     private readonly ILogger? _logger;
@@ -16,12 +16,7 @@ public class RpcTcpConnection : IDisposable
     private readonly Socket _tcpClient;
     private readonly TcpWriter _writer;
 
-    public RpcTcpConnection(
-        Socket tcpClient,
-        int program,
-        int[] versions,
-        Action<ReceivedRpcCall> receivedCallDispatcher,
-        ILogger? logger = default)
+    public RpcTcpConnection(Socket tcpClient, int program, int[] versions, Action<ReceivedRpcCall> receivedCallDispatcher, ILogger? logger = default)
     {
         _tcpClient = tcpClient;
         if (tcpClient.RemoteEndPoint is not IPEndPoint remoteIpEndPoint)
@@ -35,28 +30,22 @@ public class RpcTcpConnection : IDisposable
         _writer = new TcpWriter(tcpClient, logger);
         _logger = logger;
 
-        _receivedCall = new ReceivedRpcCall(
-            program,
-            versions,
-            _reader,
-            _writer,
-            receivedCallDispatcher);
+        _receivedCall = new ReceivedRpcCall(program, versions, _reader, _writer, receivedCallDispatcher);
+
+        _logger?.Trace($"{remoteIpEndPoint} connected.");
     }
 
     public void Dispose() => _tcpClient.Dispose();
 
     public bool Handle()
     {
-        NetworkReadResult readResult = _reader.BeginReading();
-        if (readResult.HasError)
+        try
         {
-            _logger?.Trace($"Could not read data from {_caller}. Socket error: {readResult.SocketError}.");
-            return false;
+            _ = _reader.BeginReading();
         }
-
-        if (readResult.IsDisconnected)
+        catch (RpcException e)
         {
-            _logger?.Trace($"{_caller} disconnected.");
+            _logger?.Trace(e.Message);
             return false;
         }
 
@@ -64,10 +53,13 @@ public class RpcTcpConnection : IDisposable
         _receivedCall.HandleCall(_caller);
         _reader.EndReading();
 
-        NetworkWriteResult writeResult = _writer.EndWriting(_remoteIpEndPoint);
-        if (writeResult.HasError)
+        try
         {
-            _logger?.Trace($"Could not write data to {_caller}. Socket error: {writeResult.SocketError}.");
+            _writer.EndWriting(_remoteIpEndPoint);
+        }
+        catch (RpcException e)
+        {
+            _logger?.Trace(e.Message);
             return false;
         }
 

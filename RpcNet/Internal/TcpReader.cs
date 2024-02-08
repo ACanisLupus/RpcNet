@@ -2,10 +2,11 @@
 
 namespace RpcNet.Internal;
 
+using System.Net;
 using System.Net.Sockets;
 
 // Public for tests
-public class TcpReader : INetworkReader
+public sealed class TcpReader : INetworkReader
 {
     private const int TcpHeaderLength = 4;
 
@@ -39,7 +40,7 @@ public class TcpReader : INetworkReader
 
     public void Reset(Socket tcpClient) => _tcpClient = tcpClient;
 
-    public NetworkReadResult BeginReading()
+    public IPEndPoint BeginReading()
     {
         _readIndex = 0;
         _writeIndex = 0;
@@ -48,30 +49,23 @@ public class TcpReader : INetworkReader
         _bodyIndex = 0;
         _packetState = PacketState.Header;
 
-        return FillBuffer();
+        FillBuffer();
+        return (IPEndPoint)_tcpClient.RemoteEndPoint!;
     }
 
     public void EndReading()
     {
-        if ((_packetState != PacketState.Complete) || (_readIndex != _writeIndex))
+        // Just read to the end. Obviously, this is an unknown procedure
+        while ((_packetState != PacketState.Complete) || (_readIndex != _writeIndex))
         {
-            throw new RpcException("Not all TCP data was read.");
+            int length = Math.Max(_writeIndex - _readIndex, 1);
+            _ = Read(length);
         }
     }
 
     public ReadOnlySpan<byte> Read(int length)
     {
-        NetworkReadResult networkReadResult = FillBuffer();
-        if (networkReadResult.HasError)
-        {
-            throw new RpcException(
-                $"Could not receive from TCP stream. Socket error: {networkReadResult.SocketError}.");
-        }
-
-        if (networkReadResult.IsDisconnected)
-        {
-            throw new RpcException("Could not receive from TCP stream. Remote end point disconnected.");
-        }
+        FillBuffer();
 
         int endIndex = Math.Min(_headerIndex, _buffer.Length);
         endIndex = Math.Min(endIndex, _writeIndex);
@@ -88,16 +82,16 @@ public class TcpReader : INetworkReader
     // - Not enough bytes for header? Read from network again
     // - Packet is not complete and there is space left in the buffer? Read from network again
     // - Packet is not complete and no space available? Return and wait for XDR read
-    // - Packet is complete and XDR read is not complete? Return and wait for XDF read
+    // - Packet is complete and XDR read is not complete? Return and wait for XDR read
     // - Packet and XDR read is complete? Read next header. Or finish if previous packet was the last packet
-    private NetworkReadResult FillBuffer()
+    private void FillBuffer()
     {
         bool readFromNetwork = false;
         while (true)
         {
             if (_packetState == PacketState.Complete)
             {
-                return NetworkReadResult.CreateSuccess();
+                return;
             }
 
             if (_packetState == PacketState.Header)
@@ -109,17 +103,13 @@ public class TcpReader : INetworkReader
             {
                 if (ReadBody(ref readFromNetwork))
                 {
-                    return NetworkReadResult.CreateSuccess();
+                    return;
                 }
             }
 
             if (readFromNetwork)
             {
-                NetworkReadResult networkReadResult = ReadFromNetwork(ref readFromNetwork);
-                if (networkReadResult.HasError || networkReadResult.IsDisconnected)
-                {
-                    return networkReadResult;
-                }
+                ReadFromNetwork();
             }
 
             ShiftData();
@@ -164,43 +154,22 @@ public class TcpReader : INetworkReader
         return false;
     }
 
-    private NetworkReadResult ReadFromNetwork(ref bool readFromNetwork)
+    private void ReadFromNetwork()
     {
-        int receivedLength;
-        SocketError socketError;
         try
         {
-            receivedLength = _tcpClient.Receive(
-                _buffer,
-                _writeIndex,
-                _buffer.Length - _writeIndex,
-                SocketFlags.None,
-                out socketError);
-        }
-        catch (SocketException exception)
-        {
-            return NetworkReadResult.CreateError(exception.SocketErrorCode);
-        }
-        catch (Exception exception)
-        {
-            _logger?.Error(
-                $"Unexpected error while receiving TCP data from {_tcpClient.RemoteEndPoint}: {exception}");
-            return NetworkReadResult.CreateError(SocketError.SocketError);
-        }
+            int receivedLength = _tcpClient.Receive(_buffer.AsSpan(_writeIndex, _buffer.Length - _writeIndex));
+            if (receivedLength == 0)
+            {
+                throw new RpcException($"{_tcpClient.RemoteEndPoint} disconnected.");
+            }
 
-        if (socketError != SocketError.Success)
-        {
-            return NetworkReadResult.CreateError(socketError);
+            _writeIndex += receivedLength;
         }
-
-        if (receivedLength == 0)
+        catch (SocketException e)
         {
-            return NetworkReadResult.CreateDisconnected();
+            throw new RpcException($"Could not read from {_tcpClient.RemoteEndPoint}. Socket error code: {e.SocketErrorCode}.");
         }
-
-        _writeIndex += receivedLength;
-        readFromNetwork = false;
-        return NetworkReadResult.CreateSuccess();
     }
 
     private void ReadHeader(ref bool readFromNetwork)

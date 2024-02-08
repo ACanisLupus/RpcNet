@@ -4,12 +4,10 @@ namespace RpcNet.Internal;
 
 using System.Net;
 
-internal class RpcCall
+internal sealed class RpcCall
 {
-    private readonly ILogger? _logger;
     private readonly INetworkReader _networkReader;
     private readonly INetworkWriter _networkWriter;
-    private readonly Action? _reestablishConnection;
     private readonly IPEndPoint _remoteIpEndPoint;
     private readonly RpcMessage _rpcMessage;
     private readonly IXdrReader _xdrReader;
@@ -17,13 +15,7 @@ internal class RpcCall
 
     private uint _nextXid = (uint)new Random().Next();
 
-    public RpcCall(
-        int program,
-        IPEndPoint remoteIpEndPoint,
-        INetworkReader networkReader,
-        INetworkWriter networkWriter,
-        Action? reestablishConnection,
-        ILogger? logger = default)
+    public RpcCall(int program, IPEndPoint remoteIpEndPoint, INetworkReader networkReader, INetworkWriter networkWriter)
     {
         _remoteIpEndPoint = remoteIpEndPoint;
         _networkReader = networkReader;
@@ -37,7 +29,7 @@ internal class RpcCall
                 MessageType = MessageType.Call,
                 CallBody =
                 {
-                    RpcVersion = 2,
+                    RpcVersion = Utilities.RpcVersion,
                     Program = (uint)program,
                     Credential =
                     {
@@ -52,45 +44,15 @@ internal class RpcCall
                 }
             }
         };
-        _logger = logger;
-        _reestablishConnection = reestablishConnection;
     }
 
     public void SendCall(int procedure, int version, IXdrDataType argument, IXdrDataType result)
     {
-        for (int i = 0; i < 2; i++)
-        {
-            if (!SendMessage(procedure, version, argument, out string? errorMessage))
-            {
-                if (i == 0)
-                {
-                    _logger?.Error(errorMessage + " Retrying...");
-                    _reestablishConnection?.Invoke();
-                    continue;
-                }
-
-                errorMessage ??= "Unknown error.";
-                throw new RpcException(errorMessage);
-            }
-
-            if (!ReceiveReply(result, out errorMessage))
-            {
-                if (i == 0)
-                {
-                    _logger?.Error(errorMessage + " Retrying...");
-                    _reestablishConnection?.Invoke();
-                    continue;
-                }
-
-                errorMessage ??= "Unknown error.";
-                throw new RpcException(errorMessage);
-            }
-
-            break;
-        }
+        SendMessage(procedure, version, argument);
+        ReceiveReply(result);
     }
 
-    private bool SendMessage(int procedure, int version, IXdrDataType argument, out string? errorMessage)
+    private void SendMessage(int procedure, int version, IXdrDataType argument)
     {
         _networkWriter.BeginWriting();
 
@@ -100,59 +62,37 @@ internal class RpcCall
         _rpcMessage.WriteTo(_xdrWriter);
         argument.WriteTo(_xdrWriter);
 
-        NetworkWriteResult writeResult = _networkWriter.EndWriting(_remoteIpEndPoint);
-        if (writeResult.HasError)
-        {
-            errorMessage =
-                $"Could not send message to {_remoteIpEndPoint}. Socket error: {writeResult.SocketError}.";
-            return false;
-        }
+        _networkWriter.EndWriting(_remoteIpEndPoint);
 
-        NetworkReadResult readResult = _networkReader.BeginReading();
-        if (readResult.HasError)
-        {
-            errorMessage =
-                $"Could not receive reply from {_remoteIpEndPoint}. Socket error: {readResult.SocketError}.";
-            return false;
-        }
-
-        errorMessage = null;
-        return true;
+        _ = _networkReader.BeginReading();
     }
 
-    private bool ReceiveReply(IXdrDataType result, out string? errorMessage)
+    private void ReceiveReply(IXdrDataType result)
     {
         var reply = new RpcMessage();
         reply.ReadFrom(_xdrReader);
 
         if (reply.Xid != _rpcMessage.Xid)
         {
-            errorMessage = $"Wrong XID. Expected {_rpcMessage.Xid}, but was {reply.Xid}.";
-            return false;
+            throw new RpcException($"Wrong XID. Expected {_rpcMessage.Xid}, but was {reply.Xid}.");
         }
 
         if (reply.Body.MessageType != MessageType.Reply)
         {
-            errorMessage = $"Wrong message type. Expected {MessageType.Reply}, but was {reply.Body.MessageType}.";
-            return false;
+            throw new RpcException($"Wrong message type. Expected {MessageType.Reply}, but was {reply.Body.MessageType}.");
         }
 
         if (reply.Body.ReplyBody.ReplyStatus != ReplyStatus.Accepted)
         {
-            errorMessage = "Call was denied.";
-            return false;
+            throw new RpcException("Call was denied.");
         }
 
         if (reply.Body.ReplyBody.AcceptedReply.ReplyData.AcceptStatus != AcceptStatus.Success)
         {
-            errorMessage = $"Call was unsuccessful: {reply.Body.ReplyBody.AcceptedReply.ReplyData.AcceptStatus}.";
-            return false;
+            throw new RpcException($"Call was unsuccessful: {reply.Body.ReplyBody.AcceptedReply.ReplyData.AcceptStatus}.");
         }
 
         result.ReadFrom(_xdrReader);
         _networkReader.EndReading();
-
-        errorMessage = null;
-        return true;
     }
 }

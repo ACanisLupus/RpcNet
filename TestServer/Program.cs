@@ -1,46 +1,29 @@
 // Copyright by Artur Wolf
 
-namespace TestServer;
-
 using System.Net;
 using RpcNet;
 using Test;
 using TestService;
 
-internal class Program
+if ((args.Length != 1) || !IPEndPoint.TryParse(args[0], out IPEndPoint? ipEndPoint))
 {
-    private static void Main()
-    {
-        using var testServer = new TestServer(IPAddress.Any);
-        testServer.Start();
+    ipEndPoint = new IPEndPoint(IPAddress.IPv6Any, 0);
+}
 
-        Thread.Sleep(-1);
+using var testServer = new TestServer(ipEndPoint);
+testServer.Start();
+
+Thread.Sleep(-1);
+
+internal class TestServer : TestServiceServerStub
+{
+    private static readonly ILogger _theLogger = new TestLogger("Test Server");
+
+    public TestServer(IPEndPoint ipEndPoint) : base(Protocol.TcpAndUdp, ipEndPoint.Address, ipEndPoint.Port, new ServerSettings { Logger = _theLogger })
+    {
     }
 
-    private class TestServer : TestServiceServerStub
-    {
-        private static readonly ILogger _theLogger = new TestLogger("Test Server");
-
-        public TestServer(IPAddress ipAddress) : base(
-            Protocol.TcpAndUdp,
-            ipAddress,
-            0,
-            new ServerSettings { Logger = _theLogger })
-        {
-        }
-
-        public override void VoidVoid1_1(Caller caller)
-        {
-        }
-
-        public override void VoidVoid2_1(Caller caller)
-        {
-        }
-
-        public override int IntInt1_1(Caller caller, int value) => value;
-
-        public override int IntInt2_1(Caller caller, int int32) => int32;
-
-        public override SimpleStruct SimpleStructSimpleStruct_2(Caller caller, SimpleStruct value) => value;
-    }
+    public override void ThrowsException_1(Caller caller) => throw new NotImplementedException();
+    public override int Echo_1(Caller caller, int value) => value;
+    public override SimpleStruct SimpleStructSimpleStruct_2(Caller caller, SimpleStruct value) => value;
 }

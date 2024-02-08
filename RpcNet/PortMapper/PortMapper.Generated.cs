@@ -17,14 +17,27 @@ namespace RpcNet.PortMapper
 
     public static class PortMapperConstants
     {
+        public const int Broadcast = 5;
         public const int Call = 5;
         public const int Dump = 4;
+        public const int GetAddress = 3;
+        public const int GetAddressList = 11;
         public const int GetPort = 3;
+        public const int GetStatistics = 12;
+        public const int GetTime = 6;
+        public const int GetVersionAddress = 9;
+        public const int HighestProcedurePlusOne = 13;
+        public const int IndirectCall = 10;
         public const int Ping = 0;
         public const int PortMapperPort = 111;
         public const int PortMapperProgram = 100000;
-        public const int PortMapperVersion = 2;
+        public const int PortMapperVersion2 = 2;
+        public const int PortMapperVersion3 = 3;
+        public const int PortMapperVersion4 = 4;
         public const int Set = 1;
+        public const int StatisticsVersions = 3;
+        public const int TransportSpecificAddressToUniversalAddress = 8;
+        public const int UniversalAddressToTransportSpecificAddress = 7;
         public const int Unset = 2;
     }
 
@@ -33,6 +46,141 @@ namespace RpcNet.PortMapper
         Unknown = 0,
         Tcp = 6,
         Udp = 17,
+    }
+
+    public partial class AddressStatistics : IXdrDataType
+    {
+        public AddressStatistics()
+        {
+        }
+
+        public AddressStatistics(IXdrReader reader)
+        {
+            ReadFrom(reader);
+        }
+
+        public uint ProgramNumber { get; set; }
+        public uint VersionNumber { get; set; }
+        public int Success { get; set; }
+        public int Failure { get; set; }
+        public string NetworkId { get; set; }
+        public AddressStatistics Next { get; set; }
+
+        public void WriteTo(IXdrWriter writer)
+        {
+            var current = this;
+            do
+            {
+                writer.Write(current.ProgramNumber);
+                writer.Write(current.VersionNumber);
+                writer.Write(current.Success);
+                writer.Write(current.Failure);
+                writer.Write(current.NetworkId);
+                current = current.Next;
+                writer.Write(current is not null);
+            } while (current is not null);
+        }
+
+        public void ReadFrom(IXdrReader reader)
+        {
+            var current = this;
+            AddressStatistics next;
+            do
+            {
+                current.ProgramNumber = reader.ReadUInt32();
+                current.VersionNumber = reader.ReadUInt32();
+                current.Success = reader.ReadInt32();
+                current.Failure = reader.ReadInt32();
+                current.NetworkId = reader.ReadString();
+                next = reader.ReadBool() ? new AddressStatistics() : null;
+                current.Next = next;
+                current = next;
+            } while (current is not null);
+        }
+
+        public void ToString(StringBuilder sb)
+        {
+            var current = this;
+            sb.Append("[");
+            bool _first = true;
+            do
+            {
+                if (_first)
+                {
+                    _first = false;
+                }
+                else
+                {
+                    sb.Append(",");
+                }
+                sb.Append(" ProgramNumber = ");
+                sb.Append(current.ProgramNumber);
+                sb.Append(", VersionNumber = ");
+                sb.Append(current.VersionNumber);
+                sb.Append(", Success = ");
+                sb.Append(current.Success);
+                sb.Append(", Failure = ");
+                sb.Append(current.Failure);
+                sb.Append(", NetworkId = ");
+                sb.Append(current.NetworkId);
+                current = current.Next;
+            } while (current is not null);
+            sb.Append(" ]");
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            ToString(sb);
+            return sb.ToString();
+        }
+    }
+
+    public partial class AddressStatisticsHead : IXdrDataType
+    {
+        public AddressStatisticsHead()
+        {
+        }
+
+        public AddressStatisticsHead(IXdrReader reader)
+        {
+            ReadFrom(reader);
+        }
+
+        public AddressStatistics Value { get; set; }
+
+        public void WriteTo(IXdrWriter writer)
+        {
+            if (Value is not null)
+            {
+                writer.Write(true);
+                Value.WriteTo(writer);
+            }
+            else
+            {
+                writer.Write(false);
+            }
+        }
+
+        public void ReadFrom(IXdrReader reader)
+        {
+            Value = reader.ReadBool() ? new AddressStatistics(reader) : null;
+        }
+
+        public void ToString(StringBuilder sb)
+        {
+            sb.Append("{");
+            sb.Append(" Value = ");
+            Value?.ToString(sb);
+            sb.Append(" }");
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            ToString(sb);
+            return sb.ToString();
+        }
     }
 
     public partial class CallArguments : IXdrDataType
@@ -46,36 +194,36 @@ namespace RpcNet.PortMapper
             ReadFrom(reader);
         }
 
-        public int Program { get; set; }
-        public int Version { get; set; }
-        public int Procedure { get; set; }
+        public int ProgramNumber { get; set; }
+        public int VersionNumber { get; set; }
+        public int ProcedureNumber { get; set; }
         public byte[] Arguments { get; set; }
 
         public void WriteTo(IXdrWriter writer)
         {
-            writer.Write(Program);
-            writer.Write(Version);
-            writer.Write(Procedure);
+            writer.Write(ProgramNumber);
+            writer.Write(VersionNumber);
+            writer.Write(ProcedureNumber);
             writer.WriteOpaque(Arguments);
         }
 
         public void ReadFrom(IXdrReader reader)
         {
-            Program = reader.ReadInt32();
-            Version = reader.ReadInt32();
-            Procedure = reader.ReadInt32();
+            ProgramNumber = reader.ReadInt32();
+            VersionNumber = reader.ReadInt32();
+            ProcedureNumber = reader.ReadInt32();
             Arguments = reader.ReadOpaque();
         }
 
         public void ToString(StringBuilder sb)
         {
             sb.Append("{");
-            sb.Append(" Program = ");
-            sb.Append(Program);
-            sb.Append(", Version = ");
-            sb.Append(Version);
-            sb.Append(", Procedure = ");
-            sb.Append(Procedure);
+            sb.Append(" ProgramNumber = ");
+            sb.Append(ProgramNumber);
+            sb.Append(", VersionNumber = ");
+            sb.Append(VersionNumber);
+            sb.Append(", ProcedureNumber = ");
+            sb.Append(ProcedureNumber);
             sb.Append(", Arguments = [");
             for (int _idx = 0; _idx < Arguments.Length; _idx++)
             {
@@ -94,13 +242,13 @@ namespace RpcNet.PortMapper
         }
     }
 
-    public partial class CallResult : IXdrDataType
+    public partial class CallResult2 : IXdrDataType
     {
-        public CallResult()
+        public CallResult2()
         {
         }
 
-        public CallResult(IXdrReader reader)
+        public CallResult2(IXdrReader reader)
         {
             ReadFrom(reader);
         }
@@ -143,34 +291,257 @@ namespace RpcNet.PortMapper
         }
     }
 
-    public partial class Mapping : IXdrDataType
+    public partial class CallResult3 : IXdrDataType
     {
-        public Mapping()
+        public CallResult3()
         {
         }
 
-        public Mapping(IXdrReader reader)
+        public CallResult3(IXdrReader reader)
         {
             ReadFrom(reader);
         }
 
-        public int Program { get; set; }
-        public int Version { get; set; }
+        public string RemoteUniversalAddress { get; set; }
+        public byte[] Result { get; set; }
+
+        public void WriteTo(IXdrWriter writer)
+        {
+            writer.Write(RemoteUniversalAddress);
+            writer.WriteOpaque(Result);
+        }
+
+        public void ReadFrom(IXdrReader reader)
+        {
+            RemoteUniversalAddress = reader.ReadString();
+            Result = reader.ReadOpaque();
+        }
+
+        public void ToString(StringBuilder sb)
+        {
+            sb.Append("{");
+            sb.Append(" RemoteUniversalAddress = ");
+            sb.Append(RemoteUniversalAddress);
+            sb.Append(", Result = [");
+            for (int _idx = 0; _idx < Result.Length; _idx++)
+            {
+                sb.Append(_idx == 0 ? " " : ", ");
+                sb.Append(Result[_idx]);
+            }
+            sb.Append(" ]");
+            sb.Append(" }");
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            ToString(sb);
+            return sb.ToString();
+        }
+    }
+
+    public partial class Entry : IXdrDataType
+    {
+        public Entry()
+        {
+        }
+
+        public Entry(IXdrReader reader)
+        {
+            ReadFrom(reader);
+        }
+
+        public string MergedAddressOfService { get; set; }
+        public string NetworkId { get; set; }
+        public uint SemanticsOfTransport { get; set; }
+        public string ProtocolFamily { get; set; }
+        public string ProtocolName { get; set; }
+
+        public void WriteTo(IXdrWriter writer)
+        {
+            writer.Write(MergedAddressOfService);
+            writer.Write(NetworkId);
+            writer.Write(SemanticsOfTransport);
+            writer.Write(ProtocolFamily);
+            writer.Write(ProtocolName);
+        }
+
+        public void ReadFrom(IXdrReader reader)
+        {
+            MergedAddressOfService = reader.ReadString();
+            NetworkId = reader.ReadString();
+            SemanticsOfTransport = reader.ReadUInt32();
+            ProtocolFamily = reader.ReadString();
+            ProtocolName = reader.ReadString();
+        }
+
+        public void ToString(StringBuilder sb)
+        {
+            sb.Append("{");
+            sb.Append(" MergedAddressOfService = ");
+            sb.Append(MergedAddressOfService);
+            sb.Append(", NetworkId = ");
+            sb.Append(NetworkId);
+            sb.Append(", SemanticsOfTransport = ");
+            sb.Append(SemanticsOfTransport);
+            sb.Append(", ProtocolFamily = ");
+            sb.Append(ProtocolFamily);
+            sb.Append(", ProtocolName = ");
+            sb.Append(ProtocolName);
+            sb.Append(" }");
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            ToString(sb);
+            return sb.ToString();
+        }
+    }
+
+    public partial class EntryNode : IXdrDataType
+    {
+        public EntryNode()
+        {
+        }
+
+        public EntryNode(IXdrReader reader)
+        {
+            ReadFrom(reader);
+        }
+
+        public Entry Entry { get; set; } = new Entry();
+        public EntryNode Next { get; set; }
+
+        public void WriteTo(IXdrWriter writer)
+        {
+            var current = this;
+            do
+            {
+                current.Entry.WriteTo(writer);
+                current = current.Next;
+                writer.Write(current is not null);
+            } while (current is not null);
+        }
+
+        public void ReadFrom(IXdrReader reader)
+        {
+            var current = this;
+            EntryNode next;
+            do
+            {
+                current.Entry.ReadFrom(reader);
+                next = reader.ReadBool() ? new EntryNode() : null;
+                current.Next = next;
+                current = next;
+            } while (current is not null);
+        }
+
+        public void ToString(StringBuilder sb)
+        {
+            var current = this;
+            sb.Append("[");
+            bool _first = true;
+            do
+            {
+                if (_first)
+                {
+                    _first = false;
+                }
+                else
+                {
+                    sb.Append(",");
+                }
+                sb.Append(" Entry = ");
+                current.Entry.ToString(sb);
+                current = current.Next;
+            } while (current is not null);
+            sb.Append(" ]");
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            ToString(sb);
+            return sb.ToString();
+        }
+    }
+
+    public partial class EntryNodeHead : IXdrDataType
+    {
+        public EntryNodeHead()
+        {
+        }
+
+        public EntryNodeHead(IXdrReader reader)
+        {
+            ReadFrom(reader);
+        }
+
+        public EntryNode Value { get; set; }
+
+        public void WriteTo(IXdrWriter writer)
+        {
+            if (Value is not null)
+            {
+                writer.Write(true);
+                Value.WriteTo(writer);
+            }
+            else
+            {
+                writer.Write(false);
+            }
+        }
+
+        public void ReadFrom(IXdrReader reader)
+        {
+            Value = reader.ReadBool() ? new EntryNode(reader) : null;
+        }
+
+        public void ToString(StringBuilder sb)
+        {
+            sb.Append("{");
+            sb.Append(" Value = ");
+            Value?.ToString(sb);
+            sb.Append(" }");
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            ToString(sb);
+            return sb.ToString();
+        }
+    }
+
+    public partial class Mapping2 : IXdrDataType
+    {
+        public Mapping2()
+        {
+        }
+
+        public Mapping2(IXdrReader reader)
+        {
+            ReadFrom(reader);
+        }
+
+        public int ProgramNumber { get; set; }
+        public int VersionNumber { get; set; }
         public ProtocolKind Protocol { get; set; }
         public int Port { get; set; }
 
         public void WriteTo(IXdrWriter writer)
         {
-            writer.Write(Program);
-            writer.Write(Version);
+            writer.Write(ProgramNumber);
+            writer.Write(VersionNumber);
             writer.Write((int)Protocol);
             writer.Write(Port);
         }
 
         public void ReadFrom(IXdrReader reader)
         {
-            Program = reader.ReadInt32();
-            Version = reader.ReadInt32();
+            ProgramNumber = reader.ReadInt32();
+            VersionNumber = reader.ReadInt32();
             Protocol = (ProtocolKind)reader.ReadInt32();
             Port = reader.ReadInt32();
         }
@@ -178,10 +549,10 @@ namespace RpcNet.PortMapper
         public void ToString(StringBuilder sb)
         {
             sb.Append("{");
-            sb.Append(" Program = ");
-            sb.Append(Program);
-            sb.Append(", Version = ");
-            sb.Append(Version);
+            sb.Append(" ProgramNumber = ");
+            sb.Append(ProgramNumber);
+            sb.Append(", VersionNumber = ");
+            sb.Append(VersionNumber);
             sb.Append(", Protocol = ");
             sb.Append(Protocol);
             sb.Append(", Port = ");
@@ -197,19 +568,78 @@ namespace RpcNet.PortMapper
         }
     }
 
-    public partial class MappingNode : IXdrDataType
+    public partial class Mapping3 : IXdrDataType
     {
-        public MappingNode()
+        public Mapping3()
         {
         }
 
-        public MappingNode(IXdrReader reader)
+        public Mapping3(IXdrReader reader)
         {
             ReadFrom(reader);
         }
 
-        public Mapping Mapping { get; set; } = new Mapping();
-        public MappingNode Next { get; set; }
+        public uint ProgramNumber { get; set; }
+        public uint VersionNumber { get; set; }
+        public string NetworkId { get; set; }
+        public string UniversalAddress { get; set; }
+        public string OwnerOfThisService { get; set; }
+
+        public void WriteTo(IXdrWriter writer)
+        {
+            writer.Write(ProgramNumber);
+            writer.Write(VersionNumber);
+            writer.Write(NetworkId);
+            writer.Write(UniversalAddress);
+            writer.Write(OwnerOfThisService);
+        }
+
+        public void ReadFrom(IXdrReader reader)
+        {
+            ProgramNumber = reader.ReadUInt32();
+            VersionNumber = reader.ReadUInt32();
+            NetworkId = reader.ReadString();
+            UniversalAddress = reader.ReadString();
+            OwnerOfThisService = reader.ReadString();
+        }
+
+        public void ToString(StringBuilder sb)
+        {
+            sb.Append("{");
+            sb.Append(" ProgramNumber = ");
+            sb.Append(ProgramNumber);
+            sb.Append(", VersionNumber = ");
+            sb.Append(VersionNumber);
+            sb.Append(", NetworkId = ");
+            sb.Append(NetworkId);
+            sb.Append(", UniversalAddress = ");
+            sb.Append(UniversalAddress);
+            sb.Append(", OwnerOfThisService = ");
+            sb.Append(OwnerOfThisService);
+            sb.Append(" }");
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            ToString(sb);
+            return sb.ToString();
+        }
+    }
+
+    public partial class MappingNode2 : IXdrDataType
+    {
+        public MappingNode2()
+        {
+        }
+
+        public MappingNode2(IXdrReader reader)
+        {
+            ReadFrom(reader);
+        }
+
+        public Mapping2 Mapping { get; set; } = new Mapping2();
+        public MappingNode2 Next { get; set; }
 
         public void WriteTo(IXdrWriter writer)
         {
@@ -218,21 +648,21 @@ namespace RpcNet.PortMapper
             {
                 current.Mapping.WriteTo(writer);
                 current = current.Next;
-                writer.Write(current != null);
-            } while (current != null);
+                writer.Write(current is not null);
+            } while (current is not null);
         }
 
         public void ReadFrom(IXdrReader reader)
         {
             var current = this;
-            MappingNode next;
+            MappingNode2 next;
             do
             {
                 current.Mapping.ReadFrom(reader);
-                next = reader.ReadBool() ? new MappingNode() : null;
+                next = reader.ReadBool() ? new MappingNode2() : null;
                 current.Next = next;
                 current = next;
-            } while (current != null);
+            } while (current is not null);
         }
 
         public void ToString(StringBuilder sb)
@@ -253,7 +683,7 @@ namespace RpcNet.PortMapper
                 sb.Append(" Mapping = ");
                 current.Mapping.ToString(sb);
                 current = current.Next;
-            } while (current != null);
+            } while (current is not null);
             sb.Append(" ]");
         }
 
@@ -265,25 +695,93 @@ namespace RpcNet.PortMapper
         }
     }
 
-    public partial class MappingNodeHead : IXdrDataType
+    public partial class MappingNode3 : IXdrDataType
     {
-        public MappingNodeHead()
+        public MappingNode3()
         {
         }
 
-        public MappingNodeHead(IXdrReader reader)
+        public MappingNode3(IXdrReader reader)
         {
             ReadFrom(reader);
         }
 
-        public MappingNode MappingNode { get; set; }
+        public Mapping3 Mapping { get; set; } = new Mapping3();
+        public MappingNode3 Next { get; set; }
 
         public void WriteTo(IXdrWriter writer)
         {
-            if (MappingNode != null)
+            var current = this;
+            do
+            {
+                current.Mapping.WriteTo(writer);
+                current = current.Next;
+                writer.Write(current is not null);
+            } while (current is not null);
+        }
+
+        public void ReadFrom(IXdrReader reader)
+        {
+            var current = this;
+            MappingNode3 next;
+            do
+            {
+                current.Mapping.ReadFrom(reader);
+                next = reader.ReadBool() ? new MappingNode3() : null;
+                current.Next = next;
+                current = next;
+            } while (current is not null);
+        }
+
+        public void ToString(StringBuilder sb)
+        {
+            var current = this;
+            sb.Append("[");
+            bool _first = true;
+            do
+            {
+                if (_first)
+                {
+                    _first = false;
+                }
+                else
+                {
+                    sb.Append(",");
+                }
+                sb.Append(" Mapping = ");
+                current.Mapping.ToString(sb);
+                current = current.Next;
+            } while (current is not null);
+            sb.Append(" ]");
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            ToString(sb);
+            return sb.ToString();
+        }
+    }
+
+    public partial class MappingNodeHead2 : IXdrDataType
+    {
+        public MappingNodeHead2()
+        {
+        }
+
+        public MappingNodeHead2(IXdrReader reader)
+        {
+            ReadFrom(reader);
+        }
+
+        public MappingNode2 Value { get; set; }
+
+        public void WriteTo(IXdrWriter writer)
+        {
+            if (Value is not null)
             {
                 writer.Write(true);
-                MappingNode.WriteTo(writer);
+                Value.WriteTo(writer);
             }
             else
             {
@@ -293,14 +791,422 @@ namespace RpcNet.PortMapper
 
         public void ReadFrom(IXdrReader reader)
         {
-            MappingNode = reader.ReadBool() ? new MappingNode(reader) : null;
+            Value = reader.ReadBool() ? new MappingNode2(reader) : null;
         }
 
         public void ToString(StringBuilder sb)
         {
             sb.Append("{");
-            sb.Append(" MappingNode = ");
-            MappingNode?.ToString(sb);
+            sb.Append(" Value = ");
+            Value?.ToString(sb);
+            sb.Append(" }");
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            ToString(sb);
+            return sb.ToString();
+        }
+    }
+
+    public partial class MappingNodeHead3 : IXdrDataType
+    {
+        public MappingNodeHead3()
+        {
+        }
+
+        public MappingNodeHead3(IXdrReader reader)
+        {
+            ReadFrom(reader);
+        }
+
+        public MappingNode3 Value { get; set; }
+
+        public void WriteTo(IXdrWriter writer)
+        {
+            if (Value is not null)
+            {
+                writer.Write(true);
+                Value.WriteTo(writer);
+            }
+            else
+            {
+                writer.Write(false);
+            }
+        }
+
+        public void ReadFrom(IXdrReader reader)
+        {
+            Value = reader.ReadBool() ? new MappingNode3(reader) : null;
+        }
+
+        public void ToString(StringBuilder sb)
+        {
+            sb.Append("{");
+            sb.Append(" Value = ");
+            Value?.ToString(sb);
+            sb.Append(" }");
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            ToString(sb);
+            return sb.ToString();
+        }
+    }
+
+    public partial class NetworkBuffer : IXdrDataType
+    {
+        public NetworkBuffer()
+        {
+        }
+
+        public NetworkBuffer(IXdrReader reader)
+        {
+            ReadFrom(reader);
+        }
+
+        public uint Maxlen { get; set; }
+        public byte[] Buffer { get; set; }
+
+        public void WriteTo(IXdrWriter writer)
+        {
+            writer.Write(Maxlen);
+            writer.WriteOpaque(Buffer);
+        }
+
+        public void ReadFrom(IXdrReader reader)
+        {
+            Maxlen = reader.ReadUInt32();
+            Buffer = reader.ReadOpaque();
+        }
+
+        public void ToString(StringBuilder sb)
+        {
+            sb.Append("{");
+            sb.Append(" Maxlen = ");
+            sb.Append(Maxlen);
+            sb.Append(", Buffer = [");
+            for (int _idx = 0; _idx < Buffer.Length; _idx++)
+            {
+                sb.Append(_idx == 0 ? " " : ", ");
+                sb.Append(Buffer[_idx]);
+            }
+            sb.Append(" ]");
+            sb.Append(" }");
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            ToString(sb);
+            return sb.ToString();
+        }
+    }
+
+    public partial class ProcedureInfo : IXdrDataType
+    {
+        public ProcedureInfo()
+        {
+        }
+
+        public ProcedureInfo(IXdrReader reader)
+        {
+            ReadFrom(reader);
+        }
+
+        public int[] Value { get; set; } = new int[PortMapperConstants.HighestProcedurePlusOne];
+
+        public void WriteTo(IXdrWriter writer)
+        {
+            {
+                for (int _idx = 0; _idx < Value.Length; _idx++)
+                {
+                    writer.Write(Value[_idx]);
+                }
+            }
+        }
+
+        public void ReadFrom(IXdrReader reader)
+        {
+            {
+                for (int _idx = 0; _idx < Value.Length; _idx++)
+                {
+                    Value[_idx] = reader.ReadInt32();
+                }
+            }
+        }
+
+        public void ToString(StringBuilder sb)
+        {
+            sb.Append("{");
+            sb.Append(" Value = [");
+            for (int _idx = 0; _idx < Value.Length; _idx++)
+            {
+                sb.Append(_idx == 0 ? " " : ", ");
+                sb.Append(Value[_idx]);
+            }
+            sb.Append(" ]");
+            sb.Append(" }");
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            ToString(sb);
+            return sb.ToString();
+        }
+    }
+
+    public partial class RemoteCallStatistics : IXdrDataType
+    {
+        public RemoteCallStatistics()
+        {
+        }
+
+        public RemoteCallStatistics(IXdrReader reader)
+        {
+            ReadFrom(reader);
+        }
+
+        public uint ProgramNumber { get; set; }
+        public uint VersionNumber { get; set; }
+        public uint ProcedureNumber { get; set; }
+        public int Success { get; set; }
+        public int Failure { get; set; }
+        public int Indirect { get; set; }
+        public string NetworkId { get; set; }
+        public RemoteCallStatistics Next { get; set; }
+
+        public void WriteTo(IXdrWriter writer)
+        {
+            var current = this;
+            do
+            {
+                writer.Write(current.ProgramNumber);
+                writer.Write(current.VersionNumber);
+                writer.Write(current.ProcedureNumber);
+                writer.Write(current.Success);
+                writer.Write(current.Failure);
+                writer.Write(current.Indirect);
+                writer.Write(current.NetworkId);
+                current = current.Next;
+                writer.Write(current is not null);
+            } while (current is not null);
+        }
+
+        public void ReadFrom(IXdrReader reader)
+        {
+            var current = this;
+            RemoteCallStatistics next;
+            do
+            {
+                current.ProgramNumber = reader.ReadUInt32();
+                current.VersionNumber = reader.ReadUInt32();
+                current.ProcedureNumber = reader.ReadUInt32();
+                current.Success = reader.ReadInt32();
+                current.Failure = reader.ReadInt32();
+                current.Indirect = reader.ReadInt32();
+                current.NetworkId = reader.ReadString();
+                next = reader.ReadBool() ? new RemoteCallStatistics() : null;
+                current.Next = next;
+                current = next;
+            } while (current is not null);
+        }
+
+        public void ToString(StringBuilder sb)
+        {
+            var current = this;
+            sb.Append("[");
+            bool _first = true;
+            do
+            {
+                if (_first)
+                {
+                    _first = false;
+                }
+                else
+                {
+                    sb.Append(",");
+                }
+                sb.Append(" ProgramNumber = ");
+                sb.Append(current.ProgramNumber);
+                sb.Append(", VersionNumber = ");
+                sb.Append(current.VersionNumber);
+                sb.Append(", ProcedureNumber = ");
+                sb.Append(current.ProcedureNumber);
+                sb.Append(", Success = ");
+                sb.Append(current.Success);
+                sb.Append(", Failure = ");
+                sb.Append(current.Failure);
+                sb.Append(", Indirect = ");
+                sb.Append(current.Indirect);
+                sb.Append(", NetworkId = ");
+                sb.Append(current.NetworkId);
+                current = current.Next;
+            } while (current is not null);
+            sb.Append(" ]");
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            ToString(sb);
+            return sb.ToString();
+        }
+    }
+
+    public partial class RemoteCallStatisticsHead : IXdrDataType
+    {
+        public RemoteCallStatisticsHead()
+        {
+        }
+
+        public RemoteCallStatisticsHead(IXdrReader reader)
+        {
+            ReadFrom(reader);
+        }
+
+        public RemoteCallStatistics Value { get; set; }
+
+        public void WriteTo(IXdrWriter writer)
+        {
+            if (Value is not null)
+            {
+                writer.Write(true);
+                Value.WriteTo(writer);
+            }
+            else
+            {
+                writer.Write(false);
+            }
+        }
+
+        public void ReadFrom(IXdrReader reader)
+        {
+            Value = reader.ReadBool() ? new RemoteCallStatistics(reader) : null;
+        }
+
+        public void ToString(StringBuilder sb)
+        {
+            sb.Append("{");
+            sb.Append(" Value = ");
+            Value?.ToString(sb);
+            sb.Append(" }");
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            ToString(sb);
+            return sb.ToString();
+        }
+    }
+
+    public partial class Statistics : IXdrDataType
+    {
+        public Statistics()
+        {
+        }
+
+        public Statistics(IXdrReader reader)
+        {
+            ReadFrom(reader);
+        }
+
+        public ProcedureInfo Info { get; set; } = new ProcedureInfo();
+        public int SetInfo { get; set; }
+        public int UnsetInfo { get; set; }
+        public AddressStatisticsHead AddressInfo { get; set; } = new AddressStatisticsHead();
+        public RemoteCallStatisticsHead RemoteCallInfo { get; set; } = new RemoteCallStatisticsHead();
+
+        public void WriteTo(IXdrWriter writer)
+        {
+            Info.WriteTo(writer);
+            writer.Write(SetInfo);
+            writer.Write(UnsetInfo);
+            AddressInfo.WriteTo(writer);
+            RemoteCallInfo.WriteTo(writer);
+        }
+
+        public void ReadFrom(IXdrReader reader)
+        {
+            Info.ReadFrom(reader);
+            SetInfo = reader.ReadInt32();
+            UnsetInfo = reader.ReadInt32();
+            AddressInfo.ReadFrom(reader);
+            RemoteCallInfo.ReadFrom(reader);
+        }
+
+        public void ToString(StringBuilder sb)
+        {
+            sb.Append("{");
+            sb.Append(" Info = ");
+            Info.ToString(sb);
+            sb.Append(", SetInfo = ");
+            sb.Append(SetInfo);
+            sb.Append(", UnsetInfo = ");
+            sb.Append(UnsetInfo);
+            sb.Append(", AddressInfo = ");
+            AddressInfo.ToString(sb);
+            sb.Append(", RemoteCallInfo = ");
+            RemoteCallInfo.ToString(sb);
+            sb.Append(" }");
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            ToString(sb);
+            return sb.ToString();
+        }
+    }
+
+    public partial class StatisticsByVersion : IXdrDataType
+    {
+        public StatisticsByVersion()
+        {
+        }
+
+        public StatisticsByVersion(IXdrReader reader)
+        {
+            ReadFrom(reader);
+        }
+
+        public Statistics[] Value { get; set; } = new Statistics[PortMapperConstants.StatisticsVersions];
+
+        public void WriteTo(IXdrWriter writer)
+        {
+            {
+                for (int _idx = 0; _idx < Value.Length; _idx++)
+                {
+                    Value[_idx].WriteTo(writer);
+                }
+            }
+        }
+
+        public void ReadFrom(IXdrReader reader)
+        {
+            {
+                for (int _idx = 0; _idx < Value.Length; _idx++)
+                {
+                    Value[_idx].ReadFrom(reader);
+                }
+            }
+        }
+
+        public void ToString(StringBuilder sb)
+        {
+            sb.Append("{");
+            sb.Append(" Value = [");
+            for (int _idx = 0; _idx < Value.Length; _idx++)
+            {
+                sb.Append(_idx == 0 ? " " : ", ");
+                Value[_idx].ToString(sb);
+            }
+            sb.Append(" ]");
             sb.Append(" }");
         }
 
@@ -315,7 +1221,7 @@ namespace RpcNet.PortMapper
     public class PortMapperClient : ClientStub
     {
         public PortMapperClient(Protocol protocol, IPAddress ipAddress, int port = 0, ClientSettings clientSettings = default) :
-            base(protocol, ipAddress, port, PortMapperConstants.PortMapperProgram, PortMapperConstants.PortMapperVersion, clientSettings)
+            base(protocol, ipAddress, port, PortMapperConstants.PortMapperProgram, PortMapperConstants.PortMapperVersion4, clientSettings)
         {
         }
 
@@ -323,9 +1229,9 @@ namespace RpcNet.PortMapper
         {
             var args = Void;
             var result = Void;
-            Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion, PortMapperConstants.Ping, "Ping", args);
-            Call(PortMapperConstants.Ping, PortMapperConstants.PortMapperVersion, args, result);
-            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion, PortMapperConstants.Ping, "Ping", args, result);
+            Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Ping, "Ping", args);
+            Call(PortMapperConstants.Ping, PortMapperConstants.PortMapperVersion2, args, result);
+            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Ping, "Ping", args, result);
         }
 
         private class Set_2_Result : IXdrDataType
@@ -358,12 +1264,12 @@ namespace RpcNet.PortMapper
             }
         }
 
-        public bool Set_2(Mapping mapping)
+        public bool Set_2(Mapping2 mapping2)
         {
             var result = new Set_2_Result();
-            Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion, PortMapperConstants.Set, "Set", mapping);
-            Call(PortMapperConstants.Set, PortMapperConstants.PortMapperVersion, mapping, result);
-            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion, PortMapperConstants.Set, "Set", mapping, result);
+            Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Set, "Set", mapping2);
+            Call(PortMapperConstants.Set, PortMapperConstants.PortMapperVersion2, mapping2, result);
+            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Set, "Set", mapping2, result);
             return result.Value;
         }
 
@@ -397,12 +1303,12 @@ namespace RpcNet.PortMapper
             }
         }
 
-        public bool Unset_2(Mapping mapping)
+        public bool Unset_2(Mapping2 mapping2)
         {
             var result = new Unset_2_Result();
-            Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion, PortMapperConstants.Unset, "Unset", mapping);
-            Call(PortMapperConstants.Unset, PortMapperConstants.PortMapperVersion, mapping, result);
-            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion, PortMapperConstants.Unset, "Unset", mapping, result);
+            Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Unset, "Unset", mapping2);
+            Call(PortMapperConstants.Unset, PortMapperConstants.PortMapperVersion2, mapping2, result);
+            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Unset, "Unset", mapping2, result);
             return result.Value;
         }
 
@@ -436,31 +1342,614 @@ namespace RpcNet.PortMapper
             }
         }
 
-        public int GetPort_2(Mapping mapping)
+        public int GetPort_2(Mapping2 mapping2)
         {
             var result = new GetPort_2_Result();
-            Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion, PortMapperConstants.GetPort, "GetPort", mapping);
-            Call(PortMapperConstants.GetPort, PortMapperConstants.PortMapperVersion, mapping, result);
-            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion, PortMapperConstants.GetPort, "GetPort", mapping, result);
+            Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.GetPort, "GetPort", mapping2);
+            Call(PortMapperConstants.GetPort, PortMapperConstants.PortMapperVersion2, mapping2, result);
+            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.GetPort, "GetPort", mapping2, result);
             return result.Value;
         }
 
-        public MappingNodeHead Dump_2()
+        public MappingNodeHead2 Dump_2()
         {
             var args = Void;
-            var result = new MappingNodeHead();
-            Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion, PortMapperConstants.Dump, "Dump", args);
-            Call(PortMapperConstants.Dump, PortMapperConstants.PortMapperVersion, args, result);
-            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion, PortMapperConstants.Dump, "Dump", args, result);
+            var result = new MappingNodeHead2();
+            Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Dump, "Dump", args);
+            Call(PortMapperConstants.Dump, PortMapperConstants.PortMapperVersion2, args, result);
+            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Dump, "Dump", args, result);
             return result;
         }
 
-        public CallResult Call_2(CallArguments callArguments)
+        public CallResult2 Call_2(CallArguments callArguments)
         {
-            var result = new CallResult();
-            Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion, PortMapperConstants.Call, "Call", callArguments);
-            Call(PortMapperConstants.Call, PortMapperConstants.PortMapperVersion, callArguments, result);
-            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion, PortMapperConstants.Call, "Call", callArguments, result);
+            var result = new CallResult2();
+            Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Call, "Call", callArguments);
+            Call(PortMapperConstants.Call, PortMapperConstants.PortMapperVersion2, callArguments, result);
+            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Call, "Call", callArguments, result);
+            return result;
+        }
+
+        private class Set_3_Result : IXdrDataType
+        {
+            public bool Value { get; set; }
+
+            public void WriteTo(IXdrWriter writer)
+            {
+                writer.Write(Value);
+            }
+
+            public void ReadFrom(IXdrReader reader)
+            {
+                Value = reader.ReadBool();
+            }
+
+            public void ToString(StringBuilder sb)
+            {
+                sb.Append("{");
+                sb.Append(" Value = ");
+                sb.Append(Value);
+                sb.Append(" }");
+            }
+
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+                ToString(sb);
+                return sb.ToString();
+            }
+        }
+
+        public bool Set_3(Mapping3 mapping3)
+        {
+            var result = new Set_3_Result();
+            Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.Set, "Set", mapping3);
+            Call(PortMapperConstants.Set, PortMapperConstants.PortMapperVersion3, mapping3, result);
+            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.Set, "Set", mapping3, result);
+            return result.Value;
+        }
+
+        private class Unset_3_Result : IXdrDataType
+        {
+            public bool Value { get; set; }
+
+            public void WriteTo(IXdrWriter writer)
+            {
+                writer.Write(Value);
+            }
+
+            public void ReadFrom(IXdrReader reader)
+            {
+                Value = reader.ReadBool();
+            }
+
+            public void ToString(StringBuilder sb)
+            {
+                sb.Append("{");
+                sb.Append(" Value = ");
+                sb.Append(Value);
+                sb.Append(" }");
+            }
+
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+                ToString(sb);
+                return sb.ToString();
+            }
+        }
+
+        public bool Unset_3(Mapping3 mapping3)
+        {
+            var result = new Unset_3_Result();
+            Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.Unset, "Unset", mapping3);
+            Call(PortMapperConstants.Unset, PortMapperConstants.PortMapperVersion3, mapping3, result);
+            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.Unset, "Unset", mapping3, result);
+            return result.Value;
+        }
+
+        private class GetAddress_3_Result : IXdrDataType
+        {
+            public string Value { get; set; }
+
+            public void WriteTo(IXdrWriter writer)
+            {
+                writer.Write(Value);
+            }
+
+            public void ReadFrom(IXdrReader reader)
+            {
+                Value = reader.ReadString();
+            }
+
+            public void ToString(StringBuilder sb)
+            {
+                sb.Append("{");
+                sb.Append(" Value = ");
+                sb.Append(Value);
+                sb.Append(" }");
+            }
+
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+                ToString(sb);
+                return sb.ToString();
+            }
+        }
+
+        public string GetAddress_3(Mapping3 mapping3)
+        {
+            var result = new GetAddress_3_Result();
+            Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetAddress, "GetAddress", mapping3);
+            Call(PortMapperConstants.GetAddress, PortMapperConstants.PortMapperVersion3, mapping3, result);
+            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetAddress, "GetAddress", mapping3, result);
+            return result.Value;
+        }
+
+        public MappingNodeHead3 Dump_3()
+        {
+            var args = Void;
+            var result = new MappingNodeHead3();
+            Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.Dump, "Dump", args);
+            Call(PortMapperConstants.Dump, PortMapperConstants.PortMapperVersion3, args, result);
+            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.Dump, "Dump", args, result);
+            return result;
+        }
+
+        public CallResult3 Call_3(CallArguments callArguments)
+        {
+            var result = new CallResult3();
+            Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.Call, "Call", callArguments);
+            Call(PortMapperConstants.Call, PortMapperConstants.PortMapperVersion3, callArguments, result);
+            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.Call, "Call", callArguments, result);
+            return result;
+        }
+
+        private class GetTime_3_Result : IXdrDataType
+        {
+            public uint Value { get; set; }
+
+            public void WriteTo(IXdrWriter writer)
+            {
+                writer.Write(Value);
+            }
+
+            public void ReadFrom(IXdrReader reader)
+            {
+                Value = reader.ReadUInt32();
+            }
+
+            public void ToString(StringBuilder sb)
+            {
+                sb.Append("{");
+                sb.Append(" Value = ");
+                sb.Append(Value);
+                sb.Append(" }");
+            }
+
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+                ToString(sb);
+                return sb.ToString();
+            }
+        }
+
+        public uint GetTime_3()
+        {
+            var args = Void;
+            var result = new GetTime_3_Result();
+            Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetTime, "GetTime", args);
+            Call(PortMapperConstants.GetTime, PortMapperConstants.PortMapperVersion3, args, result);
+            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetTime, "GetTime", args, result);
+            return result.Value;
+        }
+
+        private class UniversalAddressToTransportSpecificAddress_3_Arguments : IXdrDataType
+        {
+            public string UniversalAddress { get; set; }
+
+            public void WriteTo(IXdrWriter writer)
+            {
+                writer.Write(UniversalAddress);
+            }
+
+            public void ReadFrom(IXdrReader reader)
+            {
+                UniversalAddress = reader.ReadString();
+            }
+
+            public void ToString(StringBuilder sb)
+            {
+                sb.Append("{");
+                sb.Append(" UniversalAddress = ");
+                sb.Append(UniversalAddress);
+                sb.Append(" }");
+            }
+
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+                ToString(sb);
+                return sb.ToString();
+            }
+        }
+
+        public NetworkBuffer UniversalAddressToTransportSpecificAddress_3(string universalAddress)
+        {
+            var args = new UniversalAddressToTransportSpecificAddress_3_Arguments
+            {
+                UniversalAddress = universalAddress,
+            };
+            var result = new NetworkBuffer();
+            Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress", args);
+            Call(PortMapperConstants.UniversalAddressToTransportSpecificAddress, PortMapperConstants.PortMapperVersion3, args, result);
+            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress", args, result);
+            return result;
+        }
+
+        private class TransportSpecificAddressToUniversalAddress_3_Result : IXdrDataType
+        {
+            public string Value { get; set; }
+
+            public void WriteTo(IXdrWriter writer)
+            {
+                writer.Write(Value);
+            }
+
+            public void ReadFrom(IXdrReader reader)
+            {
+                Value = reader.ReadString();
+            }
+
+            public void ToString(StringBuilder sb)
+            {
+                sb.Append("{");
+                sb.Append(" Value = ");
+                sb.Append(Value);
+                sb.Append(" }");
+            }
+
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+                ToString(sb);
+                return sb.ToString();
+            }
+        }
+
+        public string TransportSpecificAddressToUniversalAddress_3(NetworkBuffer networkBuffer)
+        {
+            var result = new TransportSpecificAddressToUniversalAddress_3_Result();
+            Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress", networkBuffer);
+            Call(PortMapperConstants.TransportSpecificAddressToUniversalAddress, PortMapperConstants.PortMapperVersion3, networkBuffer, result);
+            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress", networkBuffer, result);
+            return result.Value;
+        }
+
+        private class Set_4_Result : IXdrDataType
+        {
+            public bool Value { get; set; }
+
+            public void WriteTo(IXdrWriter writer)
+            {
+                writer.Write(Value);
+            }
+
+            public void ReadFrom(IXdrReader reader)
+            {
+                Value = reader.ReadBool();
+            }
+
+            public void ToString(StringBuilder sb)
+            {
+                sb.Append("{");
+                sb.Append(" Value = ");
+                sb.Append(Value);
+                sb.Append(" }");
+            }
+
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+                ToString(sb);
+                return sb.ToString();
+            }
+        }
+
+        public bool Set_4(Mapping3 mapping3)
+        {
+            var result = new Set_4_Result();
+            Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.Set, "Set", mapping3);
+            Call(PortMapperConstants.Set, PortMapperConstants.PortMapperVersion4, mapping3, result);
+            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.Set, "Set", mapping3, result);
+            return result.Value;
+        }
+
+        private class Unset_4_Result : IXdrDataType
+        {
+            public bool Value { get; set; }
+
+            public void WriteTo(IXdrWriter writer)
+            {
+                writer.Write(Value);
+            }
+
+            public void ReadFrom(IXdrReader reader)
+            {
+                Value = reader.ReadBool();
+            }
+
+            public void ToString(StringBuilder sb)
+            {
+                sb.Append("{");
+                sb.Append(" Value = ");
+                sb.Append(Value);
+                sb.Append(" }");
+            }
+
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+                ToString(sb);
+                return sb.ToString();
+            }
+        }
+
+        public bool Unset_4(Mapping3 mapping3)
+        {
+            var result = new Unset_4_Result();
+            Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.Unset, "Unset", mapping3);
+            Call(PortMapperConstants.Unset, PortMapperConstants.PortMapperVersion4, mapping3, result);
+            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.Unset, "Unset", mapping3, result);
+            return result.Value;
+        }
+
+        private class GetAddress_4_Result : IXdrDataType
+        {
+            public string Value { get; set; }
+
+            public void WriteTo(IXdrWriter writer)
+            {
+                writer.Write(Value);
+            }
+
+            public void ReadFrom(IXdrReader reader)
+            {
+                Value = reader.ReadString();
+            }
+
+            public void ToString(StringBuilder sb)
+            {
+                sb.Append("{");
+                sb.Append(" Value = ");
+                sb.Append(Value);
+                sb.Append(" }");
+            }
+
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+                ToString(sb);
+                return sb.ToString();
+            }
+        }
+
+        public string GetAddress_4(Mapping3 mapping3)
+        {
+            var result = new GetAddress_4_Result();
+            Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddress, "GetAddress", mapping3);
+            Call(PortMapperConstants.GetAddress, PortMapperConstants.PortMapperVersion4, mapping3, result);
+            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddress, "GetAddress", mapping3, result);
+            return result.Value;
+        }
+
+        public MappingNodeHead3 Dump_4()
+        {
+            var args = Void;
+            var result = new MappingNodeHead3();
+            Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.Dump, "Dump", args);
+            Call(PortMapperConstants.Dump, PortMapperConstants.PortMapperVersion4, args, result);
+            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.Dump, "Dump", args, result);
+            return result;
+        }
+
+        public CallResult3 Broadcast_4(CallArguments callArguments)
+        {
+            var result = new CallResult3();
+            Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.Broadcast, "Broadcast", callArguments);
+            Call(PortMapperConstants.Broadcast, PortMapperConstants.PortMapperVersion4, callArguments, result);
+            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.Broadcast, "Broadcast", callArguments, result);
+            return result;
+        }
+
+        private class GetTime_4_Result : IXdrDataType
+        {
+            public uint Value { get; set; }
+
+            public void WriteTo(IXdrWriter writer)
+            {
+                writer.Write(Value);
+            }
+
+            public void ReadFrom(IXdrReader reader)
+            {
+                Value = reader.ReadUInt32();
+            }
+
+            public void ToString(StringBuilder sb)
+            {
+                sb.Append("{");
+                sb.Append(" Value = ");
+                sb.Append(Value);
+                sb.Append(" }");
+            }
+
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+                ToString(sb);
+                return sb.ToString();
+            }
+        }
+
+        public uint GetTime_4()
+        {
+            var args = Void;
+            var result = new GetTime_4_Result();
+            Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetTime, "GetTime", args);
+            Call(PortMapperConstants.GetTime, PortMapperConstants.PortMapperVersion4, args, result);
+            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetTime, "GetTime", args, result);
+            return result.Value;
+        }
+
+        private class UniversalAddressToTransportSpecificAddress_4_Arguments : IXdrDataType
+        {
+            public string UniversalAddress { get; set; }
+
+            public void WriteTo(IXdrWriter writer)
+            {
+                writer.Write(UniversalAddress);
+            }
+
+            public void ReadFrom(IXdrReader reader)
+            {
+                UniversalAddress = reader.ReadString();
+            }
+
+            public void ToString(StringBuilder sb)
+            {
+                sb.Append("{");
+                sb.Append(" UniversalAddress = ");
+                sb.Append(UniversalAddress);
+                sb.Append(" }");
+            }
+
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+                ToString(sb);
+                return sb.ToString();
+            }
+        }
+
+        public NetworkBuffer UniversalAddressToTransportSpecificAddress_4(string universalAddress)
+        {
+            var args = new UniversalAddressToTransportSpecificAddress_4_Arguments
+            {
+                UniversalAddress = universalAddress,
+            };
+            var result = new NetworkBuffer();
+            Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress", args);
+            Call(PortMapperConstants.UniversalAddressToTransportSpecificAddress, PortMapperConstants.PortMapperVersion4, args, result);
+            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress", args, result);
+            return result;
+        }
+
+        private class TransportSpecificAddressToUniversalAddress_4_Result : IXdrDataType
+        {
+            public string Value { get; set; }
+
+            public void WriteTo(IXdrWriter writer)
+            {
+                writer.Write(Value);
+            }
+
+            public void ReadFrom(IXdrReader reader)
+            {
+                Value = reader.ReadString();
+            }
+
+            public void ToString(StringBuilder sb)
+            {
+                sb.Append("{");
+                sb.Append(" Value = ");
+                sb.Append(Value);
+                sb.Append(" }");
+            }
+
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+                ToString(sb);
+                return sb.ToString();
+            }
+        }
+
+        public string TransportSpecificAddressToUniversalAddress_4(NetworkBuffer networkBuffer)
+        {
+            var result = new TransportSpecificAddressToUniversalAddress_4_Result();
+            Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress", networkBuffer);
+            Call(PortMapperConstants.TransportSpecificAddressToUniversalAddress, PortMapperConstants.PortMapperVersion4, networkBuffer, result);
+            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress", networkBuffer, result);
+            return result.Value;
+        }
+
+        private class GetVersionAddress_4_Result : IXdrDataType
+        {
+            public string Value { get; set; }
+
+            public void WriteTo(IXdrWriter writer)
+            {
+                writer.Write(Value);
+            }
+
+            public void ReadFrom(IXdrReader reader)
+            {
+                Value = reader.ReadString();
+            }
+
+            public void ToString(StringBuilder sb)
+            {
+                sb.Append("{");
+                sb.Append(" Value = ");
+                sb.Append(Value);
+                sb.Append(" }");
+            }
+
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+                ToString(sb);
+                return sb.ToString();
+            }
+        }
+
+        public string GetVersionAddress_4(Mapping3 mapping3)
+        {
+            var result = new GetVersionAddress_4_Result();
+            Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetVersionAddress, "GetVersionAddress", mapping3);
+            Call(PortMapperConstants.GetVersionAddress, PortMapperConstants.PortMapperVersion4, mapping3, result);
+            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetVersionAddress, "GetVersionAddress", mapping3, result);
+            return result.Value;
+        }
+
+        public CallResult3 IndirectCall_4(CallArguments callArguments)
+        {
+            var result = new CallResult3();
+            Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.IndirectCall, "IndirectCall", callArguments);
+            Call(PortMapperConstants.IndirectCall, PortMapperConstants.PortMapperVersion4, callArguments, result);
+            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.IndirectCall, "IndirectCall", callArguments, result);
+            return result;
+        }
+
+        public EntryNodeHead GetAddressList_4(Mapping3 mapping3)
+        {
+            var result = new EntryNodeHead();
+            Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddressList, "GetAddressList", mapping3);
+            Call(PortMapperConstants.GetAddressList, PortMapperConstants.PortMapperVersion4, mapping3, result);
+            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddressList, "GetAddressList", mapping3, result);
+            return result;
+        }
+
+        public StatisticsByVersion GetStatistics_4()
+        {
+            var args = Void;
+            var result = new StatisticsByVersion();
+            Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetStatistics, "GetStatistics", args);
+            Call(PortMapperConstants.GetStatistics, PortMapperConstants.PortMapperVersion4, args, result);
+            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetStatistics, "GetStatistics", args, result);
             return result;
         }
     }
@@ -468,7 +1957,7 @@ namespace RpcNet.PortMapper
     public abstract class PortMapperServerStub : ServerStub
     {
         public PortMapperServerStub(Protocol protocol, IPAddress ipAddress, int port = 0, ServerSettings serverSettings = default) :
-            base(protocol, ipAddress, port, PortMapperConstants.PortMapperProgram, new[] { PortMapperConstants.PortMapperVersion }, serverSettings)
+            base(protocol, ipAddress, port, PortMapperConstants.PortMapperProgram, new[] { PortMapperConstants.PortMapperVersion2, PortMapperConstants.PortMapperVersion3, PortMapperConstants.PortMapperVersion4 }, serverSettings)
         {
         }
 
@@ -544,6 +2033,396 @@ namespace RpcNet.PortMapper
             public void ReadFrom(IXdrReader reader)
             {
                 Value = reader.ReadInt32();
+            }
+
+            public void ToString(StringBuilder sb)
+            {
+                sb.Append("{");
+                sb.Append(" Value = ");
+                sb.Append(Value);
+                sb.Append(" }");
+            }
+
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+                ToString(sb);
+                return sb.ToString();
+            }
+        }
+
+        private class Set_3_Result : IXdrDataType
+        {
+            public bool Value { get; set; }
+
+            public void WriteTo(IXdrWriter writer)
+            {
+                writer.Write(Value);
+            }
+
+            public void ReadFrom(IXdrReader reader)
+            {
+                Value = reader.ReadBool();
+            }
+
+            public void ToString(StringBuilder sb)
+            {
+                sb.Append("{");
+                sb.Append(" Value = ");
+                sb.Append(Value);
+                sb.Append(" }");
+            }
+
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+                ToString(sb);
+                return sb.ToString();
+            }
+        }
+
+        private class Unset_3_Result : IXdrDataType
+        {
+            public bool Value { get; set; }
+
+            public void WriteTo(IXdrWriter writer)
+            {
+                writer.Write(Value);
+            }
+
+            public void ReadFrom(IXdrReader reader)
+            {
+                Value = reader.ReadBool();
+            }
+
+            public void ToString(StringBuilder sb)
+            {
+                sb.Append("{");
+                sb.Append(" Value = ");
+                sb.Append(Value);
+                sb.Append(" }");
+            }
+
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+                ToString(sb);
+                return sb.ToString();
+            }
+        }
+
+        private class GetAddress_3_Result : IXdrDataType
+        {
+            public string Value { get; set; }
+
+            public void WriteTo(IXdrWriter writer)
+            {
+                writer.Write(Value);
+            }
+
+            public void ReadFrom(IXdrReader reader)
+            {
+                Value = reader.ReadString();
+            }
+
+            public void ToString(StringBuilder sb)
+            {
+                sb.Append("{");
+                sb.Append(" Value = ");
+                sb.Append(Value);
+                sb.Append(" }");
+            }
+
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+                ToString(sb);
+                return sb.ToString();
+            }
+        }
+
+        private class GetTime_3_Result : IXdrDataType
+        {
+            public uint Value { get; set; }
+
+            public void WriteTo(IXdrWriter writer)
+            {
+                writer.Write(Value);
+            }
+
+            public void ReadFrom(IXdrReader reader)
+            {
+                Value = reader.ReadUInt32();
+            }
+
+            public void ToString(StringBuilder sb)
+            {
+                sb.Append("{");
+                sb.Append(" Value = ");
+                sb.Append(Value);
+                sb.Append(" }");
+            }
+
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+                ToString(sb);
+                return sb.ToString();
+            }
+        }
+
+        private class UniversalAddressToTransportSpecificAddress_3_Arguments : IXdrDataType
+        {
+            public string UniversalAddress { get; set; }
+
+            public void WriteTo(IXdrWriter writer)
+            {
+                writer.Write(UniversalAddress);
+            }
+
+            public void ReadFrom(IXdrReader reader)
+            {
+                UniversalAddress = reader.ReadString();
+            }
+
+            public void ToString(StringBuilder sb)
+            {
+                sb.Append("{");
+                sb.Append(" UniversalAddress = ");
+                sb.Append(UniversalAddress);
+                sb.Append(" }");
+            }
+
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+                ToString(sb);
+                return sb.ToString();
+            }
+        }
+
+        private class TransportSpecificAddressToUniversalAddress_3_Result : IXdrDataType
+        {
+            public string Value { get; set; }
+
+            public void WriteTo(IXdrWriter writer)
+            {
+                writer.Write(Value);
+            }
+
+            public void ReadFrom(IXdrReader reader)
+            {
+                Value = reader.ReadString();
+            }
+
+            public void ToString(StringBuilder sb)
+            {
+                sb.Append("{");
+                sb.Append(" Value = ");
+                sb.Append(Value);
+                sb.Append(" }");
+            }
+
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+                ToString(sb);
+                return sb.ToString();
+            }
+        }
+
+        private class Set_4_Result : IXdrDataType
+        {
+            public bool Value { get; set; }
+
+            public void WriteTo(IXdrWriter writer)
+            {
+                writer.Write(Value);
+            }
+
+            public void ReadFrom(IXdrReader reader)
+            {
+                Value = reader.ReadBool();
+            }
+
+            public void ToString(StringBuilder sb)
+            {
+                sb.Append("{");
+                sb.Append(" Value = ");
+                sb.Append(Value);
+                sb.Append(" }");
+            }
+
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+                ToString(sb);
+                return sb.ToString();
+            }
+        }
+
+        private class Unset_4_Result : IXdrDataType
+        {
+            public bool Value { get; set; }
+
+            public void WriteTo(IXdrWriter writer)
+            {
+                writer.Write(Value);
+            }
+
+            public void ReadFrom(IXdrReader reader)
+            {
+                Value = reader.ReadBool();
+            }
+
+            public void ToString(StringBuilder sb)
+            {
+                sb.Append("{");
+                sb.Append(" Value = ");
+                sb.Append(Value);
+                sb.Append(" }");
+            }
+
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+                ToString(sb);
+                return sb.ToString();
+            }
+        }
+
+        private class GetAddress_4_Result : IXdrDataType
+        {
+            public string Value { get; set; }
+
+            public void WriteTo(IXdrWriter writer)
+            {
+                writer.Write(Value);
+            }
+
+            public void ReadFrom(IXdrReader reader)
+            {
+                Value = reader.ReadString();
+            }
+
+            public void ToString(StringBuilder sb)
+            {
+                sb.Append("{");
+                sb.Append(" Value = ");
+                sb.Append(Value);
+                sb.Append(" }");
+            }
+
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+                ToString(sb);
+                return sb.ToString();
+            }
+        }
+
+        private class GetTime_4_Result : IXdrDataType
+        {
+            public uint Value { get; set; }
+
+            public void WriteTo(IXdrWriter writer)
+            {
+                writer.Write(Value);
+            }
+
+            public void ReadFrom(IXdrReader reader)
+            {
+                Value = reader.ReadUInt32();
+            }
+
+            public void ToString(StringBuilder sb)
+            {
+                sb.Append("{");
+                sb.Append(" Value = ");
+                sb.Append(Value);
+                sb.Append(" }");
+            }
+
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+                ToString(sb);
+                return sb.ToString();
+            }
+        }
+
+        private class UniversalAddressToTransportSpecificAddress_4_Arguments : IXdrDataType
+        {
+            public string UniversalAddress { get; set; }
+
+            public void WriteTo(IXdrWriter writer)
+            {
+                writer.Write(UniversalAddress);
+            }
+
+            public void ReadFrom(IXdrReader reader)
+            {
+                UniversalAddress = reader.ReadString();
+            }
+
+            public void ToString(StringBuilder sb)
+            {
+                sb.Append("{");
+                sb.Append(" UniversalAddress = ");
+                sb.Append(UniversalAddress);
+                sb.Append(" }");
+            }
+
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+                ToString(sb);
+                return sb.ToString();
+            }
+        }
+
+        private class TransportSpecificAddressToUniversalAddress_4_Result : IXdrDataType
+        {
+            public string Value { get; set; }
+
+            public void WriteTo(IXdrWriter writer)
+            {
+                writer.Write(Value);
+            }
+
+            public void ReadFrom(IXdrReader reader)
+            {
+                Value = reader.ReadString();
+            }
+
+            public void ToString(StringBuilder sb)
+            {
+                sb.Append("{");
+                sb.Append(" Value = ");
+                sb.Append(Value);
+                sb.Append(" }");
+            }
+
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+                ToString(sb);
+                return sb.ToString();
+            }
+        }
+
+        private class GetVersionAddress_4_Result : IXdrDataType
+        {
+            public string Value { get; set; }
+
+            public void WriteTo(IXdrWriter writer)
+            {
+                writer.Write(Value);
+            }
+
+            public void ReadFrom(IXdrReader reader)
+            {
+                Value = reader.ReadString();
             }
 
             public void ToString(StringBuilder sb)
@@ -563,15 +2442,35 @@ namespace RpcNet.PortMapper
         }
 
         public abstract void Ping_2(Caller caller);
-        public abstract bool Set_2(Caller caller, Mapping mapping);
-        public abstract bool Unset_2(Caller caller, Mapping mapping);
-        public abstract int GetPort_2(Caller caller, Mapping mapping);
-        public abstract MappingNodeHead Dump_2(Caller caller);
-        public abstract CallResult Call_2(Caller caller, CallArguments callArguments);
+        public abstract bool Set_2(Caller caller, Mapping2 mapping2);
+        public abstract bool Unset_2(Caller caller, Mapping2 mapping2);
+        public abstract int GetPort_2(Caller caller, Mapping2 mapping2);
+        public abstract MappingNodeHead2 Dump_2(Caller caller);
+        public abstract CallResult2 Call_2(Caller caller, CallArguments callArguments);
+        public abstract bool Set_3(Caller caller, Mapping3 mapping3);
+        public abstract bool Unset_3(Caller caller, Mapping3 mapping3);
+        public abstract string GetAddress_3(Caller caller, Mapping3 mapping3);
+        public abstract MappingNodeHead3 Dump_3(Caller caller);
+        public abstract CallResult3 Call_3(Caller caller, CallArguments callArguments);
+        public abstract uint GetTime_3(Caller caller);
+        public abstract NetworkBuffer UniversalAddressToTransportSpecificAddress_3(Caller caller, string universalAddress);
+        public abstract string TransportSpecificAddressToUniversalAddress_3(Caller caller, NetworkBuffer networkBuffer);
+        public abstract bool Set_4(Caller caller, Mapping3 mapping3);
+        public abstract bool Unset_4(Caller caller, Mapping3 mapping3);
+        public abstract string GetAddress_4(Caller caller, Mapping3 mapping3);
+        public abstract MappingNodeHead3 Dump_4(Caller caller);
+        public abstract CallResult3 Broadcast_4(Caller caller, CallArguments callArguments);
+        public abstract uint GetTime_4(Caller caller);
+        public abstract NetworkBuffer UniversalAddressToTransportSpecificAddress_4(Caller caller, string universalAddress);
+        public abstract string TransportSpecificAddressToUniversalAddress_4(Caller caller, NetworkBuffer networkBuffer);
+        public abstract string GetVersionAddress_4(Caller caller, Mapping3 mapping3);
+        public abstract CallResult3 IndirectCall_4(Caller caller, CallArguments callArguments);
+        public abstract EntryNodeHead GetAddressList_4(Caller caller, Mapping3 mapping3);
+        public abstract StatisticsByVersion GetStatistics_4(Caller caller);
 
         protected override void DispatchReceivedCall(ReceivedRpcCall call)
         {
-            if (call.Version == PortMapperConstants.PortMapperVersion)
+            if (call.Version == PortMapperConstants.PortMapperVersion2)
             {
                 switch (call.Procedure)
                 {
@@ -579,17 +2478,17 @@ namespace RpcNet.PortMapper
                     {
                         var args = Void;
                         call.RetrieveCall(args);
-                        Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion, PortMapperConstants.Ping, "Ping", args);
+                        Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Ping, "Ping", args);
                         var result = Void;
                         try
                         {
                             Ping_2(call.Caller);
-                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion, PortMapperConstants.Ping, "Ping", args, result);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Ping, "Ping", args, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion, PortMapperConstants.Ping, "Ping", args, exception);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Ping, "Ping", args, e);
                             call.SystemError();
                             return;
                         }
@@ -597,19 +2496,19 @@ namespace RpcNet.PortMapper
                     }
                     case PortMapperConstants.Set:
                     {
-                        var mapping = new Mapping();
-                        call.RetrieveCall(mapping);
-                        Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion, PortMapperConstants.Set, "Set", mapping);
+                        var mapping2 = new Mapping2();
+                        call.RetrieveCall(mapping2);
+                        Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Set, "Set", mapping2);
                         var result = new Set_2_Result();
                         try
                         {
-                            result.Value = Set_2(call.Caller, mapping);
-                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion, PortMapperConstants.Set, "Set", mapping, result);
+                            result.Value = Set_2(call.Caller, mapping2);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Set, "Set", mapping2, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion, PortMapperConstants.Set, "Set", mapping, exception);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Set, "Set", mapping2, e);
                             call.SystemError();
                             return;
                         }
@@ -617,19 +2516,19 @@ namespace RpcNet.PortMapper
                     }
                     case PortMapperConstants.Unset:
                     {
-                        var mapping = new Mapping();
-                        call.RetrieveCall(mapping);
-                        Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion, PortMapperConstants.Unset, "Unset", mapping);
+                        var mapping2 = new Mapping2();
+                        call.RetrieveCall(mapping2);
+                        Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Unset, "Unset", mapping2);
                         var result = new Unset_2_Result();
                         try
                         {
-                            result.Value = Unset_2(call.Caller, mapping);
-                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion, PortMapperConstants.Unset, "Unset", mapping, result);
+                            result.Value = Unset_2(call.Caller, mapping2);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Unset, "Unset", mapping2, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion, PortMapperConstants.Unset, "Unset", mapping, exception);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Unset, "Unset", mapping2, e);
                             call.SystemError();
                             return;
                         }
@@ -637,19 +2536,19 @@ namespace RpcNet.PortMapper
                     }
                     case PortMapperConstants.GetPort:
                     {
-                        var mapping = new Mapping();
-                        call.RetrieveCall(mapping);
-                        Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion, PortMapperConstants.GetPort, "GetPort", mapping);
+                        var mapping2 = new Mapping2();
+                        call.RetrieveCall(mapping2);
+                        Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.GetPort, "GetPort", mapping2);
                         var result = new GetPort_2_Result();
                         try
                         {
-                            result.Value = GetPort_2(call.Caller, mapping);
-                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion, PortMapperConstants.GetPort, "GetPort", mapping, result);
+                            result.Value = GetPort_2(call.Caller, mapping2);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.GetPort, "GetPort", mapping2, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion, PortMapperConstants.GetPort, "GetPort", mapping, exception);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.GetPort, "GetPort", mapping2, e);
                             call.SystemError();
                             return;
                         }
@@ -659,16 +2558,16 @@ namespace RpcNet.PortMapper
                     {
                         var args = Void;
                         call.RetrieveCall(args);
-                        Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion, PortMapperConstants.Dump, "Dump", args);
+                        Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Dump, "Dump", args);
                         try
                         {
-                            MappingNodeHead result = Dump_2(call.Caller);
-                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion, PortMapperConstants.Dump, "Dump", args, result);
+                            MappingNodeHead2 result = Dump_2(call.Caller);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Dump, "Dump", args, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion, PortMapperConstants.Dump, "Dump", args, exception);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Dump, "Dump", args, e);
                             call.SystemError();
                             return;
                         }
@@ -678,28 +2577,441 @@ namespace RpcNet.PortMapper
                     {
                         var callArguments = new CallArguments();
                         call.RetrieveCall(callArguments);
-                        Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion, PortMapperConstants.Call, "Call", callArguments);
+                        Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Call, "Call", callArguments);
                         try
                         {
-                            CallResult result = Call_2(call.Caller, callArguments);
-                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion, PortMapperConstants.Call, "Call", callArguments, result);
+                            CallResult2 result = Call_2(call.Caller, callArguments);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Call, "Call", callArguments, result);
                             call.Reply(result);
                         }
-                        catch (Exception exception) when (!(exception is RpcException))
+                        catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion, PortMapperConstants.Call, "Call", callArguments, exception);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion2, PortMapperConstants.Call, "Call", callArguments, e);
                             call.SystemError();
                             return;
                         }
                         break;
                     }
                     default:
+                        Settings?.Logger?.Error($"Procedure unavailable (Version: {call.Version}, Procedure: {call.Procedure}).");
+                        call.ProcedureUnavailable();
+                        break;
+                }
+            }
+            else if (call.Version == PortMapperConstants.PortMapperVersion3)
+            {
+                switch (call.Procedure)
+                {
+                    case PortMapperConstants.Set:
+                    {
+                        var mapping3 = new Mapping3();
+                        call.RetrieveCall(mapping3);
+                        Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.Set, "Set", mapping3);
+                        var result = new Set_3_Result();
+                        try
+                        {
+                            result.Value = Set_3(call.Caller, mapping3);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.Set, "Set", mapping3, result);
+                            call.Reply(result);
+                        }
+                        catch (Exception e) when (!(e is RpcException))
+                        {
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.Set, "Set", mapping3, e);
+                            call.SystemError();
+                            return;
+                        }
+                        break;
+                    }
+                    case PortMapperConstants.Unset:
+                    {
+                        var mapping3 = new Mapping3();
+                        call.RetrieveCall(mapping3);
+                        Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.Unset, "Unset", mapping3);
+                        var result = new Unset_3_Result();
+                        try
+                        {
+                            result.Value = Unset_3(call.Caller, mapping3);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.Unset, "Unset", mapping3, result);
+                            call.Reply(result);
+                        }
+                        catch (Exception e) when (!(e is RpcException))
+                        {
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.Unset, "Unset", mapping3, e);
+                            call.SystemError();
+                            return;
+                        }
+                        break;
+                    }
+                    case PortMapperConstants.GetAddress:
+                    {
+                        var mapping3 = new Mapping3();
+                        call.RetrieveCall(mapping3);
+                        Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetAddress, "GetAddress", mapping3);
+                        var result = new GetAddress_3_Result();
+                        try
+                        {
+                            result.Value = GetAddress_3(call.Caller, mapping3);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetAddress, "GetAddress", mapping3, result);
+                            call.Reply(result);
+                        }
+                        catch (Exception e) when (!(e is RpcException))
+                        {
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetAddress, "GetAddress", mapping3, e);
+                            call.SystemError();
+                            return;
+                        }
+                        break;
+                    }
+                    case PortMapperConstants.Dump:
+                    {
+                        var args = Void;
+                        call.RetrieveCall(args);
+                        Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.Dump, "Dump", args);
+                        try
+                        {
+                            MappingNodeHead3 result = Dump_3(call.Caller);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.Dump, "Dump", args, result);
+                            call.Reply(result);
+                        }
+                        catch (Exception e) when (!(e is RpcException))
+                        {
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.Dump, "Dump", args, e);
+                            call.SystemError();
+                            return;
+                        }
+                        break;
+                    }
+                    case PortMapperConstants.Call:
+                    {
+                        var callArguments = new CallArguments();
+                        call.RetrieveCall(callArguments);
+                        Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.Call, "Call", callArguments);
+                        try
+                        {
+                            CallResult3 result = Call_3(call.Caller, callArguments);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.Call, "Call", callArguments, result);
+                            call.Reply(result);
+                        }
+                        catch (Exception e) when (!(e is RpcException))
+                        {
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.Call, "Call", callArguments, e);
+                            call.SystemError();
+                            return;
+                        }
+                        break;
+                    }
+                    case PortMapperConstants.GetTime:
+                    {
+                        var args = Void;
+                        call.RetrieveCall(args);
+                        Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetTime, "GetTime", args);
+                        var result = new GetTime_3_Result();
+                        try
+                        {
+                            result.Value = GetTime_3(call.Caller);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetTime, "GetTime", args, result);
+                            call.Reply(result);
+                        }
+                        catch (Exception e) when (!(e is RpcException))
+                        {
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetTime, "GetTime", args, e);
+                            call.SystemError();
+                            return;
+                        }
+                        break;
+                    }
+                    case PortMapperConstants.UniversalAddressToTransportSpecificAddress:
+                    {
+                        var args = new UniversalAddressToTransportSpecificAddress_3_Arguments();
+                        call.RetrieveCall(args);
+                        Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress", args);
+                        try
+                        {
+                            NetworkBuffer result = UniversalAddressToTransportSpecificAddress_3(call.Caller, args.UniversalAddress);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress", args, result);
+                            call.Reply(result);
+                        }
+                        catch (Exception e) when (!(e is RpcException))
+                        {
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress", args, e);
+                            call.SystemError();
+                            return;
+                        }
+                        break;
+                    }
+                    case PortMapperConstants.TransportSpecificAddressToUniversalAddress:
+                    {
+                        var networkBuffer = new NetworkBuffer();
+                        call.RetrieveCall(networkBuffer);
+                        Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress", networkBuffer);
+                        var result = new TransportSpecificAddressToUniversalAddress_3_Result();
+                        try
+                        {
+                            result.Value = TransportSpecificAddressToUniversalAddress_3(call.Caller, networkBuffer);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress", networkBuffer, result);
+                            call.Reply(result);
+                        }
+                        catch (Exception e) when (!(e is RpcException))
+                        {
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion3, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress", networkBuffer, e);
+                            call.SystemError();
+                            return;
+                        }
+                        break;
+                    }
+                    default:
+                        Settings?.Logger?.Error($"Procedure unavailable (Version: {call.Version}, Procedure: {call.Procedure}).");
+                        call.ProcedureUnavailable();
+                        break;
+                }
+            }
+            else if (call.Version == PortMapperConstants.PortMapperVersion4)
+            {
+                switch (call.Procedure)
+                {
+                    case PortMapperConstants.Set:
+                    {
+                        var mapping3 = new Mapping3();
+                        call.RetrieveCall(mapping3);
+                        Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.Set, "Set", mapping3);
+                        var result = new Set_4_Result();
+                        try
+                        {
+                            result.Value = Set_4(call.Caller, mapping3);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.Set, "Set", mapping3, result);
+                            call.Reply(result);
+                        }
+                        catch (Exception e) when (!(e is RpcException))
+                        {
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.Set, "Set", mapping3, e);
+                            call.SystemError();
+                            return;
+                        }
+                        break;
+                    }
+                    case PortMapperConstants.Unset:
+                    {
+                        var mapping3 = new Mapping3();
+                        call.RetrieveCall(mapping3);
+                        Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.Unset, "Unset", mapping3);
+                        var result = new Unset_4_Result();
+                        try
+                        {
+                            result.Value = Unset_4(call.Caller, mapping3);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.Unset, "Unset", mapping3, result);
+                            call.Reply(result);
+                        }
+                        catch (Exception e) when (!(e is RpcException))
+                        {
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.Unset, "Unset", mapping3, e);
+                            call.SystemError();
+                            return;
+                        }
+                        break;
+                    }
+                    case PortMapperConstants.GetAddress:
+                    {
+                        var mapping3 = new Mapping3();
+                        call.RetrieveCall(mapping3);
+                        Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddress, "GetAddress", mapping3);
+                        var result = new GetAddress_4_Result();
+                        try
+                        {
+                            result.Value = GetAddress_4(call.Caller, mapping3);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddress, "GetAddress", mapping3, result);
+                            call.Reply(result);
+                        }
+                        catch (Exception e) when (!(e is RpcException))
+                        {
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddress, "GetAddress", mapping3, e);
+                            call.SystemError();
+                            return;
+                        }
+                        break;
+                    }
+                    case PortMapperConstants.Dump:
+                    {
+                        var args = Void;
+                        call.RetrieveCall(args);
+                        Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.Dump, "Dump", args);
+                        try
+                        {
+                            MappingNodeHead3 result = Dump_4(call.Caller);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.Dump, "Dump", args, result);
+                            call.Reply(result);
+                        }
+                        catch (Exception e) when (!(e is RpcException))
+                        {
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.Dump, "Dump", args, e);
+                            call.SystemError();
+                            return;
+                        }
+                        break;
+                    }
+                    case PortMapperConstants.Broadcast:
+                    {
+                        var callArguments = new CallArguments();
+                        call.RetrieveCall(callArguments);
+                        Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.Broadcast, "Broadcast", callArguments);
+                        try
+                        {
+                            CallResult3 result = Broadcast_4(call.Caller, callArguments);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.Broadcast, "Broadcast", callArguments, result);
+                            call.Reply(result);
+                        }
+                        catch (Exception e) when (!(e is RpcException))
+                        {
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.Broadcast, "Broadcast", callArguments, e);
+                            call.SystemError();
+                            return;
+                        }
+                        break;
+                    }
+                    case PortMapperConstants.GetTime:
+                    {
+                        var args = Void;
+                        call.RetrieveCall(args);
+                        Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetTime, "GetTime", args);
+                        var result = new GetTime_4_Result();
+                        try
+                        {
+                            result.Value = GetTime_4(call.Caller);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetTime, "GetTime", args, result);
+                            call.Reply(result);
+                        }
+                        catch (Exception e) when (!(e is RpcException))
+                        {
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetTime, "GetTime", args, e);
+                            call.SystemError();
+                            return;
+                        }
+                        break;
+                    }
+                    case PortMapperConstants.UniversalAddressToTransportSpecificAddress:
+                    {
+                        var args = new UniversalAddressToTransportSpecificAddress_4_Arguments();
+                        call.RetrieveCall(args);
+                        Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress", args);
+                        try
+                        {
+                            NetworkBuffer result = UniversalAddressToTransportSpecificAddress_4(call.Caller, args.UniversalAddress);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress", args, result);
+                            call.Reply(result);
+                        }
+                        catch (Exception e) when (!(e is RpcException))
+                        {
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress", args, e);
+                            call.SystemError();
+                            return;
+                        }
+                        break;
+                    }
+                    case PortMapperConstants.TransportSpecificAddressToUniversalAddress:
+                    {
+                        var networkBuffer = new NetworkBuffer();
+                        call.RetrieveCall(networkBuffer);
+                        Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress", networkBuffer);
+                        var result = new TransportSpecificAddressToUniversalAddress_4_Result();
+                        try
+                        {
+                            result.Value = TransportSpecificAddressToUniversalAddress_4(call.Caller, networkBuffer);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress", networkBuffer, result);
+                            call.Reply(result);
+                        }
+                        catch (Exception e) when (!(e is RpcException))
+                        {
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress", networkBuffer, e);
+                            call.SystemError();
+                            return;
+                        }
+                        break;
+                    }
+                    case PortMapperConstants.GetVersionAddress:
+                    {
+                        var mapping3 = new Mapping3();
+                        call.RetrieveCall(mapping3);
+                        Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetVersionAddress, "GetVersionAddress", mapping3);
+                        var result = new GetVersionAddress_4_Result();
+                        try
+                        {
+                            result.Value = GetVersionAddress_4(call.Caller, mapping3);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetVersionAddress, "GetVersionAddress", mapping3, result);
+                            call.Reply(result);
+                        }
+                        catch (Exception e) when (!(e is RpcException))
+                        {
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetVersionAddress, "GetVersionAddress", mapping3, e);
+                            call.SystemError();
+                            return;
+                        }
+                        break;
+                    }
+                    case PortMapperConstants.IndirectCall:
+                    {
+                        var callArguments = new CallArguments();
+                        call.RetrieveCall(callArguments);
+                        Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.IndirectCall, "IndirectCall", callArguments);
+                        try
+                        {
+                            CallResult3 result = IndirectCall_4(call.Caller, callArguments);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.IndirectCall, "IndirectCall", callArguments, result);
+                            call.Reply(result);
+                        }
+                        catch (Exception e) when (!(e is RpcException))
+                        {
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.IndirectCall, "IndirectCall", callArguments, e);
+                            call.SystemError();
+                            return;
+                        }
+                        break;
+                    }
+                    case PortMapperConstants.GetAddressList:
+                    {
+                        var mapping3 = new Mapping3();
+                        call.RetrieveCall(mapping3);
+                        Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddressList, "GetAddressList", mapping3);
+                        try
+                        {
+                            EntryNodeHead result = GetAddressList_4(call.Caller, mapping3);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddressList, "GetAddressList", mapping3, result);
+                            call.Reply(result);
+                        }
+                        catch (Exception e) when (!(e is RpcException))
+                        {
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddressList, "GetAddressList", mapping3, e);
+                            call.SystemError();
+                            return;
+                        }
+                        break;
+                    }
+                    case PortMapperConstants.GetStatistics:
+                    {
+                        var args = Void;
+                        call.RetrieveCall(args);
+                        Settings?.Logger?.BeginCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetStatistics, "GetStatistics", args);
+                        try
+                        {
+                            StatisticsByVersion result = GetStatistics_4(call.Caller);
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetStatistics, "GetStatistics", args, result);
+                            call.Reply(result);
+                        }
+                        catch (Exception e) when (!(e is RpcException))
+                        {
+                            Settings?.Logger?.EndCall(PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetStatistics, "GetStatistics", args, e);
+                            call.SystemError();
+                            return;
+                        }
+                        break;
+                    }
+                    default:
+                        Settings?.Logger?.Error($"Procedure unavailable (Version: {call.Version}, Procedure: {call.Procedure}).");
                         call.ProcedureUnavailable();
                         break;
                 }
             }
             else
             {
+                Settings?.Logger?.Error($"Program mismatch (Version: {call.Version}).");
                 call.ProgramMismatch();
             }
         }

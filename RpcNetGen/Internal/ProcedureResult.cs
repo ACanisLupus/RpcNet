@@ -10,17 +10,17 @@ internal class ProcedureResult
     private Struct _tempParsedStructForClient;
     private Struct _tempParsedStructForServer;
 
-    public ProcedureResult(RpcParser.ReturnContext @return, string procedureName)
+    public ProcedureResult(string constantsClassName, RpcParser.ReturnContext @return, string procedureName)
     {
         @return.Check();
 
         _procedureName = procedureName;
 
-        if (@return.declaration() != null)
+        if (@return.declaration() is not null)
         {
-            _dataType = new Declaration(@return.declaration(), () => false).DataType;
+            _dataType = new Declaration(constantsClassName, @return.declaration(), () => false).DataType;
         }
-        else if (@return.@void() != null)
+        else if (@return.@void() is not null)
         {
             _dataType = DataType.CreateVoid();
         }
@@ -65,11 +65,8 @@ internal class ProcedureResult
         }
     }
 
-    public void DumpStructForClient(XdrFileWriter writer, int indent) =>
-        _tempParsedStructForClient?.Dump(writer, indent);
-
-    public void DumpStructForServer(XdrFileWriter writer, int indent) =>
-        _tempParsedStructForServer?.Dump(writer, indent);
+    public void DumpStructForClient(XdrFileWriter writer, int indent) => _tempParsedStructForClient?.Dump(writer, indent);
+    public void DumpStructForServer(XdrFileWriter writer, int indent) => _tempParsedStructForServer?.Dump(writer, indent);
 
     public void DumpClientResultCreation(XdrFileWriter writer, int indent)
     {

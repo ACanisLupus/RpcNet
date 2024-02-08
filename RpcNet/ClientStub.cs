@@ -3,7 +3,7 @@
 namespace RpcNet;
 
 using System.Net;
-using Internal;
+using RpcNet.Internal;
 
 public abstract class ClientStub : IDisposable
 {
@@ -12,32 +12,21 @@ public abstract class ClientStub : IDisposable
 
     private readonly INetworkClient _networkClient;
 
-    protected ClientStub(
-        Protocol protocol,
-        IPAddress ipAddress,
-        int port,
-        int program,
-        int version,
-        ClientSettings? clientSettings = default)
+    protected ClientStub(Protocol protocol, IPAddress ipAddress, int port, int program, int version, ClientSettings? clientSettings = default)
     {
-        if (ipAddress == null)
+        if (ipAddress is null)
         {
             throw new ArgumentNullException(nameof(ipAddress));
         }
 
         Settings = clientSettings;
 
-        switch (protocol)
+        _networkClient = protocol switch
         {
-            case Protocol.Tcp:
-                _networkClient = new RpcTcpClient(ipAddress, port, program, version, clientSettings);
-                break;
-            case Protocol.Udp:
-                _networkClient = new RpcUdpClient(ipAddress, port, program, version, clientSettings);
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(protocol));
-        }
+            Protocol.Tcp => new RpcTcpClient(ipAddress, port, program, version, clientSettings),
+            Protocol.Udp => new RpcUdpClient(ipAddress, port, program, version, clientSettings),
+            _ => throw new ArgumentOutOfRangeException(nameof(protocol))
+        };
     }
 
     public TimeSpan ReceiveTimeout

@@ -3,7 +3,7 @@
 namespace RpcNet;
 
 using System.Net;
-using Internal;
+using RpcNet.Internal;
 
 public abstract class ServerStub : IDisposable
 {
@@ -15,20 +15,14 @@ public abstract class ServerStub : IDisposable
 
     private bool _isDisposed;
 
-    protected ServerStub(
-        Protocol protocol,
-        IPAddress ipAddress,
-        int port,
-        int program,
-        int[] versions,
-        ServerSettings? serverSettings = default)
+    protected ServerStub(Protocol protocol, IPAddress ipAddress, int port, int program, int[] versions, ServerSettings? serverSettings = default)
     {
-        if (ipAddress == null)
+        if (ipAddress is null)
         {
             throw new ArgumentNullException(nameof(ipAddress));
         }
 
-        if ((versions == null) || (versions.Length == 0))
+        if (versions is null || (versions.Length == 0))
         {
             throw new ArgumentNullException(nameof(versions));
         }

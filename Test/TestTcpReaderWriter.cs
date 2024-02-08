@@ -8,9 +8,8 @@ using NUnit.Framework;
 using RpcNet.Internal;
 
 [TestFixture]
-internal class TestTcpReaderWriter
+internal sealed class TestTcpReaderWriter
 {
-    private TcpListener _listener;
     private TcpReader _reader;
     private TcpClient _readerTcpClient;
     private TcpWriter _writer;
@@ -19,23 +18,27 @@ internal class TestTcpReaderWriter
     [SetUp]
     public void SetUp()
     {
-        _listener = new TcpListener(IPAddress.Loopback, 0);
-        _listener.Start();
-        int port = ((IPEndPoint)_listener.Server.LocalEndPoint).Port;
+        IPAddress ipAddress = IPAddress.Loopback;
+
+        TcpListener listener = new(ipAddress, 0);
+        listener.Start();
+
+        int port = ((IPEndPoint)listener.Server.LocalEndPoint)?.Port ?? throw new InvalidOperationException("Could not find local end point.");
         _readerTcpClient = new TcpClient();
-        Task task = Task.Run(() => _writerTcpClient = _listener.AcceptTcpClient());
-        _readerTcpClient.Connect(IPAddress.Loopback, port);
+        Task task = Task.Run(() => _writerTcpClient = listener.AcceptTcpClient());
+        _readerTcpClient.Connect(ipAddress, port);
         task.GetAwaiter().GetResult();
         _reader = new TcpReader(_readerTcpClient.Client);
         _writer = new TcpWriter(_writerTcpClient.Client);
-        _listener.Stop();
+        
+        listener.Stop();
     }
 
     [TearDown]
     public void TearDown()
     {
-        _readerTcpClient.Dispose();
-        _writerTcpClient.Dispose();
+        _readerTcpClient?.Dispose();
+        _writerTcpClient?.Dispose();
     }
 
     [Test]
@@ -58,11 +61,11 @@ internal class TestTcpReaderWriter
         _writer.BeginWriting();
         xdrWriter.WriteOpaque(value);
         xdrWriter.Write(42);
-        NetworkWriteResult writeResult = _writer.EndWriting(null);
-        Assert.That(writeResult.SocketError, Is.EqualTo(SocketError.Success));
 
-        NetworkReadResult readResult = _reader.BeginReading();
-        Assert.That(readResult.SocketError, Is.EqualTo(SocketError.Success));
+        Assert.DoesNotThrow(() => _writer.EndWriting(new IPEndPoint(0, 0)));
+
+        Assert.DoesNotThrow(() => _reader.BeginReading());
+
         Assert.That(xdrReader.ReadOpaque(), Is.EqualTo(value));
         Assert.That(xdrReader.ReadInt32(), Is.EqualTo(42));
         _reader.EndReading();
@@ -90,8 +93,8 @@ internal class TestTcpReaderWriter
         var task = Task.Run(
             () =>
             {
-                NetworkReadResult readResult = _reader.BeginReading();
-                Assert.That(readResult.SocketError, Is.EqualTo(SocketError.Success));
+                Assert.DoesNotThrow(() => _reader.BeginReading());
+
                 Assert.That(xdrReader.ReadOpaque(), Is.EqualTo(value));
                 Assert.That(xdrReader.ReadInt32(), Is.EqualTo(42));
                 _reader.EndReading();

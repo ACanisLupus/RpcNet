@@ -29,11 +29,7 @@ internal class Program
         var parser = new RpcParser(tokens) { BuildParseTree = true };
 
         RpcParser.RpcSpecificationContext xdrSpecificationContext = parser.rpcSpecification();
-        var parsedContent = new Content(
-            arguments.Name,
-            arguments.Namespace,
-            arguments.Public ? "public" : "internal",
-            xdrSpecificationContext);
+        var parsedContent = new Content(arguments.Name, arguments.Namespace, arguments.Public ? "public" : "internal", xdrSpecificationContext);
 
         using var writer = new XdrFileWriter(arguments.OutputFilePath);
 
@@ -54,8 +50,7 @@ internal class Program
         }
 
         arguments.InputFilePath = Path.GetFullPath(arguments.InputFilePath);
-        string directoryName =
-            Path.GetDirectoryName(arguments.InputFilePath) ?? throw new InvalidOperationException();
+        string directoryName = Path.GetDirectoryName(arguments.InputFilePath) ?? throw new InvalidOperationException();
 
         arguments.Name = Path.GetFileNameWithoutExtension(arguments.InputFilePath);
 

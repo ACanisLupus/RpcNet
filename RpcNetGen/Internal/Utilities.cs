@@ -28,7 +28,7 @@ internal static class Utilities
 
     public static void Check(this ParserRuleContext parserRuleContext)
     {
-        if (parserRuleContext.exception != null)
+        if (parserRuleContext.exception is not null)
         {
             throw parserRuleContext.exception;
         }

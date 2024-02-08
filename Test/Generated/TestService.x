@@ -37,13 +37,10 @@ struct SimpleStruct
 
 program TestServiceProgram {
   version TestServiceVersion {
-    void VoidVoid1() = 1;
-    void VoidVoid2(void) = 2;
-
-    int IntInt1(int value) = 3;
-    int IntInt2(int) = 4;
+    void ThrowsException() = 1;
+    int Echo(int value) = 2;
   } = 1;
   version TestServiceVersion2 {
-    SimpleStruct SimpleStructSimpleStruct(SimpleStruct value) = 7;
+    SimpleStruct SimpleStructSimpleStruct(SimpleStruct value) = 3;
   } = 2;
-} = 0x020406080;
+} = 0x20406080;
