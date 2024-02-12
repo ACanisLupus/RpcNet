@@ -689,9 +689,17 @@ namespace TestService
         {
             var args = Void;
             var result = Void;
-            Settings?.Logger?.BeginCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.ThrowsException, "ThrowsException", args);
-            Call(TestServiceConstants.ThrowsException, TestServiceConstants.TestServiceVersion, args, result);
-            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.ThrowsException, "ThrowsException", args, result);
+            Settings?.Logger?.BeginCall(RpcEndPoint, TestServiceConstants.TestServiceVersion, TestServiceConstants.ThrowsException, "ThrowsException_1", args);
+            try
+            {
+                Call(TestServiceConstants.ThrowsException, TestServiceConstants.TestServiceVersion, args, result);
+            }
+            catch (Exception e)
+            {
+                Settings?.Logger?.EndCall(RpcEndPoint, TestServiceConstants.TestServiceVersion, TestServiceConstants.ThrowsException, "ThrowsException_1", args, e);
+                throw;
+            }
+            Settings?.Logger?.EndCall(RpcEndPoint, TestServiceConstants.TestServiceVersion, TestServiceConstants.ThrowsException, "ThrowsException_1", args, result);
         }
 
         private class Echo_1_Arguments : IXdrDataType
@@ -761,18 +769,34 @@ namespace TestService
                 Value = value,
             };
             var result = new Echo_1_Result();
-            Settings?.Logger?.BeginCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.Echo, "Echo", args);
-            Call(TestServiceConstants.Echo, TestServiceConstants.TestServiceVersion, args, result);
-            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.Echo, "Echo", args, result);
+            Settings?.Logger?.BeginCall(RpcEndPoint, TestServiceConstants.TestServiceVersion, TestServiceConstants.Echo, "Echo_1", args);
+            try
+            {
+                Call(TestServiceConstants.Echo, TestServiceConstants.TestServiceVersion, args, result);
+            }
+            catch (Exception e)
+            {
+                Settings?.Logger?.EndCall(RpcEndPoint, TestServiceConstants.TestServiceVersion, TestServiceConstants.Echo, "Echo_1", args, e);
+                throw;
+            }
+            Settings?.Logger?.EndCall(RpcEndPoint, TestServiceConstants.TestServiceVersion, TestServiceConstants.Echo, "Echo_1", args, result);
             return result.Value;
         }
 
         public SimpleStruct SimpleStructSimpleStruct_2(SimpleStruct value)
         {
             var result = new SimpleStruct();
-            Settings?.Logger?.BeginCall(TestServiceConstants.TestServiceVersion2, TestServiceConstants.SimpleStructSimpleStruct, "SimpleStructSimpleStruct", value);
-            Call(TestServiceConstants.SimpleStructSimpleStruct, TestServiceConstants.TestServiceVersion2, value, result);
-            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion2, TestServiceConstants.SimpleStructSimpleStruct, "SimpleStructSimpleStruct", value, result);
+            Settings?.Logger?.BeginCall(RpcEndPoint, TestServiceConstants.TestServiceVersion2, TestServiceConstants.SimpleStructSimpleStruct, "SimpleStructSimpleStruct_2", value);
+            try
+            {
+                Call(TestServiceConstants.SimpleStructSimpleStruct, TestServiceConstants.TestServiceVersion2, value, result);
+            }
+            catch (Exception e)
+            {
+                Settings?.Logger?.EndCall(RpcEndPoint, TestServiceConstants.TestServiceVersion2, TestServiceConstants.SimpleStructSimpleStruct, "SimpleStructSimpleStruct_2", value, e);
+                throw;
+            }
+            Settings?.Logger?.EndCall(RpcEndPoint, TestServiceConstants.TestServiceVersion2, TestServiceConstants.SimpleStructSimpleStruct, "SimpleStructSimpleStruct_2", value, result);
             return result;
         }
     }
@@ -844,9 +868,9 @@ namespace TestService
             }
         }
 
-        public abstract void ThrowsException_1(Caller caller);
-        public abstract int Echo_1(Caller caller, int value);
-        public abstract SimpleStruct SimpleStructSimpleStruct_2(Caller caller, SimpleStruct value);
+        public abstract void ThrowsException_1(RpcEndPoint rpcEndPoint);
+        public abstract int Echo_1(RpcEndPoint rpcEndPoint, int value);
+        public abstract SimpleStruct SimpleStructSimpleStruct_2(RpcEndPoint rpcEndPoint, SimpleStruct value);
 
         protected override void DispatchReceivedCall(ReceivedRpcCall call)
         {
@@ -858,17 +882,17 @@ namespace TestService
                     {
                         var args = Void;
                         call.RetrieveCall(args);
-                        Settings?.Logger?.BeginCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.ThrowsException, "ThrowsException", args);
+                        Settings?.Logger?.BeginCall(call.RpcEndPoint, TestServiceConstants.TestServiceVersion, TestServiceConstants.ThrowsException, "ThrowsException_1", args);
                         var result = Void;
                         try
                         {
-                            ThrowsException_1(call.Caller);
-                            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.ThrowsException, "ThrowsException", args, result);
+                            ThrowsException_1(call.RpcEndPoint);
+                            Settings?.Logger?.EndCall(call.RpcEndPoint, TestServiceConstants.TestServiceVersion, TestServiceConstants.ThrowsException, "ThrowsException_1", args, result);
                             call.Reply(result);
                         }
                         catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.ThrowsException, "ThrowsException", args, e);
+                            Settings?.Logger?.EndCall(call.RpcEndPoint, TestServiceConstants.TestServiceVersion, TestServiceConstants.ThrowsException, "ThrowsException_1", args, e);
                             call.SystemError();
                             return;
                         }
@@ -878,17 +902,17 @@ namespace TestService
                     {
                         var args = new Echo_1_Arguments();
                         call.RetrieveCall(args);
-                        Settings?.Logger?.BeginCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.Echo, "Echo", args);
+                        Settings?.Logger?.BeginCall(call.RpcEndPoint, TestServiceConstants.TestServiceVersion, TestServiceConstants.Echo, "Echo_1", args);
                         var result = new Echo_1_Result();
                         try
                         {
-                            result.Value = Echo_1(call.Caller, args.Value);
-                            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.Echo, "Echo", args, result);
+                            result.Value = Echo_1(call.RpcEndPoint, args.Value);
+                            Settings?.Logger?.EndCall(call.RpcEndPoint, TestServiceConstants.TestServiceVersion, TestServiceConstants.Echo, "Echo_1", args, result);
                             call.Reply(result);
                         }
                         catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion, TestServiceConstants.Echo, "Echo", args, e);
+                            Settings?.Logger?.EndCall(call.RpcEndPoint, TestServiceConstants.TestServiceVersion, TestServiceConstants.Echo, "Echo_1", args, e);
                             call.SystemError();
                             return;
                         }
@@ -908,16 +932,16 @@ namespace TestService
                     {
                         var value = new SimpleStruct();
                         call.RetrieveCall(value);
-                        Settings?.Logger?.BeginCall(TestServiceConstants.TestServiceVersion2, TestServiceConstants.SimpleStructSimpleStruct, "SimpleStructSimpleStruct", value);
+                        Settings?.Logger?.BeginCall(call.RpcEndPoint, TestServiceConstants.TestServiceVersion2, TestServiceConstants.SimpleStructSimpleStruct, "SimpleStructSimpleStruct_2", value);
                         try
                         {
-                            SimpleStruct result = SimpleStructSimpleStruct_2(call.Caller, value);
-                            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion2, TestServiceConstants.SimpleStructSimpleStruct, "SimpleStructSimpleStruct", value, result);
+                            SimpleStruct result = SimpleStructSimpleStruct_2(call.RpcEndPoint, value);
+                            Settings?.Logger?.EndCall(call.RpcEndPoint, TestServiceConstants.TestServiceVersion2, TestServiceConstants.SimpleStructSimpleStruct, "SimpleStructSimpleStruct_2", value, result);
                             call.Reply(result);
                         }
                         catch (Exception e) when (!(e is RpcException))
                         {
-                            Settings?.Logger?.EndCall(TestServiceConstants.TestServiceVersion2, TestServiceConstants.SimpleStructSimpleStruct, "SimpleStructSimpleStruct", value, e);
+                            Settings?.Logger?.EndCall(call.RpcEndPoint, TestServiceConstants.TestServiceVersion2, TestServiceConstants.SimpleStructSimpleStruct, "SimpleStructSimpleStruct_2", value, e);
                             call.SystemError();
                             return;
                         }

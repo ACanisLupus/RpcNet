@@ -61,7 +61,7 @@ internal sealed class TestUdpClientServer
         Assert.That(receivedCallChannel.TryReceive(TimeSpan.FromSeconds(10), out ReceivedRpcCall receivedCall));
         Assert.That(receivedCall.Procedure, Is.EqualTo(Procedure));
         Assert.That(receivedCall.Version, Is.EqualTo(Version));
-        Assert.That(receivedCall.Caller, Is.Not.Null);
+        Assert.That(receivedCall.RpcEndPoint, Is.Not.Null);
 
         Assert.That(argument.Value, Is.EqualTo(result.Value));
     }

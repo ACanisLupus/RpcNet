@@ -37,15 +37,15 @@ internal class TestServer : TestServiceServerStub
     {
     }
 
-    public override void ThrowsException_1(Caller caller)
+    public override void ThrowsException_1(RpcEndPoint rpcEndPoint)
     {
     }
 
-    public override int Echo_1(Caller caller, int value)
+    public override int Echo_1(RpcEndPoint rpcEndPoint, int value)
     {
         _ = Interlocked.Increment(ref Counter);
         return value;
     }
 
-    public override SimpleStruct SimpleStructSimpleStruct_2(Caller caller, SimpleStruct value) => value;
+    public override SimpleStruct SimpleStructSimpleStruct_2(RpcEndPoint rpcEndPoint, SimpleStruct value) => value;
 }

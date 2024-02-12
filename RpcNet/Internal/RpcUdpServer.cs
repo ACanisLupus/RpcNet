@@ -135,7 +135,7 @@ public sealed class RpcUdpServer : IDisposable
                 IPEndPoint remoteIpEndPoint = _reader.BeginReading();
 
                 _writer.BeginWriting();
-                _receivedCall.HandleCall(new Caller(remoteIpEndPoint, Protocol.Udp));
+                _receivedCall.HandleCall(new RpcEndPoint(remoteIpEndPoint, Protocol.Udp));
                 _reader.EndReading();
                 _writer.EndWriting(remoteIpEndPoint);
             }
