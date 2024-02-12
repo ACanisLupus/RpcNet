@@ -154,6 +154,8 @@ internal class Content
 
     public string GetConstant(ConstantContext @const)
     {
+        @const.Check();
+
         ITerminalNode decimalValue = @const.Decimal();
         if (decimalValue is not null)
         {

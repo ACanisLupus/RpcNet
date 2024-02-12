@@ -3,11 +3,11 @@ grammar Rpc;
 // parser rules
 
 bool: 'bool' | 'boolean';
-uint8: 'unsigned' 'char' | 'uint8' | 'UInt8' | 'byte';
+uint8: 'unsigned' 'char' | 'char' | 'uint8' | 'UInt8' | 'byte';
 uint16: 'unsigned' 'short' | 'uint16' | 'UInt16';
 uint32: 'unsigned' 'int' | 'unsigned' 'long' | 'uint32' | 'UInt32';
 uint64: 'unsigned' 'hyper' | 'uint64' | 'UInt64';
-int8: 'char' | 'int8' | 'Int8' | 'sbyte';
+int8: 'int8' | 'Int8' | 'sbyte';
 int16: 'short' | 'int16' | 'Int16';
 int32: 'int' | 'long' | 'int32' | 'Int32';
 int64: 'hyper' | 'int64' | 'Int64';
@@ -18,13 +18,14 @@ void: 'void';
 dataType: bool | uint8 | uint16 | uint32 | uint64 | int8 | int16 | int32 | int64 | float32 | float64 | Identifier;
 
 opaque: 'opaque' Identifier '<' value? '>' | 'opaque' '<' value? '>' Identifier?;
-string: 'string' Identifier '<' value? '>' | 'string' '<' value? '>' Identifier?;
+fixedLengthOpaque: 'opaque' Identifier '[' value ']' | 'opaque' '[' value '] Identifier';
+string: 'string' Identifier '<' value? '>' | 'string' '<' value? '>' Identifier? | 'string' Identifier? | 'string';
 scalar: dataType Identifier?;
 pointer: dataType '*' Identifier?;
 array: dataType Identifier '[' value ']' | dataType '[' value ']' Identifier?;
 vector: dataType Identifier '<' value? '>' | dataType '<' value? '>' Identifier?;
 
-declaration: opaque | string | scalar | pointer | array | vector;
+declaration: opaque | fixedLengthOpaque | string | scalar | pointer | array | vector;
 
 value: constant | Identifier;
 constant: Decimal | Hexadecimal | Octal;

@@ -224,6 +224,22 @@ internal sealed class TestXdr
     }
 
     [Test]
+    [TestCase(0, 0)]
+    [TestCase(1, 4)]
+    [TestCase(2, 4)]
+    [TestCase(3, 4)]
+    [TestCase(4, 4)]
+    public void ReadAndWriteFixedLengthOpaque(int length, int expectedWriteIndex)
+    {
+        byte[] value = GenerateByteTestData(length);
+
+        _writer.WriteFixedLengthOpaque(value);
+
+        Assert.That(_stubNetwork.WriteIndex, Is.EqualTo(expectedWriteIndex));
+        Assert.That(_reader.ReadFixedLengthOpaque(length), Is.EqualTo(value));
+    }
+
+    [Test]
     [TestCase(null, 4)]
     [TestCase("", 4)]
     [TestCase("a", 8)]

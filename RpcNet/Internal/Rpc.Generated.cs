@@ -91,23 +91,59 @@ namespace RpcNet.Internal
 
         public void WriteTo(IXdrWriter writer)
         {
+            if (Verifier is null)
+            {
+                throw new InvalidOperationException("Verifier must not be null.");
+            }
             Verifier.WriteTo(writer);
+            if (ReplyData is null)
+            {
+                throw new InvalidOperationException("ReplyData must not be null.");
+            }
             ReplyData.WriteTo(writer);
         }
 
         public void ReadFrom(IXdrReader reader)
         {
-            Verifier.ReadFrom(reader);
-            ReplyData.ReadFrom(reader);
+            if (Verifier is null)
+            {
+                Verifier = new OpaqueAuthentication(reader);
+            }
+            else
+            {
+                Verifier.ReadFrom(reader);
+            }
+            if (ReplyData is null)
+            {
+                ReplyData = new ReplyData(reader);
+            }
+            else
+            {
+                ReplyData.ReadFrom(reader);
+            }
         }
 
         public void ToString(StringBuilder sb)
         {
             sb.Append("{");
             sb.Append(" Verifier = ");
-            Verifier.ToString(sb);
+            if (Verifier is null)
+            {
+                sb.Append("null");
+            }
+            else
+            {
+                Verifier.ToString(sb);
+            }
             sb.Append(", ReplyData = ");
-            ReplyData.ToString(sb);
+            if (ReplyData is null)
+            {
+                sb.Append("null");
+            }
+            else
+            {
+                ReplyData.ToString(sb);
+            }
             sb.Append(" }");
         }
 
@@ -143,7 +179,15 @@ namespace RpcNet.Internal
             writer.Write(Program);
             writer.Write(Version);
             writer.Write(Procedure);
+            if (Credential is null)
+            {
+                throw new InvalidOperationException("Credential must not be null.");
+            }
             Credential.WriteTo(writer);
+            if (Verifier is null)
+            {
+                throw new InvalidOperationException("Verifier must not be null.");
+            }
             Verifier.WriteTo(writer);
         }
 
@@ -153,8 +197,22 @@ namespace RpcNet.Internal
             Program = reader.ReadUInt32();
             Version = reader.ReadUInt32();
             Procedure = reader.ReadUInt32();
-            Credential.ReadFrom(reader);
-            Verifier.ReadFrom(reader);
+            if (Credential is null)
+            {
+                Credential = new OpaqueAuthentication(reader);
+            }
+            else
+            {
+                Credential.ReadFrom(reader);
+            }
+            if (Verifier is null)
+            {
+                Verifier = new OpaqueAuthentication(reader);
+            }
+            else
+            {
+                Verifier.ReadFrom(reader);
+            }
         }
 
         public void ToString(StringBuilder sb)
@@ -169,9 +227,23 @@ namespace RpcNet.Internal
             sb.Append(", Procedure = ");
             sb.Append(Procedure);
             sb.Append(", Credential = ");
-            Credential.ToString(sb);
+            if (Credential is null)
+            {
+                sb.Append("null");
+            }
+            else
+            {
+                Credential.ToString(sb);
+            }
             sb.Append(", Verifier = ");
-            Verifier.ToString(sb);
+            if (Verifier is null)
+            {
+                sb.Append("null");
+            }
+            else
+            {
+                Verifier.ToString(sb);
+            }
             sb.Append(" }");
         }
 
@@ -239,11 +311,19 @@ namespace RpcNet.Internal
         }
 
         public AuthenticationFlavor AuthenticationFlavor { get; set; }
-        public byte[] Body { get; set; }
+        public byte[] Body { get; set; } = Array.Empty<byte>();
 
         public void WriteTo(IXdrWriter writer)
         {
             writer.Write((int)AuthenticationFlavor);
+            if (Body is null)
+            {
+                throw new InvalidOperationException("Body must not be null.");
+            }
+            if (Body.Length > 400)
+            {
+                throw new InvalidOperationException("Body must not not have more than 400 elements.");
+            }
             writer.WriteOpaque(Body);
         }
 
@@ -251,6 +331,10 @@ namespace RpcNet.Internal
         {
             AuthenticationFlavor = (AuthenticationFlavor)reader.ReadInt32();
             Body = reader.ReadOpaque();
+            if (Body.Length > 400)
+            {
+                throw new InvalidOperationException($"Body must not not have more than 400 elements but has {Body.Length}.");
+            }
         }
 
         public void ToString(StringBuilder sb)
@@ -258,13 +342,20 @@ namespace RpcNet.Internal
             sb.Append("{");
             sb.Append(" AuthenticationFlavor = ");
             sb.Append(AuthenticationFlavor);
-            sb.Append(", Body = [");
-            for (int _idx = 0; _idx < Body.Length; _idx++)
+            if (Body is null)
             {
-                sb.Append(_idx == 0 ? " " : ", ");
-                sb.Append(Body[_idx]);
+                sb.Append(", Body = null");
             }
-            sb.Append(" ]");
+            else
+            {
+                sb.Append(", Body = [");
+                for (int _idx = 0; _idx < Body.Length; _idx++)
+                {
+                    sb.Append(_idx == 0 ? " " : ", ");
+                    sb.Append(Body[_idx]);
+                }
+                sb.Append(" ]");
+            }
             sb.Append(" }");
         }
 
@@ -293,13 +384,24 @@ namespace RpcNet.Internal
         public void WriteTo(IXdrWriter writer)
         {
             writer.Write(Xid);
+            if (Body is null)
+            {
+                throw new InvalidOperationException("Body must not be null.");
+            }
             Body.WriteTo(writer);
         }
 
         public void ReadFrom(IXdrReader reader)
         {
             Xid = reader.ReadUInt32();
-            Body.ReadFrom(reader);
+            if (Body is null)
+            {
+                Body = new Body(reader);
+            }
+            else
+            {
+                Body.ReadFrom(reader);
+            }
         }
 
         public void ToString(StringBuilder sb)
@@ -308,7 +410,14 @@ namespace RpcNet.Internal
             sb.Append(" Xid = ");
             sb.Append(Xid);
             sb.Append(", Body = ");
-            Body.ToString(sb);
+            if (Body is null)
+            {
+                sb.Append("null");
+            }
+            else
+            {
+                Body.ToString(sb);
+            }
             sb.Append(" }");
         }
 
@@ -341,9 +450,17 @@ namespace RpcNet.Internal
             switch (MessageType)
             {
                 case MessageType.Call:
+                    if (CallBody is null)
+                    {
+                        throw new InvalidOperationException("CallBody must not be null.");
+                    }
                     CallBody.WriteTo(writer);
                     break;
                 case MessageType.Reply:
+                    if (ReplyBody is null)
+                    {
+                        throw new InvalidOperationException("ReplyBody must not be null.");
+                    }
                     ReplyBody.WriteTo(writer);
                     break;
             }
@@ -355,10 +472,24 @@ namespace RpcNet.Internal
             switch (MessageType)
             {
                 case MessageType.Call:
-                    CallBody.ReadFrom(reader);
+                    if (CallBody is null)
+                    {
+                        CallBody = new CallBody(reader);
+                    }
+                    else
+                    {
+                        CallBody.ReadFrom(reader);
+                    }
                     break;
                 case MessageType.Reply:
-                    ReplyBody.ReadFrom(reader);
+                    if (ReplyBody is null)
+                    {
+                        ReplyBody = new ReplyBody(reader);
+                    }
+                    else
+                    {
+                        ReplyBody.ReadFrom(reader);
+                    }
                     break;
             }
         }
@@ -370,11 +501,25 @@ namespace RpcNet.Internal
             {
                 case MessageType.Call:
                     sb.Append(" CallBody = ");
-                    CallBody.ToString(sb);
+                    if (CallBody is null)
+                    {
+                        sb.Append("null");
+                    }
+                    else
+                    {
+                        CallBody.ToString(sb);
+                    }
                     break;
                 case MessageType.Reply:
                     sb.Append(" ReplyBody = ");
-                    ReplyBody.ToString(sb);
+                    if (ReplyBody is null)
+                    {
+                        sb.Append("null");
+                    }
+                    else
+                    {
+                        ReplyBody.ToString(sb);
+                    }
                     break;
             }
             sb.Append(" }");
@@ -409,6 +554,10 @@ namespace RpcNet.Internal
             switch (RejectStatus)
             {
                 case RejectStatus.RpcVersionMismatch:
+                    if (MismatchInfo is null)
+                    {
+                        throw new InvalidOperationException("MismatchInfo must not be null.");
+                    }
                     MismatchInfo.WriteTo(writer);
                     break;
                 case RejectStatus.AuthenticationError:
@@ -423,7 +572,14 @@ namespace RpcNet.Internal
             switch (RejectStatus)
             {
                 case RejectStatus.RpcVersionMismatch:
-                    MismatchInfo.ReadFrom(reader);
+                    if (MismatchInfo is null)
+                    {
+                        MismatchInfo = new MismatchInfo(reader);
+                    }
+                    else
+                    {
+                        MismatchInfo.ReadFrom(reader);
+                    }
                     break;
                 case RejectStatus.AuthenticationError:
                     AuthenticationStatus = (AuthenticationStatus)reader.ReadInt32();
@@ -438,7 +594,14 @@ namespace RpcNet.Internal
             {
                 case RejectStatus.RpcVersionMismatch:
                     sb.Append(" MismatchInfo = ");
-                    MismatchInfo.ToString(sb);
+                    if (MismatchInfo is null)
+                    {
+                        sb.Append("null");
+                    }
+                    else
+                    {
+                        MismatchInfo.ToString(sb);
+                    }
                     break;
                 case RejectStatus.AuthenticationError:
                     sb.Append(" AuthenticationStatus = ");
@@ -477,9 +640,17 @@ namespace RpcNet.Internal
             switch (ReplyStatus)
             {
                 case ReplyStatus.Accepted:
+                    if (AcceptedReply is null)
+                    {
+                        throw new InvalidOperationException("AcceptedReply must not be null.");
+                    }
                     AcceptedReply.WriteTo(writer);
                     break;
                 case ReplyStatus.Denied:
+                    if (RejectedReply is null)
+                    {
+                        throw new InvalidOperationException("RejectedReply must not be null.");
+                    }
                     RejectedReply.WriteTo(writer);
                     break;
             }
@@ -491,10 +662,24 @@ namespace RpcNet.Internal
             switch (ReplyStatus)
             {
                 case ReplyStatus.Accepted:
-                    AcceptedReply.ReadFrom(reader);
+                    if (AcceptedReply is null)
+                    {
+                        AcceptedReply = new AcceptedReply(reader);
+                    }
+                    else
+                    {
+                        AcceptedReply.ReadFrom(reader);
+                    }
                     break;
                 case ReplyStatus.Denied:
-                    RejectedReply.ReadFrom(reader);
+                    if (RejectedReply is null)
+                    {
+                        RejectedReply = new RejectedReply(reader);
+                    }
+                    else
+                    {
+                        RejectedReply.ReadFrom(reader);
+                    }
                     break;
             }
         }
@@ -506,11 +691,25 @@ namespace RpcNet.Internal
             {
                 case ReplyStatus.Accepted:
                     sb.Append(" AcceptedReply = ");
-                    AcceptedReply.ToString(sb);
+                    if (AcceptedReply is null)
+                    {
+                        sb.Append("null");
+                    }
+                    else
+                    {
+                        AcceptedReply.ToString(sb);
+                    }
                     break;
                 case ReplyStatus.Denied:
                     sb.Append(" RejectedReply = ");
-                    RejectedReply.ToString(sb);
+                    if (RejectedReply is null)
+                    {
+                        sb.Append("null");
+                    }
+                    else
+                    {
+                        RejectedReply.ToString(sb);
+                    }
                     break;
             }
             sb.Append(" }");
@@ -546,6 +745,10 @@ namespace RpcNet.Internal
                 case AcceptStatus.Success:
                     break;
                 case AcceptStatus.ProgramMismatch:
+                    if (MismatchInfo is null)
+                    {
+                        throw new InvalidOperationException("MismatchInfo must not be null.");
+                    }
                     MismatchInfo.WriteTo(writer);
                     break;
                 default:
@@ -561,7 +764,14 @@ namespace RpcNet.Internal
                 case AcceptStatus.Success:
                     break;
                 case AcceptStatus.ProgramMismatch:
-                    MismatchInfo.ReadFrom(reader);
+                    if (MismatchInfo is null)
+                    {
+                        MismatchInfo = new MismatchInfo(reader);
+                    }
+                    else
+                    {
+                        MismatchInfo.ReadFrom(reader);
+                    }
                     break;
                 default:
                     break;
@@ -577,7 +787,14 @@ namespace RpcNet.Internal
                     break;
                 case AcceptStatus.ProgramMismatch:
                     sb.Append(" MismatchInfo = ");
-                    MismatchInfo.ToString(sb);
+                    if (MismatchInfo is null)
+                    {
+                        sb.Append("null");
+                    }
+                    else
+                    {
+                        MismatchInfo.ToString(sb);
+                    }
                     break;
                 default:
                     break;

@@ -26,8 +26,8 @@ public sealed class RpcTcpConnection : IDisposable
 
         _remoteIpEndPoint = remoteIpEndPoint;
         _caller = new Caller(remoteIpEndPoint, Protocol.Tcp);
-        _reader = new TcpReader(tcpClient, logger);
-        _writer = new TcpWriter(tcpClient, logger);
+        _reader = new TcpReader(tcpClient);
+        _writer = new TcpWriter(tcpClient);
         _logger = logger;
 
         _receivedCall = new ReceivedRpcCall(program, versions, _reader, _writer, receivedCallDispatcher);

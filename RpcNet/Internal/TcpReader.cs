@@ -11,34 +11,29 @@ public sealed class TcpReader : INetworkReader
     private const int TcpHeaderLength = 4;
 
     private readonly byte[] _buffer;
-    private readonly ILogger? _logger;
+    private readonly Socket _tcpClient;
 
     private int _bodyIndex;
     private int _headerIndex;
     private bool _lastPacket;
     private PacketState _packetState = PacketState.Header;
     private int _readIndex;
-    private Socket _tcpClient;
     private int _writeIndex;
 
-    public TcpReader(Socket tcpClient, ILogger? logger = default) : this(tcpClient, 65536, logger)
+    public TcpReader(Socket tcpClient) : this(tcpClient, 65536)
     {
     }
 
-    public TcpReader(Socket tcpClient, int bufferSize, ILogger? logger = default)
+    public TcpReader(Socket tcpClient, int bufferSize)
     {
         if ((bufferSize < (TcpHeaderLength + sizeof(int))) || ((bufferSize % 4) != 0))
         {
             throw new ArgumentOutOfRangeException(nameof(bufferSize));
         }
 
-        _logger = logger;
-
         _tcpClient = tcpClient;
         _buffer = new byte[bufferSize];
     }
-
-    public void Reset(Socket tcpClient) => _tcpClient = tcpClient;
 
     public IPEndPoint BeginReading()
     {

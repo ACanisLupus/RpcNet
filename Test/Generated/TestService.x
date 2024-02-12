@@ -21,13 +21,19 @@ struct ComplexStruct
   double Float64Value;
   SimpleStruct SimpleStructValue;
   SimpleEnum SimpleEnumValue;
-  UInt8 UInt8DynamicArray<>;
-  SimpleStruct SimpleStructDynamicArray<>;
-  SimpleEnum SimpleEnumDynamicArray<>;
-  double Float64FixedArray[10];
-  SimpleStruct SimpleStructFixedArray[10];
-  SimpleEnum SimpleEnumFixedArray[10];
-  StringType StringArray[2];
+  opaque DynamicOpaque<>;
+  opaque DynamicLimitedOpaque<10>;
+  opaque FixedLengthOpaque[10];
+  UInt8 DynamicUInt8Array<>;
+  UInt8 DynamicLimitedUInt8Array<10>;
+  UInt8 FixedLengthUInt8Array[10];
+  SimpleStruct DynamicSimpleStructArray<>;
+  SimpleStruct DynamicLimitedSimpleStructArray<10>;
+  SimpleStruct FixedLengthSimpleStructArray[10];
+  SimpleEnum DynamicSimpleEnumArray<>;
+  SimpleEnum DynamicLimitedSimpleEnumArray<10>;
+  SimpleEnum FixedLengthSimpleEnumArray[10];
+  StringType StringArray[10];
 };
 
 struct SimpleStruct
