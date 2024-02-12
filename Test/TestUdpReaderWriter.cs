@@ -104,7 +104,7 @@ internal sealed class TestUdpReaderWriter
             _ = _writer.Reserve(arguments[i]);
         }
 
-        Assert.Throws<RpcException>(() => _ = _writer.Reserve(arguments[^1]));
+        _ = Assert.Throws<RpcException>(() => _ = _writer.Reserve(arguments[^1]));
     }
 
     [Test]
@@ -125,7 +125,7 @@ internal sealed class TestUdpReaderWriter
             _ = _reader.Read(arguments[i]);
         }
 
-        Assert.Throws<RpcException>(() => _ = _reader.Read(arguments[^1]));
+        _ = Assert.Throws<RpcException>(() => _ = _reader.Read(arguments[^1]));
     }
 
     [Test]
@@ -135,7 +135,7 @@ internal sealed class TestUdpReaderWriter
         Thread.Sleep(100);
         _server.Dispose();
         RpcException e = Assert.Throws<RpcException>(() => task.GetAwaiter().GetResult());
-        Assert.That(e.Message, Is.EqualTo("Could not receive data from UDP socket. Socket error code: Interrupted."));
+        Assert.That(e?.Message, Is.EqualTo("Could not receive data from UDP socket. Socket error code: Interrupted."));
     }
 
     private static void AssertEquals(ReadOnlySpan<byte> one, ReadOnlySpan<byte> two)

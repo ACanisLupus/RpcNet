@@ -19,7 +19,6 @@ internal sealed class TestErrorHandling
         var serverSettings = new ServerSettings
         {
             PortMapperPort = 0
-            //Logger = new TestLogger("Test Server")
         };
 
         _testServer = new TestServer(Protocol.TcpAndUdp, _ipAddress, 0, serverSettings);
@@ -36,12 +35,7 @@ internal sealed class TestErrorHandling
     {
         int port = protocol == Protocol.Tcp ? _testServer.TcpPort : _testServer.UdpPort;
 
-        var clientSettings = new ClientSettings
-        {
-            //Logger = new TestLogger("Test Client")
-        };
-
-        using var client = new TestService2Client(protocol, _ipAddress, port, clientSettings);
+        using var client = new TestService2Client(protocol, _ipAddress, port);
 
         // For TCP, the argument is bigger than the internal buffer size, so that the handling of buffer overflows is checked as well
         byte[] value = protocol == Protocol.Tcp ? new byte[128000] : new byte[100];
@@ -60,12 +54,7 @@ internal sealed class TestErrorHandling
     {
         int port = protocol == Protocol.Tcp ? _testServer.TcpPort : _testServer.UdpPort;
 
-        var clientSettings = new ClientSettings
-        {
-            //Logger = new TestLogger("Test Client")
-        };
-
-        using var client = new TestService2Client(protocol, _ipAddress, port, clientSettings);
+        using var client = new TestService2Client(protocol, _ipAddress, port);
 
         // For TCP, the argument is bigger than the internal buffer size, so that the handling of buffer overflows is checked as well
         byte[] value = protocol == Protocol.Tcp ? new byte[128000] : new byte[100];
@@ -84,12 +73,7 @@ internal sealed class TestErrorHandling
     {
         int port = protocol == Protocol.Tcp ? _testServer.TcpPort : _testServer.UdpPort;
 
-        var clientSettings = new ClientSettings
-        {
-            //Logger = new TestLogger("Test Client")
-        };
-
-        using var client = new TestService2Client(protocol, _ipAddress, port, clientSettings);
+        using var client = new TestService2Client(protocol, _ipAddress, port);
 
         RpcException e = Assert.Throws<RpcException>(() => client.ThrowsException_1());
         Assert.That(e?.Message, Is.EqualTo("Call was unsuccessful: SystemError."));

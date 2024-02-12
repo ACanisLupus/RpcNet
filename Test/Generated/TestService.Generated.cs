@@ -57,17 +57,17 @@ namespace TestService
         public SimpleEnum SimpleEnumValue { get; set; }
         public byte[] DynamicOpaque { get; set; } = Array.Empty<byte>();
         public byte[] DynamicLimitedOpaque { get; set; } = Array.Empty<byte>();
-        public byte[] FixedLengthOpaque { get; set; } = new byte[10];
+        public byte[] FixedLengthOpaque { get; } = new byte[10];
         public List<byte> DynamicUInt8Array { get; set; } = new List<byte>();
         public List<byte> DynamicLimitedUInt8Array { get; set; } = new List<byte>(10);
-        public byte[] FixedLengthUInt8Array { get; set; } = new byte[10];
+        public byte[] FixedLengthUInt8Array { get; } = new byte[10];
         public List<SimpleStruct> DynamicSimpleStructArray { get; set; } = new List<SimpleStruct>();
         public List<SimpleStruct> DynamicLimitedSimpleStructArray { get; set; } = new List<SimpleStruct>(10);
-        public SimpleStruct[] FixedLengthSimpleStructArray { get; set; } = new SimpleStruct[10];
+        public SimpleStruct[] FixedLengthSimpleStructArray { get; } = new SimpleStruct[10];
         public List<SimpleEnum> DynamicSimpleEnumArray { get; set; } = new List<SimpleEnum>();
         public List<SimpleEnum> DynamicLimitedSimpleEnumArray { get; set; } = new List<SimpleEnum>(10);
-        public SimpleEnum[] FixedLengthSimpleEnumArray { get; set; } = new SimpleEnum[10];
-        public StringType[] StringArray { get; set; } = new StringType[10];
+        public SimpleEnum[] FixedLengthSimpleEnumArray { get; } = new SimpleEnum[10];
+        public StringType[] StringArray { get; } = new StringType[10];
 
         public void WriteTo(IXdrWriter writer)
         {
@@ -102,14 +102,6 @@ namespace TestService
                 throw new InvalidOperationException("DynamicLimitedOpaque must not not have more than 10 elements.");
             }
             writer.WriteOpaque(DynamicLimitedOpaque);
-            if (FixedLengthOpaque is null)
-            {
-                throw new InvalidOperationException("FixedLengthOpaque must not be null.");
-            }
-            if (FixedLengthOpaque.Length != 10)
-            {
-                throw new InvalidOperationException("FixedLengthOpaque must not have exactly 10 elements.");
-            }
             writer.WriteFixedLengthOpaque(FixedLengthOpaque);
             if (DynamicUInt8Array is not null)
             {
@@ -134,14 +126,6 @@ namespace TestService
                 }
             }
             {
-                if (FixedLengthUInt8Array is null)
-                {
-                    throw new InvalidOperationException("FixedLengthUInt8Array must not be null.");
-                }
-                if (FixedLengthUInt8Array.Length != 10)
-                {
-                    throw new InvalidOperationException("FixedLengthUInt8Array must not have exactly 10 elements.");
-                }
                 for (int _idx = 0; _idx < FixedLengthUInt8Array.Length; _idx++)
                 {
                     writer.Write(FixedLengthUInt8Array[_idx]);
@@ -178,14 +162,6 @@ namespace TestService
                 }
             }
             {
-                if (FixedLengthSimpleStructArray is null)
-                {
-                    throw new InvalidOperationException("FixedLengthSimpleStructArray must not be null.");
-                }
-                if (FixedLengthSimpleStructArray.Length != 10)
-                {
-                    throw new InvalidOperationException("FixedLengthSimpleStructArray must not have exactly 10 elements.");
-                }
                 for (int _idx = 0; _idx < FixedLengthSimpleStructArray.Length; _idx++)
                 {
                     if (FixedLengthSimpleStructArray[_idx] is null)
@@ -218,28 +194,12 @@ namespace TestService
                 }
             }
             {
-                if (FixedLengthSimpleEnumArray is null)
-                {
-                    throw new InvalidOperationException("FixedLengthSimpleEnumArray must not be null.");
-                }
-                if (FixedLengthSimpleEnumArray.Length != 10)
-                {
-                    throw new InvalidOperationException("FixedLengthSimpleEnumArray must not have exactly 10 elements.");
-                }
                 for (int _idx = 0; _idx < FixedLengthSimpleEnumArray.Length; _idx++)
                 {
                     writer.Write((int)FixedLengthSimpleEnumArray[_idx]);
                 }
             }
             {
-                if (StringArray is null)
-                {
-                    throw new InvalidOperationException("StringArray must not be null.");
-                }
-                if (StringArray.Length != 10)
-                {
-                    throw new InvalidOperationException("StringArray must not have exactly 10 elements.");
-                }
                 for (int _idx = 0; _idx < StringArray.Length; _idx++)
                 {
                     if (StringArray[_idx] is null)
@@ -279,7 +239,7 @@ namespace TestService
             {
                 throw new InvalidOperationException($"DynamicLimitedOpaque must not not have more than 10 elements but has {DynamicLimitedOpaque.Length}.");
             }
-            FixedLengthOpaque = reader.ReadFixedLengthOpaque(10);
+            reader.ReadFixedLengthOpaque(FixedLengthOpaque);
             {
                 int _size = reader.ReadInt32();
                 DynamicUInt8Array.Clear();
@@ -302,10 +262,6 @@ namespace TestService
                 }
             }
             {
-                if (FixedLengthUInt8Array.Length != 10)
-                {
-                    FixedLengthUInt8Array = new byte[10];
-                }
                 for (int _idx = 0; _idx < FixedLengthUInt8Array.Length; _idx++)
                 {
                     FixedLengthUInt8Array[_idx] = reader.ReadUInt8();
@@ -333,10 +289,6 @@ namespace TestService
                 }
             }
             {
-                if (FixedLengthSimpleStructArray.Length != 10)
-                {
-                    FixedLengthSimpleStructArray = new SimpleStruct[10];
-                }
                 for (int _idx = 0; _idx < FixedLengthSimpleStructArray.Length; _idx++)
                 {
                     if (FixedLengthSimpleStructArray[_idx] is null)
@@ -371,20 +323,12 @@ namespace TestService
                 }
             }
             {
-                if (FixedLengthSimpleEnumArray.Length != 10)
-                {
-                    FixedLengthSimpleEnumArray = new SimpleEnum[10];
-                }
                 for (int _idx = 0; _idx < FixedLengthSimpleEnumArray.Length; _idx++)
                 {
                     FixedLengthSimpleEnumArray[_idx] = (SimpleEnum)reader.ReadInt32();
                 }
             }
             {
-                if (StringArray.Length != 10)
-                {
-                    StringArray = new StringType[10];
-                }
                 for (int _idx = 0; _idx < StringArray.Length; _idx++)
                 {
                     if (StringArray[_idx] is null)

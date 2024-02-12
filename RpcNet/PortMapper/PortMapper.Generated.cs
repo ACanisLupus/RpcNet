@@ -1059,19 +1059,11 @@ namespace RpcNet.PortMapper
             ReadFrom(reader);
         }
 
-        public int[] Value { get; set; } = new int[PortMapperConstants.HighestProcedurePlusOne];
+        public int[] Value { get; } = new int[PortMapperConstants.HighestProcedurePlusOne];
 
         public void WriteTo(IXdrWriter writer)
         {
             {
-                if (Value is null)
-                {
-                    throw new InvalidOperationException("Value must not be null.");
-                }
-                if (Value.Length != PortMapperConstants.HighestProcedurePlusOne)
-                {
-                    throw new InvalidOperationException("Value must not have exactly PortMapperConstants.HighestProcedurePlusOne elements.");
-                }
                 for (int _idx = 0; _idx < Value.Length; _idx++)
                 {
                     writer.Write(Value[_idx]);
@@ -1082,10 +1074,6 @@ namespace RpcNet.PortMapper
         public void ReadFrom(IXdrReader reader)
         {
             {
-                if (Value.Length != PortMapperConstants.HighestProcedurePlusOne)
-                {
-                    Value = new int[PortMapperConstants.HighestProcedurePlusOne];
-                }
                 for (int _idx = 0; _idx < Value.Length; _idx++)
                 {
                     Value[_idx] = reader.ReadInt32();
@@ -1401,19 +1389,11 @@ namespace RpcNet.PortMapper
             ReadFrom(reader);
         }
 
-        public Statistics[] Value { get; set; } = new Statistics[PortMapperConstants.StatisticsVersions];
+        public Statistics[] Value { get; } = new Statistics[PortMapperConstants.StatisticsVersions];
 
         public void WriteTo(IXdrWriter writer)
         {
             {
-                if (Value is null)
-                {
-                    throw new InvalidOperationException("Value must not be null.");
-                }
-                if (Value.Length != PortMapperConstants.StatisticsVersions)
-                {
-                    throw new InvalidOperationException("Value must not have exactly PortMapperConstants.StatisticsVersions elements.");
-                }
                 for (int _idx = 0; _idx < Value.Length; _idx++)
                 {
                     if (Value[_idx] is null)
@@ -1428,10 +1408,6 @@ namespace RpcNet.PortMapper
         public void ReadFrom(IXdrReader reader)
         {
             {
-                if (Value.Length != PortMapperConstants.StatisticsVersions)
-                {
-                    Value = new Statistics[PortMapperConstants.StatisticsVersions];
-                }
                 for (int _idx = 0; _idx < Value.Length; _idx++)
                 {
                     if (Value[_idx] is null)

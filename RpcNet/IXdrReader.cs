@@ -17,5 +17,5 @@ public interface IXdrReader
     ulong ReadUInt64();
     uint ReadUInt32();
     byte[] ReadOpaque();
-    byte[] ReadFixedLengthOpaque(int length);
+    void ReadFixedLengthOpaque(byte[] array);
 }

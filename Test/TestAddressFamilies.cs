@@ -42,7 +42,6 @@ internal sealed class TestAddressFamilies
         var clientSettings = new ClientSettings
         {
             PortMapperPort = _portMapperServer.TcpPort
-            //Logger = new TestLogger("Test Client")
         };
 
         using var client = new TestServiceClient(protocol, clientIpAddress, 0, clientSettings);
@@ -87,18 +86,12 @@ internal sealed class TestAddressFamilies
 
     private void SetUp(IPAddress portMapperIpAddress, IPAddress serverIpAddress)
     {
-        var portMapperSettings = new ServerSettings
-        {
-            //Logger = new TestLogger("Port Mapper")
-        };
-
-        _portMapperServer = new PortMapperServer(Protocol.Tcp, portMapperIpAddress, 0, portMapperSettings);
+        _portMapperServer = new PortMapperServer(Protocol.Tcp, portMapperIpAddress, 0);
         _portMapperServer.Start();
 
         var serverSettings = new ServerSettings
         {
             PortMapperPort = _portMapperServer.TcpPort
-            //Logger = new TestLogger("Test Server")
         };
 
         _testServer = new TestServer(Protocol.TcpAndUdp, serverIpAddress, 0, serverSettings);

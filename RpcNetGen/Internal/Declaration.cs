@@ -109,7 +109,7 @@ internal class Declaration
         {
             if (!string.IsNullOrWhiteSpace(Length))
             {
-                writer.WriteLine(indent, $"public byte[] {NameAsProperty} {{ get; set; }} = new byte[{Length}];");
+                writer.WriteLine(indent, $"public byte[] {NameAsProperty} {{ get; }} = new byte[{Length}];");
             }
             else
             {
@@ -122,7 +122,7 @@ internal class Declaration
         }
         else if (IsArray)
         {
-            writer.WriteLine(indent, $"public {DataType.Declaration}[] {NameAsProperty} {{ get; set; }} = new {DataType.Declaration}[{Length}];");
+            writer.WriteLine(indent, $"public {DataType.Declaration}[] {NameAsProperty} {{ get; }} = new {DataType.Declaration}[{Length}];");
         }
         else if (IsPointer)
         {
@@ -149,22 +149,17 @@ internal class Declaration
 
         if (DataType.Kind == DataTypeKind.Opaque)
         {
-            writer.WriteLine(indent, $"if ({name} is null)");
-            writer.WriteLine(indent, "{");
-            writer.WriteLine(indent + 1, $"throw new InvalidOperationException(\"{name} must not be null.\");");
-            writer.WriteLine(indent, "}");
-
             if (!string.IsNullOrWhiteSpace(Length))
             {
-                writer.WriteLine(indent, $"if ({name}.Length != {Length})");
-                writer.WriteLine(indent, "{");
-                writer.WriteLine(indent + 1, $"throw new InvalidOperationException(\"{name} must not have exactly {Length} elements.\");");
-                writer.WriteLine(indent, "}");
-
                 writer.WriteLine(indent, $"writer.WriteFixedLengthOpaque({name});");
             }
             else if (!string.IsNullOrWhiteSpace(VariableLength))
             {
+                writer.WriteLine(indent, $"if ({name} is null)");
+                writer.WriteLine(indent, "{");
+                writer.WriteLine(indent + 1, $"throw new InvalidOperationException(\"{name} must not be null.\");");
+                writer.WriteLine(indent, "}");
+
                 writer.WriteLine(indent, $"if ({name}.Length > {VariableLength})");
                 writer.WriteLine(indent, "{");
                 writer.WriteLine(indent + 1, $"throw new InvalidOperationException(\"{name} must not not have more than {VariableLength} elements.\");");
@@ -174,25 +169,17 @@ internal class Declaration
             }
             else
             {
+                writer.WriteLine(indent, $"if ({name} is null)");
+                writer.WriteLine(indent, "{");
+                writer.WriteLine(indent + 1, $"throw new InvalidOperationException(\"{name} must not be null.\");");
+                writer.WriteLine(indent, "}");
+
                 writer.WriteLine(indent, $"writer.WriteOpaque({name});");
             }
         }
         else if (IsArray)
         {
             writer.WriteLine(indent, "{");
-            writer.WriteLine(indent + 1, $"if ({name} is null)");
-            writer.WriteLine(indent + 1, "{");
-            writer.WriteLine(indent + 2, $"throw new InvalidOperationException(\"{name} must not be null.\");");
-            writer.WriteLine(indent + 1, "}");
-
-            if (!string.IsNullOrWhiteSpace(Length))
-            {
-                writer.WriteLine(indent + 1, $"if ({name}.Length != {Length})");
-                writer.WriteLine(indent + 1, "{");
-                writer.WriteLine(indent + 2, $"throw new InvalidOperationException(\"{name} must not have exactly {Length} elements.\");");
-                writer.WriteLine(indent + 1, "}");
-            }
-
             writer.WriteLine(indent + 1, $"for (int _idx = 0; _idx < {name}.Length; _idx++)");
             writer.WriteLine(indent + 1, "{");
             WriteWriteStatement(writer, indent + 2, $"{name}[_idx]");
@@ -259,7 +246,7 @@ internal class Declaration
         {
             if (!string.IsNullOrWhiteSpace(Length))
             {
-                writer.WriteLine(indent, $"{name} = reader.ReadFixedLengthOpaque({Length});");
+                writer.WriteLine(indent, $"reader.ReadFixedLengthOpaque({name});");
             }
             else if (!string.IsNullOrWhiteSpace(VariableLength))
             {
@@ -277,10 +264,6 @@ internal class Declaration
         else if (IsArray)
         {
             writer.WriteLine(indent, "{");
-            writer.WriteLine(indent + 1, $"if ({name}.Length != {Length})");
-            writer.WriteLine(indent + 1, "{");
-            writer.WriteLine(indent + 2, $"{name} = new {DataType.Declaration}[{Length}];");
-            writer.WriteLine(indent + 1, "}");
             writer.WriteLine(indent + 1, $"for (int _idx = 0; _idx < {name}.Length; _idx++)");
             writer.WriteLine(indent + 1, "{");
             WriteReadStatement(writer, indent + 2, $"{name}[_idx]");
