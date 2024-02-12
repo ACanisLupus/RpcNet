@@ -8,7 +8,7 @@ using System.Net.Sockets;
 // Public for tests
 public sealed class RpcTcpConnection : IDisposable
 {
-    private readonly Caller _caller;
+    private readonly RpcEndPoint _rpcEndPoint;
     private readonly ILogger? _logger;
     private readonly TcpReader _reader;
     private readonly ReceivedRpcCall _receivedCall;
@@ -25,7 +25,7 @@ public sealed class RpcTcpConnection : IDisposable
         }
 
         _remoteIpEndPoint = remoteIpEndPoint;
-        _caller = new Caller(remoteIpEndPoint, Protocol.Tcp);
+        _rpcEndPoint = new RpcEndPoint(remoteIpEndPoint, Protocol.Tcp);
         _reader = new TcpReader(tcpClient);
         _writer = new TcpWriter(tcpClient);
         _logger = logger;
@@ -50,7 +50,7 @@ public sealed class RpcTcpConnection : IDisposable
         }
 
         _writer.BeginWriting();
-        _receivedCall.HandleCall(_caller);
+        _receivedCall.HandleCall(_rpcEndPoint);
         _reader.EndReading();
 
         try

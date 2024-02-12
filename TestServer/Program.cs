@@ -30,7 +30,7 @@ internal class TestServer : TestServiceServerStub
     {
     }
 
-    public override void ThrowsException_1(Caller caller) => throw new NotImplementedException();
-    public override int Echo_1(Caller caller, int value) => value;
-    public override SimpleStruct SimpleStructSimpleStruct_2(Caller caller, SimpleStruct value) => value;
+    public override void ThrowsException_1(RpcEndPoint rpcEndPoint) => throw new NotImplementedException();
+    public override int Echo_1(RpcEndPoint rpcEndPoint, int value) => value;
+    public override SimpleStruct SimpleStructSimpleStruct_2(RpcEndPoint rpcEndPoint, SimpleStruct value) => value;
 }

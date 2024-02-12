@@ -32,7 +32,7 @@ public sealed class ReceivedRpcCall
 
     public uint Version { get; private set; }
     public uint Procedure { get; private set; }
-    public Caller? Caller { get; private set; }
+    public RpcEndPoint? RpcEndPoint { get; private set; }
 
     public void RetrieveCall(IXdrDataType argument) => argument.ReadFrom(_xdrReader);
 
@@ -61,7 +61,7 @@ public sealed class ReceivedRpcCall
         reply.WriteTo(_xdrWriter);
     }
 
-    internal void HandleCall(Caller clientInfo)
+    internal void HandleCall(RpcEndPoint rpcEndPoint)
     {
         var rpcMessage = new RpcMessage(_xdrReader);
         _xid = rpcMessage.Xid;
@@ -86,7 +86,7 @@ public sealed class ReceivedRpcCall
 
         Version = rpcMessage.Body.CallBody.Version;
         Procedure = rpcMessage.Body.CallBody.Procedure;
-        Caller = clientInfo;
+        RpcEndPoint = rpcEndPoint;
 
         _receivedCallDispatcher(this);
     }

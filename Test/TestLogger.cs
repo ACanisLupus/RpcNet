@@ -13,11 +13,13 @@ internal sealed class TestLogger : ILogger
     public void Trace(string entry) => Console.WriteLine($"[{_name}] [TRACE] {entry}");
     public void Info(string entry) => Console.WriteLine($"[{_name}] [INFO]  {entry}");
     public void Error(string entry) => Console.WriteLine($"[{_name}] [ERROR] {entry}");
-    public void BeginCall(int version, int procedure, string method, IXdrDataType arguments) => Console.WriteLine($"[{_name}] [BEGIN] {method}({arguments})");
 
-    public void EndCall(int version, int procedure, string method, IXdrDataType arguments, IXdrDataType result) =>
+    public void BeginCall(RpcEndPoint rpcEndPoint, int version, int procedure, string method, IXdrDataType arguments) =>
+        Console.WriteLine($"[{_name}] [BEGIN] {method}({arguments})");
+
+    public void EndCall(RpcEndPoint rpcEndPoint, int version, int procedure, string method, IXdrDataType arguments, IXdrDataType result) =>
         Console.WriteLine($"[{_name}] [END]   {method}({arguments}): {result}");
 
-    public void EndCall(int version, int procedure, string method, IXdrDataType arguments, Exception exception) =>
+    public void EndCall(RpcEndPoint rpcEndPoint, int version, int procedure, string method, IXdrDataType arguments, Exception exception) =>
         Console.WriteLine($"[{_name}] [END]   {method}({arguments}): {exception}");
 }

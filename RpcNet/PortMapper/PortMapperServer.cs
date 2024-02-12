@@ -51,11 +51,11 @@ public sealed class PortMapperServer : PortMapperServerStub
         }
     }
 
-    public override void Ping_2(Caller caller)
+    public override void Ping_2(RpcEndPoint rpcEndPoint)
     {
     }
 
-    public override bool Set_2(Caller caller, Mapping2 mapping)
+    public override bool Set_2(RpcEndPoint rpcEndPoint, Mapping2 mapping)
     {
         lock (_lock)
         {
@@ -69,7 +69,7 @@ public sealed class PortMapperServer : PortMapperServerStub
         }
     }
 
-    public override bool Unset_2(Caller caller, Mapping2 mapping)
+    public override bool Unset_2(RpcEndPoint rpcEndPoint, Mapping2 mapping)
     {
         lock (_lock)
         {
@@ -83,7 +83,7 @@ public sealed class PortMapperServer : PortMapperServerStub
         }
     }
 
-    public override int GetPort_2(Caller caller, Mapping2 mapping2)
+    public override int GetPort_2(RpcEndPoint rpcEndPoint, Mapping2 mapping2)
     {
         lock (_lock)
         {
@@ -104,7 +104,7 @@ public sealed class PortMapperServer : PortMapperServerStub
         }
     }
 
-    public override MappingNodeHead2 Dump_2(Caller caller)
+    public override MappingNodeHead2 Dump_2(RpcEndPoint rpcEndPoint)
     {
         lock (_lock)
         {
@@ -137,9 +137,9 @@ public sealed class PortMapperServer : PortMapperServerStub
         }
     }
 
-    public override CallResult2 Call_2(Caller caller, CallArguments callArguments) => _callResult;
+    public override CallResult2 Call_2(RpcEndPoint rpcEndPoint, CallArguments callArguments) => _callResult;
 
-    public override bool Set_3(Caller caller, Mapping3 mapping3)
+    public override bool Set_3(RpcEndPoint rpcEndPoint, Mapping3 mapping3)
     {
         lock (_lock)
         {
@@ -153,7 +153,7 @@ public sealed class PortMapperServer : PortMapperServerStub
         }
     }
 
-    public override bool Unset_3(Caller caller, Mapping3 mapping3)
+    public override bool Unset_3(RpcEndPoint rpcEndPoint, Mapping3 mapping3)
     {
         lock (_lock)
         {
@@ -163,7 +163,7 @@ public sealed class PortMapperServer : PortMapperServerStub
         }
     }
 
-    public override string GetAddress_3(Caller caller, Mapping3 mapping3)
+    public override string GetAddress_3(RpcEndPoint rpcEndPoint, Mapping3 mapping3)
     {
         lock (_lock)
         {
@@ -184,23 +184,23 @@ public sealed class PortMapperServer : PortMapperServerStub
         }
     }
 
-    public override MappingNodeHead3 Dump_3(Caller caller) => throw new NotImplementedException();
-    public override CallResult3 Call_3(Caller caller, CallArguments callArguments) => throw new NotImplementedException();
-    public override uint GetTime_3(Caller caller) => throw new NotImplementedException();
-    public override NetworkBuffer UniversalAddressToTransportSpecificAddress_3(Caller caller, string universalAddress) => throw new NotImplementedException();
-    public override string TransportSpecificAddressToUniversalAddress_3(Caller caller, NetworkBuffer networkBuffer) => throw new NotImplementedException();
-    public override bool Set_4(Caller caller, Mapping3 mapping3) => Set_3(caller, mapping3);
-    public override bool Unset_4(Caller caller, Mapping3 mapping3) => Unset_3(caller, mapping3);
-    public override string GetAddress_4(Caller caller, Mapping3 mapping3) => GetAddress_3(caller, mapping3);
-    public override MappingNodeHead3 Dump_4(Caller caller) => throw new NotImplementedException();
-    public override CallResult3 Broadcast_4(Caller caller, CallArguments callArguments) => throw new NotImplementedException();
-    public override uint GetTime_4(Caller caller) => throw new NotImplementedException();
-    public override NetworkBuffer UniversalAddressToTransportSpecificAddress_4(Caller caller, string universalAddress) => throw new NotImplementedException();
-    public override string TransportSpecificAddressToUniversalAddress_4(Caller caller, NetworkBuffer networkBuffer) => throw new NotImplementedException();
-    public override string GetVersionAddress_4(Caller caller, Mapping3 mapping3) => throw new NotImplementedException();
-    public override CallResult3 IndirectCall_4(Caller caller, CallArguments callArguments) => throw new NotImplementedException();
-    public override EntryNodeHead GetAddressList_4(Caller caller, Mapping3 mapping3) => throw new NotImplementedException();
-    public override StatisticsByVersion GetStatistics_4(Caller caller) => throw new NotImplementedException();
+    public override MappingNodeHead3 Dump_3(RpcEndPoint rpcEndPoint) => throw new NotImplementedException();
+    public override CallResult3 Call_3(RpcEndPoint rpcEndPoint, CallArguments callArguments) => throw new NotImplementedException();
+    public override uint GetTime_3(RpcEndPoint rpcEndPoint) => throw new NotImplementedException();
+    public override NetworkBuffer UniversalAddressToTransportSpecificAddress_3(RpcEndPoint rpcEndPoint, string universalAddress) => throw new NotImplementedException();
+    public override string TransportSpecificAddressToUniversalAddress_3(RpcEndPoint rpcEndPoint, NetworkBuffer networkBuffer) => throw new NotImplementedException();
+    public override bool Set_4(RpcEndPoint rpcEndPoint, Mapping3 mapping3) => Set_3(rpcEndPoint, mapping3);
+    public override bool Unset_4(RpcEndPoint rpcEndPoint, Mapping3 mapping3) => Unset_3(rpcEndPoint, mapping3);
+    public override string GetAddress_4(RpcEndPoint rpcEndPoint, Mapping3 mapping3) => GetAddress_3(rpcEndPoint, mapping3);
+    public override MappingNodeHead3 Dump_4(RpcEndPoint rpcEndPoint) => throw new NotImplementedException();
+    public override CallResult3 Broadcast_4(RpcEndPoint rpcEndPoint, CallArguments callArguments) => throw new NotImplementedException();
+    public override uint GetTime_4(RpcEndPoint rpcEndPoint) => throw new NotImplementedException();
+    public override NetworkBuffer UniversalAddressToTransportSpecificAddress_4(RpcEndPoint rpcEndPoint, string universalAddress) => throw new NotImplementedException();
+    public override string TransportSpecificAddressToUniversalAddress_4(RpcEndPoint rpcEndPoint, NetworkBuffer networkBuffer) => throw new NotImplementedException();
+    public override string GetVersionAddress_4(RpcEndPoint rpcEndPoint, Mapping3 mapping3) => throw new NotImplementedException();
+    public override CallResult3 IndirectCall_4(RpcEndPoint rpcEndPoint, CallArguments callArguments) => throw new NotImplementedException();
+    public override EntryNodeHead GetAddressList_4(RpcEndPoint rpcEndPoint, Mapping3 mapping3) => throw new NotImplementedException();
+    public override StatisticsByVersion GetStatistics_4(RpcEndPoint rpcEndPoint) => throw new NotImplementedException();
 
     private static bool IsProgramAndVersionEqual(Mapping2 firstMapping, Mapping2 secondMapping) =>
         (firstMapping.ProgramNumber == secondMapping.ProgramNumber) && (firstMapping.VersionNumber == secondMapping.VersionNumber);

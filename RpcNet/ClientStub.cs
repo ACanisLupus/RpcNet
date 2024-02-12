@@ -20,6 +20,7 @@ public abstract class ClientStub : IDisposable
         }
 
         Settings = clientSettings;
+        RpcEndPoint = new RpcEndPoint(new IPEndPoint(ipAddress, port), protocol);
 
         _networkClient = protocol switch
         {
@@ -28,6 +29,8 @@ public abstract class ClientStub : IDisposable
             _ => throw new ArgumentOutOfRangeException(nameof(protocol))
         };
     }
+
+    public RpcEndPoint RpcEndPoint { get; }
 
     public TimeSpan ReceiveTimeout
     {
