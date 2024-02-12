@@ -25,7 +25,14 @@ public sealed class XdrReader : IXdrReader
     public double ReadFloat64() => BitConverter.Int64BitsToDouble(ReadInt64());
     public string ReadString() => _encoding.GetString(ReadOpaque());
 
-    public void ReadOpaque(byte[] array)
+    public byte[] ReadOpaque()
+    {
+        byte[] array = new byte[ReadInt32()];
+        ReadFixedLengthOpaque(array);
+        return array;
+    }
+
+    public void ReadFixedLengthOpaque(byte[] array)
     {
         int length = array.Length;
         int padding = Utilities.CalculateXdrPadding(length);
@@ -40,12 +47,5 @@ public sealed class XdrReader : IXdrReader
         }
 
         _ = _networkReader.Read(padding);
-    }
-
-    public byte[] ReadOpaque()
-    {
-        byte[] array = new byte[ReadInt32()];
-        ReadOpaque(array);
-        return array;
     }
 }

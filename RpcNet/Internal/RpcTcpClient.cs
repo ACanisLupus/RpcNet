@@ -13,8 +13,6 @@ public sealed class RpcTcpClient : INetworkClient
     private readonly Socket _client;
     private readonly ClientSettings _clientSettings;
     private readonly IPEndPoint _remoteIpEndPoint;
-    private readonly TcpReader _tcpReader;
-    private readonly TcpWriter _tcpWriter;
 
     public RpcTcpClient(IPAddress ipAddress, int port, int program, int version, ClientSettings? clientSettings = default)
     {
@@ -43,9 +41,9 @@ public sealed class RpcTcpClient : INetworkClient
             _client = EstablishConnection();
         }
 
-        _tcpReader = new TcpReader(_client, _clientSettings.Logger);
-        _tcpWriter = new TcpWriter(_client, _clientSettings.Logger);
-        _call = new RpcCall(program, _remoteIpEndPoint, _tcpReader, _tcpWriter);
+        TcpReader tcpReader = new(_client);
+        TcpWriter tcpWriter = new(_client);
+        _call = new RpcCall(program, _remoteIpEndPoint, tcpReader, tcpWriter);
     }
 
     public TimeSpan ReceiveTimeout

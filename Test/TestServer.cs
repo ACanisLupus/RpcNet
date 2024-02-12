@@ -12,7 +12,7 @@ internal sealed class TestServer : TestServiceServerStub
     {
     }
 
-    public override void ThrowsException_1(Caller caller) => throw new NotImplementedException();
+    public override void ThrowsException_1(Caller caller) => throw new NotSupportedException();
     public override int Echo_1(Caller caller, int value) => value;
     public override SimpleStruct SimpleStructSimpleStruct_2(Caller caller, SimpleStruct value) => value;
 }

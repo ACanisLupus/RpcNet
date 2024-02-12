@@ -16,5 +16,6 @@ public interface IXdrWriter
     void Write(uint value);
     void Write(ulong value);
     void Write(ushort value);
+    void WriteFixedLengthOpaque(ReadOnlySpan<byte> value);
     void WriteOpaque(ReadOnlySpan<byte> value);
 }

@@ -34,7 +34,6 @@ internal sealed class TestUdpClientServer
 
         var serverSettings = new ServerSettings
         {
-            //Logger = new TestLogger("UDP Server"),
             PortMapperPort = 0 // Don't register at port mapper
         };
 
@@ -50,12 +49,7 @@ internal sealed class TestUdpClientServer
             serverSettings);
         int port = server.Start();
 
-        var clientSettings = new ClientSettings
-        {
-            //Logger = new TestLogger("UDP Client")
-        };
-
-        using var client = new RpcUdpClient(ipAddress, port, Program, Version, clientSettings);
+        using var client = new RpcUdpClient(ipAddress, port, Program, Version);
         var argument = new SimpleStruct
         {
             Value = 42

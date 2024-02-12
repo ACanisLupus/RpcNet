@@ -24,12 +24,7 @@ internal sealed class TestTcpClientServer
         const int Program = 12;
         const int Version = 13;
 
-        var clientSettings = new ClientSettings
-        {
-            //Logger = new TestLogger("TCP Client")
-        };
-
-        RpcException e = Assert.Throws<RpcException>(() => _ = new RpcTcpClient(_ipAddress, 1, Program, Version, clientSettings));
+        RpcException e = Assert.Throws<RpcException>(() => _ = new RpcTcpClient(_ipAddress, 1, Program, Version));
 
         Assert.That(e?.Message, Is.EqualTo("Could not connect to [::1]:1. Socket error code: ConnectionRefused."));
     }
@@ -40,11 +35,6 @@ internal sealed class TestTcpClientServer
         const int Program = 12;
         const int Version = 13;
 
-        var serverSettings = new ServerSettings
-        {
-            //Logger = new TestLogger("TCP Server")
-        };
-
         var server = new RpcTcpServer(
             _ipAddress,
             0,
@@ -53,8 +43,7 @@ internal sealed class TestTcpClientServer
             {
                 Version
             },
-            _ => { },
-            serverSettings);
+            _ => { });
         Assert.DoesNotThrow(() => server.Dispose());
     }
 
@@ -79,7 +68,6 @@ internal sealed class TestTcpClientServer
 
         var serverSettings = new ServerSettings
         {
-            //Logger = new TestLogger("TCP Server"),
             PortMapperPort = 0 // Don't register at port mapper
         };
 
@@ -95,12 +83,7 @@ internal sealed class TestTcpClientServer
             serverSettings);
         int port = server.Start();
 
-        var clientSettings = new ClientSettings
-        {
-            //Logger = new TestLogger("TCP Client")
-        };
-
-        using var client = new RpcTcpClient(_ipAddress, port, Program, Version, clientSettings);
+        using var client = new RpcTcpClient(_ipAddress, port, Program, Version);
         var argument = new SimpleStruct
         {
             Value = 42
