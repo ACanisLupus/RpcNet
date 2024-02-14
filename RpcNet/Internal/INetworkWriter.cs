@@ -8,6 +8,6 @@ using System.Net;
 public interface INetworkWriter
 {
     void BeginWriting();
-    void EndWriting(IPEndPoint remoteEndPoint);
+    void EndWriting(EndPoint remoteEndPoint);
     Span<byte> Reserve(int length);
 }

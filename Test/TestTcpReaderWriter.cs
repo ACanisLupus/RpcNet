@@ -10,10 +10,10 @@ using RpcNet.Internal;
 [TestFixture]
 internal sealed class TestTcpReaderWriter
 {
-    private TcpReader _reader;
-    private TcpClient _readerTcpClient;
-    private TcpWriter _writer;
-    private TcpClient _writerTcpClient;
+    private TcpReader _reader = null!;
+    private TcpClient _readerTcpClient = null!;
+    private TcpWriter _writer = null!;
+    private TcpClient _writerTcpClient = null!;
 
     [SetUp]
     public void SetUp()
@@ -23,7 +23,8 @@ internal sealed class TestTcpReaderWriter
         TcpListener listener = new(ipAddress, 0);
         listener.Start();
 
-        int port = ((IPEndPoint)listener.Server.LocalEndPoint)?.Port ?? throw new InvalidOperationException("Could not find local end point.");
+        var localIpEndPoint = listener.Server.LocalEndPoint as IPEndPoint;
+        int port = localIpEndPoint?.Port ?? throw new InvalidOperationException("Could not find local end point.");
         _readerTcpClient = new TcpClient();
         Task task = Task.Run(() => _writerTcpClient = listener.AcceptTcpClient());
         _readerTcpClient.Connect(ipAddress, port);

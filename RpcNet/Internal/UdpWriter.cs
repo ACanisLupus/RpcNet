@@ -9,32 +9,32 @@ using System.Net.Sockets;
 public sealed class UdpWriter : INetworkWriter
 {
     private readonly byte[] _buffer;
-    private readonly Socket _udpClient;
+    private readonly Socket _socket;
 
     private int _writeIndex;
 
-    public UdpWriter(Socket udpClient) : this(udpClient, 65536)
+    public UdpWriter(Socket socket) : this(socket, 65536)
     {
     }
 
-    public UdpWriter(Socket udpClient, int bufferSize)
+    public UdpWriter(Socket socket, int bufferSize)
     {
         if ((bufferSize < sizeof(int)) || ((bufferSize % 4) != 0))
         {
             throw new ArgumentOutOfRangeException(nameof(bufferSize));
         }
 
-        _udpClient = udpClient;
+        _socket = socket;
         _buffer = new byte[bufferSize];
     }
 
     public void BeginWriting() => _writeIndex = 0;
 
-    public void EndWriting(IPEndPoint remoteEndPoint)
+    public void EndWriting(EndPoint remoteEndPoint)
     {
         try
         {
-            _ = _udpClient.SendTo(_buffer, _writeIndex, SocketFlags.None, remoteEndPoint);
+            _ = _socket.SendTo(_buffer, _writeIndex, SocketFlags.None, remoteEndPoint);
         }
         catch (SocketException e)
         {

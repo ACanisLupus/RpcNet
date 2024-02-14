@@ -11,7 +11,7 @@ if ((args.Length != 1) || !IPEndPoint.TryParse(args[0], out IPEndPoint? ipEndPoi
 }
 
 using var portMapperServer = new PortMapperServer(
-    Protocol.TcpAndUdp,
+    Protocol.Tcp | Protocol.Udp,
     ipEndPoint.Address,
     ipEndPoint.Port,
     new ServerSettings

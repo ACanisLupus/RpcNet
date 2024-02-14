@@ -13,7 +13,7 @@ public sealed class RpcUdpServer : IDisposable
     private readonly int _port;
     private readonly UdpReader _reader;
     private readonly ReceivedRpcCall _receivedCall;
-    private readonly Socket _server;
+    private readonly Socket _socket;
     private readonly UdpWriter _writer;
 
     private bool _isDisposed;
@@ -26,17 +26,17 @@ public sealed class RpcUdpServer : IDisposable
         int program,
         int[] versions,
         Action<ReceivedRpcCall> receivedCallDispatcher,
-        ServerSettings? serverSettings = default)
+        ServerSettings serverSettings)
     {
-        serverSettings ??= new ServerSettings();
-
         _port = port;
-        _server = new Socket(ipAddress.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
+        _socket = new Socket(ipAddress.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
+        Utilities.FixUdpSocket(_socket);
+
         if (ipAddress.AddressFamily == AddressFamily.InterNetworkV6)
         {
             try
             {
-                _server.DualMode = true;
+                _socket.DualMode = true;
             }
             catch (SocketException e)
             {
@@ -44,10 +44,15 @@ public sealed class RpcUdpServer : IDisposable
             }
         }
 
-        _server.Bind(new IPEndPoint(ipAddress, _port));
+        _socket.Bind(new IPEndPoint(ipAddress, _port));
 
-        _reader = new UdpReader(_server);
-        _writer = new UdpWriter(_server);
+        if (_socket.LocalEndPoint is not IPEndPoint localEndPoint)
+        {
+            throw new InvalidOperationException("Could not find local endpoint for server socket.");
+        }
+
+        _reader = new UdpReader(_socket);
+        _writer = new UdpWriter(_socket);
 
         _receivedCall = new ReceivedRpcCall(program, versions, _reader, _writer, receivedCallDispatcher);
 
@@ -55,11 +60,6 @@ public sealed class RpcUdpServer : IDisposable
 
         if (_port == 0)
         {
-            if (_server.LocalEndPoint is not IPEndPoint localEndPoint)
-            {
-                throw new InvalidOperationException("Could not find local endpoint for server socket.");
-            }
-
             _port = localEndPoint.Port;
         }
 
@@ -84,7 +84,7 @@ public sealed class RpcUdpServer : IDisposable
             }
         }
 
-        _logger?.Info($"{Utilities.ConvertToString(Protocol.Udp)} Server listening on {_server.LocalEndPoint}...");
+        _logger?.Info($"UDP Server listening on {localEndPoint}...");
     }
 
     public int Start()
@@ -114,14 +114,14 @@ public sealed class RpcUdpServer : IDisposable
         try
         {
             // Necessary for Linux. Dispose doesn't abort synchronous calls
-            _server.Shutdown(SocketShutdown.Both);
+            _socket.Shutdown(SocketShutdown.Both);
         }
         catch
         {
             // Ignored
         }
 
-        _server.Dispose();
+        _socket.Dispose();
         Interlocked.Exchange(ref _receivingThread, null)?.Join();
         _isDisposed = true;
     }
@@ -132,12 +132,12 @@ public sealed class RpcUdpServer : IDisposable
         {
             try
             {
-                IPEndPoint remoteIpEndPoint = _reader.BeginReading();
+                EndPoint remoteEndPoint = _reader.BeginReading();
 
                 _writer.BeginWriting();
-                _receivedCall.HandleCall(new RpcEndPoint(remoteIpEndPoint, Protocol.Udp));
+                _receivedCall.HandleCall(new RpcEndPoint(remoteEndPoint, Protocol.Udp));
                 _reader.EndReading();
-                _writer.EndWriting(remoteIpEndPoint);
+                _writer.EndWriting(remoteEndPoint);
             }
             catch (RpcException e)
             {

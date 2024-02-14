@@ -7,14 +7,14 @@ using RpcNet.Internal;
 
 public sealed class RpcEndPoint
 {
-    public RpcEndPoint(IPEndPoint ipEndPoint, Protocol protocol)
+    public RpcEndPoint(EndPoint endPoint, Protocol protocol)
     {
-        IpEndPoint = ipEndPoint;
+        EndPoint = endPoint;
         Protocol = protocol;
     }
 
-    public IPEndPoint IpEndPoint { get; }
+    public EndPoint EndPoint { get; }
     public Protocol Protocol { get; }
 
-    public override string ToString() => $"{Utilities.ConvertToString(Protocol)}:{IpEndPoint}";
+    public override string ToString() => $"{Protocol.ToString().ToUpper()}:{EndPoint}";
 }

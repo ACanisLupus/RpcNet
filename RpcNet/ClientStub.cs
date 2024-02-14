@@ -19,13 +19,13 @@ public abstract class ClientStub : IDisposable
             throw new ArgumentNullException(nameof(ipAddress));
         }
 
-        Settings = clientSettings;
+        Settings = clientSettings ?? new ClientSettings();
         RpcEndPoint = new RpcEndPoint(new IPEndPoint(ipAddress, port), protocol);
 
         _networkClient = protocol switch
         {
-            Protocol.Tcp => new RpcTcpClient(ipAddress, port, program, version, clientSettings),
-            Protocol.Udp => new RpcUdpClient(ipAddress, port, program, version, clientSettings),
+            Protocol.Tcp => new RpcTcpClient(ipAddress, port, program, version, Settings),
+            Protocol.Udp => new RpcUdpClient(ipAddress, port, program, version, Settings),
             _ => throw new ArgumentOutOfRangeException(nameof(protocol))
         };
     }

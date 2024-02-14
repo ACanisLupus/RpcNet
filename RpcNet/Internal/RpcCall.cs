@@ -8,16 +8,16 @@ internal sealed class RpcCall
 {
     private readonly INetworkReader _networkReader;
     private readonly INetworkWriter _networkWriter;
-    private readonly IPEndPoint _remoteIpEndPoint;
+    private readonly EndPoint _remoteEndPoint;
     private readonly RpcMessage _rpcMessage;
     private readonly IXdrReader _xdrReader;
     private readonly IXdrWriter _xdrWriter;
 
     private uint _nextXid = (uint)new Random().Next();
 
-    public RpcCall(int program, IPEndPoint remoteIpEndPoint, INetworkReader networkReader, INetworkWriter networkWriter)
+    public RpcCall(int program, EndPoint remoteEndPoint, INetworkReader networkReader, INetworkWriter networkWriter)
     {
-        _remoteIpEndPoint = remoteIpEndPoint;
+        _remoteEndPoint = remoteEndPoint;
         _networkReader = networkReader;
         _networkWriter = networkWriter;
         _xdrReader = new XdrReader(networkReader);
@@ -62,7 +62,7 @@ internal sealed class RpcCall
         _rpcMessage.WriteTo(_xdrWriter);
         argument.WriteTo(_xdrWriter);
 
-        _networkWriter.EndWriting(_remoteIpEndPoint);
+        _networkWriter.EndWriting(_remoteEndPoint);
 
         _ = _networkReader.BeginReading();
     }

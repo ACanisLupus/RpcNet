@@ -11,27 +11,27 @@ public sealed class TcpWriter : INetworkWriter
     private const int TcpHeaderLength = 4;
 
     private readonly byte[] _buffer;
-    private readonly Socket _tcpClient;
+    private readonly Socket _socket;
 
     private int _writeIndex;
 
-    public TcpWriter(Socket tcpClient) : this(tcpClient, 65536)
+    public TcpWriter(Socket socket) : this(socket, 65536)
     {
     }
 
-    public TcpWriter(Socket tcpClient, int bufferSize)
+    public TcpWriter(Socket socket, int bufferSize)
     {
         if ((bufferSize < (TcpHeaderLength + sizeof(int))) || ((bufferSize % 4) != 0))
         {
             throw new ArgumentOutOfRangeException(nameof(bufferSize));
         }
 
-        _tcpClient = tcpClient;
+        _socket = socket;
         _buffer = new byte[bufferSize];
     }
 
     public void BeginWriting() => _writeIndex = TcpHeaderLength;
-    public void EndWriting(IPEndPoint remoteEndPoint) => FlushPacket(true);
+    public void EndWriting(EndPoint remoteEndPoint) => FlushPacket(true);
 
     public Span<byte> Reserve(int length)
     {
@@ -63,11 +63,11 @@ public sealed class TcpWriter : INetworkWriter
         SocketError socketError;
         try
         {
-            _ = _tcpClient.Send(_buffer, 0, length + TcpHeaderLength, SocketFlags.None, out socketError);
+            _ = _socket.Send(_buffer, 0, length + TcpHeaderLength, SocketFlags.None, out socketError);
         }
         catch (SocketException e)
         {
-            throw new RpcException($"Could not send data to {_tcpClient.RemoteEndPoint}. Socket error code: {e.SocketErrorCode}.");
+            throw new RpcException($"Could not send data to {_socket.RemoteEndPoint}. Socket error code: {e.SocketErrorCode}.");
         }
 
         if (socketError == SocketError.Success)

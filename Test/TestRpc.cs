@@ -13,8 +13,8 @@ internal sealed class TestRpc
 {
     private readonly IPAddress _ipAddress = IPAddress.Loopback;
 
-    private PortMapperServer _portMapperServer;
-    private TestServer _testServer;
+    private PortMapperServer _portMapperServer = null!;
+    private TestServer _testServer = null!;
 
     [SetUp]
     public void SetUp()
@@ -32,7 +32,7 @@ internal sealed class TestRpc
             PortMapperPort = _portMapperServer.TcpPort
         };
 
-        _testServer = new TestServer(Protocol.TcpAndUdp, _ipAddress, 0, serverSettings);
+        _testServer = new TestServer(Protocol.Tcp | Protocol.Udp, _ipAddress, 0, serverSettings);
         _testServer.Start();
     }
 

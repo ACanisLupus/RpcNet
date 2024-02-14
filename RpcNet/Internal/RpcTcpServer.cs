@@ -15,7 +15,7 @@ public sealed class RpcTcpServer : IDisposable
     private readonly int _portMapperPort;
     private readonly int _program;
     private readonly Action<ReceivedRpcCall> _receivedCallDispatcher;
-    private readonly Socket _server;
+    private readonly Socket _socket;
     private readonly int[] _versions;
     private readonly ServerSettings _serverSettings;
 
@@ -30,10 +30,8 @@ public sealed class RpcTcpServer : IDisposable
         int program,
         int[] versions,
         Action<ReceivedRpcCall> receivedCallDispatcher,
-        ServerSettings? serverSettings = default)
+        ServerSettings serverSettings)
     {
-        serverSettings ??= new ServerSettings();
-
         _serverSettings = serverSettings;
         _program = program;
         _versions = versions;
@@ -42,12 +40,12 @@ public sealed class RpcTcpServer : IDisposable
         _ipAddress = ipAddress;
         _port = port;
         _portMapperPort = serverSettings.PortMapperPort;
-        _server = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+        _socket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
         if (ipAddress.AddressFamily == AddressFamily.InterNetworkV6)
         {
             try
             {
-                _server.DualMode = true;
+                _socket.DualMode = true;
             }
             catch (SocketException e)
             {
@@ -70,21 +68,21 @@ public sealed class RpcTcpServer : IDisposable
 
         try
         {
-            _server.Bind(new IPEndPoint(_ipAddress, _port));
-            _server.Listen(int.MaxValue);
+            _socket.Bind(new IPEndPoint(_ipAddress, _port));
+            _socket.Listen(int.MaxValue);
         }
         catch (SocketException e)
         {
             throw new RpcException($"Could not start TCP listener. Socket error code: {e.SocketErrorCode}.");
         }
 
+        if (_socket.LocalEndPoint is not IPEndPoint localEndPoint)
+        {
+            throw new InvalidOperationException("Could not find local endpoint for server socket.");
+        }
+
         if (_port == 0)
         {
-            if (_server.LocalEndPoint is not IPEndPoint localEndPoint)
-            {
-                throw new InvalidOperationException("Could not find local endpoint for server socket.");
-            }
-
             _port = localEndPoint.Port;
         }
 
@@ -105,12 +103,12 @@ public sealed class RpcTcpServer : IDisposable
             }
         }
 
-        _logger?.Info($"{Utilities.ConvertToString(Protocol.Tcp)} Server listening on {_server.LocalEndPoint}...");
+        _logger?.Info($"TCP Server listening on {localEndPoint}...");
 
         _acceptingThread = new Thread(Accepting)
         {
             IsBackground = true,
-            Name = $"RpcNet TCP Server Thread for Port {_port}"
+            Name = $"RpcNet TCP Server Thread for {localEndPoint}"
         };
         _acceptingThread.Start();
         return _port;
@@ -122,14 +120,14 @@ public sealed class RpcTcpServer : IDisposable
         try
         {
             // Necessary for Linux. Dispose doesn't abort synchronous calls
-            _server.Shutdown(SocketShutdown.Both);
+            _socket.Shutdown(SocketShutdown.Both);
         }
         catch
         {
             // Ignored
         }
 
-        _server.Dispose();
+        _socket.Dispose();
 
         lock (_connections)
         {
@@ -163,7 +161,7 @@ public sealed class RpcTcpServer : IDisposable
                     }
                 }
 
-                sockets.Add(_server);
+                sockets.Add(_socket);
 
                 Socket.Select(sockets, null, null, 1000000);
 
@@ -171,12 +169,12 @@ public sealed class RpcTcpServer : IDisposable
                 {
                     for (int i = sockets.Count - 1; i >= 0; i--)
                     {
-                        if (sockets[i] == _server)
+                        if (sockets[i] == _socket)
                         {
-                            Socket tcpClient = _server.Accept();
-                            var connection = new RpcTcpConnection(tcpClient, _program, _versions, _receivedCallDispatcher, _logger);
+                            Socket acceptedSocket = _socket.Accept();
+                            var connection = new RpcTcpConnection(acceptedSocket, _program, _versions, _receivedCallDispatcher, _logger);
 
-                            _connections.Add(tcpClient, connection);
+                            _connections.Add(acceptedSocket, connection);
                         }
                         else
                         {

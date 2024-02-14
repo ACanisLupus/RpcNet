@@ -12,8 +12,8 @@ using TestService;
 [TestFixture]
 internal sealed class TestAddressFamilies
 {
-    private PortMapperServer _portMapperServer;
-    private TestServer _testServer;
+    private PortMapperServer _portMapperServer = null!;
+    private TestServer _testServer = null!;
 
     [TearDown]
     public void TearDown()
@@ -94,7 +94,7 @@ internal sealed class TestAddressFamilies
             PortMapperPort = _portMapperServer.TcpPort
         };
 
-        _testServer = new TestServer(Protocol.TcpAndUdp, serverIpAddress, 0, serverSettings);
+        _testServer = new TestServer(Protocol.Tcp | Protocol.Udp, serverIpAddress, 0, serverSettings);
         _testServer.Start();
     }
 }

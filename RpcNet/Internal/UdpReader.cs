@@ -9,52 +9,37 @@ using System.Net.Sockets;
 public sealed class UdpReader : INetworkReader
 {
     private readonly byte[] _buffer;
-    private readonly Socket _udpClient;
+    private readonly Socket _socket;
 
     private int _readIndex;
     private EndPoint _remoteEndPoint;
     private int _totalLength;
 
-    public UdpReader(Socket udpClient) : this(udpClient, 65536)
+    public UdpReader(Socket socket) : this(socket, 65536)
     {
     }
 
-    public UdpReader(Socket udpClient, int bufferSize)
+    public UdpReader(Socket socket, int bufferSize)
     {
         if ((bufferSize < sizeof(int)) || ((bufferSize % 4) != 0))
         {
             throw new ArgumentOutOfRangeException(nameof(bufferSize));
         }
 
-        _udpClient = udpClient;
-        IPAddress iPAddress = udpClient.AddressFamily == AddressFamily.InterNetworkV6 ? IPAddress.IPv6Loopback : IPAddress.Loopback;
+        _socket = socket;
+        IPAddress iPAddress = socket.AddressFamily == AddressFamily.InterNetworkV6 ? IPAddress.IPv6Loopback : IPAddress.Loopback;
         _remoteEndPoint = new IPEndPoint(iPAddress, 0);
-
-        // See https://stackoverflow.com/questions/7201862/an-existing-connection-was-forcibly-closed-by-the-remote-host
-        if (OperatingSystem.IsWindows())
-        {
-            const uint IocIn = 0x80000000;
-            const uint IocVendor = 0x18000000;
-            const uint SioUdpConnectionReset = IocIn | IocVendor | 12;
-            _ = _udpClient.IOControl(
-                unchecked((int)SioUdpConnectionReset),
-                new[]
-                {
-                    Convert.ToByte(false)
-                },
-                null);
-        }
 
         _buffer = new byte[bufferSize];
     }
 
-    public IPEndPoint BeginReading()
+    public EndPoint BeginReading()
     {
         _readIndex = 0;
         try
         {
-            _totalLength = _udpClient.ReceiveFrom(_buffer, ref _remoteEndPoint);
-            return (IPEndPoint)_remoteEndPoint;
+            _totalLength = _socket.ReceiveFrom(_buffer, ref _remoteEndPoint);
+            return _remoteEndPoint;
         }
         catch (SocketException e)
         {

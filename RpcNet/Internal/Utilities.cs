@@ -62,15 +62,6 @@ internal static class Utilities
         throw new InvalidOperationException($"The following address family is unsupported: {addressFamily}.");
     }
 
-    public static string ConvertToString(Protocol protocol) =>
-        protocol switch
-        {
-            Protocol.Tcp => "TCP",
-            Protocol.Udp => "UDP",
-            Protocol.TcpAndUdp => "TCP and UDP",
-            _ => throw new ArgumentOutOfRangeException(nameof(protocol), protocol, null)
-        };
-
     public static TimeSpan GetReceiveTimeout(Socket socket)
     {
         try
@@ -116,6 +107,24 @@ internal static class Utilities
         catch (SocketException e)
         {
             throw new RpcException($"Could not set send timeout to {timeout}. Socket error code: {e.SocketErrorCode}.");
+        }
+    }
+
+    public static void FixUdpSocket(Socket socket)
+    {
+        // See https://stackoverflow.com/questions/7201862/an-existing-connection-was-forcibly-closed-by-the-remote-host
+        if (OperatingSystem.IsWindows())
+        {
+            const uint IocIn = 0x80000000;
+            const uint IocVendor = 0x18000000;
+            const uint SioUdpConnectionReset = IocIn | IocVendor | 12;
+            _ = socket.IOControl(
+                unchecked((int)SioUdpConnectionReset),
+                new[]
+                {
+                    Convert.ToByte(false)
+                },
+                null);
         }
     }
 }
