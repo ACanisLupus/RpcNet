@@ -10,7 +10,7 @@ internal class Union
     private readonly Declaration _switchDeclaration;
     private readonly List<Declaration> _unionItems = new();
 
-    public Union(string constantsClassName, RpcParser.UnionContext union, string access, Content content)
+    public Union(Settings settings, RpcParser.UnionContext union, string access, Content content)
     {
         _access = access;
         union.Check();
@@ -18,12 +18,12 @@ internal class Union
         Name = union.Identifier().GetText();
 
         RpcParser.DeclarationContext declaration = union.declaration();
-        _switchDeclaration = new Declaration(constantsClassName, declaration, () => false);
+        _switchDeclaration = new Declaration(settings, declaration, () => false);
         if (union.defaultItem() is not null)
         {
             if (union.defaultItem().declaration() is not null)
             {
-                _defaultCase = new Declaration(constantsClassName, union.defaultItem().declaration(), () => false);
+                _defaultCase = new Declaration(settings, union.defaultItem().declaration(), () => false);
             }
             else if (union.defaultItem().@void() is not null)
             {
@@ -40,7 +40,7 @@ internal class Union
             _caseNames.Add(caseName);
             if (@case.unionItem().declaration() is not null)
             {
-                _unionItems.Add(new Declaration(constantsClassName, @case.unionItem().declaration(), () => false));
+                _unionItems.Add(new Declaration(settings, @case.unionItem().declaration(), () => false));
             }
             else if (@case.unionItem().@void() is not null)
             {

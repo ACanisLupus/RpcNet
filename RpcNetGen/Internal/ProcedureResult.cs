@@ -10,7 +10,7 @@ internal class ProcedureResult
     private Struct _tempParsedStructForClient;
     private Struct _tempParsedStructForServer;
 
-    public ProcedureResult(string constantsClassName, RpcParser.ReturnContext @return, string procedureName)
+    public ProcedureResult(Settings settings, RpcParser.ReturnContext @return, string procedureName)
     {
         @return.Check();
 
@@ -18,7 +18,7 @@ internal class ProcedureResult
 
         if (@return.declaration() is not null)
         {
-            _dataType = new Declaration(constantsClassName, @return.declaration(), () => false).DataType;
+            _dataType = new Declaration(settings, @return.declaration(), () => false).DataType;
         }
         else if (@return.@void() is not null)
         {

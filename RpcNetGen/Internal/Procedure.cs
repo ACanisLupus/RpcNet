@@ -9,15 +9,15 @@ internal class Procedure
     private readonly ProcedureArguments _procedureArguments;
     private readonly string _versionConstant;
 
-    public Procedure(string constantsClassName, string version, string versionConstant, RpcParser.ProcedureContext procedureContext, Content content)
+    public Procedure(Settings settings, string version, string versionConstant, RpcParser.ProcedureContext procedureContext, Content content)
     {
         _versionConstant = versionConstant;
         Name = procedureContext.Identifier().GetText();
         FullName = Name + "_" + version;
         _argumentConstant = content.AddConstant(Name, content.GetConstant(procedureContext.constant()));
 
-        _procedureArguments = new ProcedureArguments(constantsClassName, procedureContext.arguments(), FullName);
-        _procedureResult = new ProcedureResult(constantsClassName, procedureContext.@return(), FullName);
+        _procedureArguments = new ProcedureArguments(settings, procedureContext.arguments(), FullName);
+        _procedureResult = new ProcedureResult(settings, procedureContext.@return(), FullName);
     }
 
     public string Name { get; }

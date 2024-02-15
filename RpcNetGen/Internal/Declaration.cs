@@ -6,7 +6,7 @@ internal class Declaration
 {
     private readonly Func<bool> _isLinkedList;
 
-    public Declaration(string constantsClassName, RpcParser.DeclarationContext declaration, Func<bool> isLinkedList)
+    public Declaration(Settings settings, RpcParser.DeclarationContext declaration, Func<bool> isLinkedList)
     {
         declaration.Check();
 
@@ -70,12 +70,12 @@ internal class Declaration
 
         if (!string.IsNullOrWhiteSpace(Length) && !int.TryParse(Length, out _))
         {
-            Length = constantsClassName + '.' + Length;
+            Length = settings.ConstantsClassName + '.' + Length;
         }
 
         if (!string.IsNullOrWhiteSpace(VariableLength) && !int.TryParse(VariableLength, out _))
         {
-            VariableLength = constantsClassName + '.' + VariableLength;
+            VariableLength = settings.ConstantsClassName + '.' + VariableLength;
         }
     }
 
@@ -126,11 +126,15 @@ internal class Declaration
         }
         else if (IsPointer)
         {
-            writer.WriteLine(indent, $"public {DataType.Declaration} {NameAsProperty} {{ get; set; }}");
+            writer.WriteLine(indent, $"public {DataType.Declaration}? {NameAsProperty} {{ get; set; }}");
         }
         else if (DataType.Kind is DataTypeKind.CustomType or DataTypeKind.Unknown)
         {
             writer.WriteLine(indent, $"public {DataType.Declaration} {NameAsProperty} {{ get; set; }} = new {DataType.Declaration}();");
+        }
+        else if (DataType.Declaration == "string")
+        {
+            writer.WriteLine(indent, $"public {DataType.Declaration} {NameAsProperty} {{ get; set; }} = \"\";");
         }
         else
         {

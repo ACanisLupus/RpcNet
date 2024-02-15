@@ -32,7 +32,8 @@ internal class Program
         };
 
         RpcParser.RpcSpecificationContext xdrSpecificationContext = parser.rpcSpecification();
-        var parsedContent = new Content(arguments.Name, arguments.Namespace, arguments.Public ? "public" : "internal", xdrSpecificationContext);
+        var parsedContent =
+            new Content(arguments.Name, arguments.Namespace, arguments.Public ? "public" : "internal", xdrSpecificationContext);
 
         using var writer = new XdrFileWriter(arguments.OutputFilePath);
 
@@ -41,7 +42,18 @@ internal class Program
         return 0;
     }
 
-    private static void ShowHelp() => Console.WriteLine("Usage: RpcNetGen [-n <namespace>] [-o <output cs file path>] <input x file path>");
+    private static void ShowHelp()
+    {
+        Console.WriteLine("USAGE:");
+        Console.WriteLine("  RpcNetGen [-n <namespace>] [-o <output file>] [-p] [-u] <input x file path>");
+        Console.WriteLine();
+        Console.WriteLine("  -n <namespace>     Namespace in the generated file.");
+        Console.WriteLine();
+        Console.WriteLine("  -o <output file>   Output file.");
+        Console.WriteLine();
+        Console.WriteLine("  -p                 Public classes (default is internal).");
+        Console.WriteLine();
+    }
 
     private static bool Validate(Arguments arguments)
     {

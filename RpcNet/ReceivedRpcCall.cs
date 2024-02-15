@@ -2,6 +2,7 @@
 
 namespace RpcNet;
 
+using System.Net;
 using RpcNet.Internal;
 
 public sealed class ReceivedRpcCall
@@ -28,11 +29,14 @@ public sealed class ReceivedRpcCall
         _highVersion = (uint)versions.Max();
         _xdrReader = new XdrReader(networkReader);
         _xdrWriter = new XdrWriter(networkWriter);
+
+        // Fake value to shut up the nullable check
+        RpcEndPoint = new RpcEndPoint(new IPEndPoint(0, 0), Protocol.Tcp);
     }
 
     public uint Version { get; private set; }
     public uint Procedure { get; private set; }
-    public RpcEndPoint? RpcEndPoint { get; private set; }
+    public RpcEndPoint RpcEndPoint { get; private set; }
 
     public void RetrieveCall(IXdrDataType argument) => argument.ReadFrom(_xdrReader);
 
