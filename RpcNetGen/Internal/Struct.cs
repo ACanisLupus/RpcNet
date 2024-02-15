@@ -8,7 +8,7 @@ internal class Struct
 {
     private readonly bool _isLinkedList;
 
-    public Struct(string constantsClassName, StructContext @struct, string access)
+    public Struct(Settings settings, StructContext @struct, string access)
     {
         Access = access;
         Name = @struct.Identifier().GetText();
@@ -17,7 +17,7 @@ internal class Struct
         for (int i = 0; i < declarations.Length; i++)
         {
             DeclarationContext declaration = declarations[i];
-            var parsedDeclaration = new Declaration(constantsClassName, declaration, () => _isLinkedList);
+            var parsedDeclaration = new Declaration(settings, declaration, () => _isLinkedList);
             StructItems.Add(parsedDeclaration);
 
             if ((i == (declarations.Length - 1)) && (Name == parsedDeclaration.DataType.Name))
@@ -28,10 +28,10 @@ internal class Struct
         }
     }
 
-    public Struct(string constantsClassName, TypedefContext typedef, string access)
+    public Struct(Settings settings, TypedefContext typedef, string access)
     {
         Access = access;
-        var parsedDeclaration = new Declaration(constantsClassName, typedef.declaration(), () => _isLinkedList);
+        var parsedDeclaration = new Declaration(settings, typedef.declaration(), () => _isLinkedList);
         StructItems.Add(parsedDeclaration);
         Name = parsedDeclaration.Identifier;
         parsedDeclaration.Identifier = "Value";
@@ -127,7 +127,7 @@ internal class Struct
         if (_isLinkedList)
         {
             writer.WriteLine(indent + 2, "var current = this;");
-            writer.WriteLine(indent + 2, $"{Name} next;");
+            writer.WriteLine(indent + 2, $"{Name}? next;");
             writer.WriteLine(indent + 2, "do");
             writer.WriteLine(indent + 2, "{");
             nextIndent++;

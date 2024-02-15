@@ -80,7 +80,7 @@ internal class Program
     {
         using PortMapperClient client = CreateClient(ipEndPoint);
         MappingNodeHead2 mappingNodeHead = client.Dump_2();
-        MappingNode2 node = mappingNodeHead.Value;
+        MappingNode2? node = mappingNodeHead.Value;
         while (node is not null)
         {
             Mapping2 mapping = node.Mapping;

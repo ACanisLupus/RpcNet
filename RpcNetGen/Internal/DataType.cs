@@ -97,6 +97,7 @@ internal sealed class DataType
     public string Name { get; }
     public DataTypeKind Kind { get; private set; }
     public string Declaration { get; }
+    public bool IsString { get; }
 
     public static DataType CreateOpaque() => new("opaque", DataTypeKind.Opaque, "byte[]");
     public static DataType CreateString() => new("String", DataTypeKind.Simple, "string");

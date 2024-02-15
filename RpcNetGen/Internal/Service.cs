@@ -12,7 +12,7 @@ internal class Service
     private readonly List<string> _versionConstants = new();
     private readonly Dictionary<string, List<Procedure>> _parsedProceduresPerVersionConstant = new();
 
-    public Service(string constantsClassName, RpcParser.ProgramContext program, string access, Content content)
+    public Service(Settings settings, RpcParser.ProgramContext program, string access, Content content)
     {
         _access = access;
         _name = content.Name;
@@ -31,7 +31,7 @@ internal class Service
 
             foreach (RpcParser.ProcedureContext procedure in version.procedure())
             {
-                var parsedProcedure = new Procedure(constantsClassName, versionConstant, versionConstantFullName, procedure, content);
+                var parsedProcedure = new Procedure(settings, versionConstant, versionConstantFullName, procedure, content);
                 _parsedProcedures.Add(parsedProcedure);
 
                 if (!_parsedProceduresPerVersionConstant.TryGetValue(versionConstantFullName, out List<Procedure> procedureList))
@@ -64,7 +64,7 @@ internal class Service
         writer.WriteLine();
         writer.WriteLine(indent, $"{_access} class {_name}Client : ClientStub");
         writer.WriteLine(indent, "{");
-        writer.WriteLine(indent + 1, $"public {_name}Client(Protocol protocol, IPAddress ipAddress, int port = 0, ClientSettings clientSettings = default) :");
+        writer.WriteLine(indent + 1, $"public {_name}Client(Protocol protocol, IPAddress ipAddress, int port = 0, ClientSettings? clientSettings = default) :");
         writer.WriteLine(indent + 2, $"base(protocol, ipAddress, port, {_programNumberConstant}, {_clientVersionNumber}, clientSettings)");
         writer.WriteLine(indent + 1, "{");
         writer.WriteLine(indent + 1, "}");
@@ -83,7 +83,7 @@ internal class Service
         writer.WriteLine(indent, "{");
         writer.WriteLine(
             indent + 1,
-            $"public {_name}ServerStub(Protocol protocol, IPAddress ipAddress, int port = 0, ServerSettings serverSettings = default) :");
+            $"public {_name}ServerStub(Protocol protocol, IPAddress ipAddress, int port = 0, ServerSettings? serverSettings = default) :");
         string allVersions = string.Join(", ", _versionConstants);
         writer.WriteLine(indent + 2, $"base(protocol, ipAddress, port, {_programNumberConstant}, new[] {{ {allVersions} }}, serverSettings)");
         writer.WriteLine(indent + 1, "{");

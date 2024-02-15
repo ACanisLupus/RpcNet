@@ -7,9 +7,10 @@ using RpcNet.Internal;
 
 public abstract class ServerStub : IDisposable
 {
+    protected readonly ServerSettings Settings;
     protected readonly XdrVoid Void = new();
-    protected readonly ServerSettings? Settings;
 
+    private readonly object _lock = new();
     private readonly RpcTcpServer? _rpcTcpServer;
     private readonly RpcUdpServer? _rpcUdpServer;
 
@@ -27,16 +28,22 @@ public abstract class ServerStub : IDisposable
             throw new ArgumentNullException(nameof(versions));
         }
 
-        Settings = serverSettings;
+        Settings = serverSettings ?? new ServerSettings();
+
+        Action<ReceivedRpcCall> dispatchReceivedCall = DispatchReceivedCallWithLock;
+        if (Settings.LockFreeDispatcher)
+        {
+            dispatchReceivedCall = DispatchReceivedCall;
+        }
 
         if (protocol.HasFlag(Protocol.Tcp))
         {
-            _rpcTcpServer = new RpcTcpServer(ipAddress, port, program, versions, DispatchReceivedCall, serverSettings);
+            _rpcTcpServer = new RpcTcpServer(ipAddress, port, program, versions, dispatchReceivedCall, Settings);
         }
 
         if (protocol.HasFlag(Protocol.Udp))
         {
-            _rpcUdpServer = new RpcUdpServer(ipAddress, port, program, versions, DispatchReceivedCall, serverSettings);
+            _rpcUdpServer = new RpcUdpServer(ipAddress, port, program, versions, dispatchReceivedCall, Settings);
         }
     }
 
@@ -68,6 +75,14 @@ public abstract class ServerStub : IDisposable
             }
 
             _isDisposed = true;
+        }
+    }
+
+    private void DispatchReceivedCallWithLock(ReceivedRpcCall call)
+    {
+        lock (_lock)
+        {
+            DispatchReceivedCall(call);
         }
     }
 }

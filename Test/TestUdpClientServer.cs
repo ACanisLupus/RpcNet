@@ -49,7 +49,7 @@ internal sealed class TestUdpClientServer
             serverSettings);
         int port = server.Start();
 
-        using var client = new RpcUdpClient(ipAddress, port, Program, Version);
+        using var client = new RpcUdpClient(ipAddress, port, Program, Version, ClientSettings.Default);
         var argument = new SimpleStruct
         {
             Value = 42
@@ -58,10 +58,11 @@ internal sealed class TestUdpClientServer
 
         client.Call(Procedure, Version, argument, result);
 
-        Assert.That(receivedCallChannel.TryReceive(TimeSpan.FromSeconds(10), out ReceivedRpcCall receivedCall));
-        Assert.That(receivedCall.Procedure, Is.EqualTo(Procedure));
-        Assert.That(receivedCall.Version, Is.EqualTo(Version));
-        Assert.That(receivedCall.RpcEndPoint, Is.Not.Null);
+        Assert.That(receivedCallChannel.TryReceive(TimeSpan.FromSeconds(10), out ReceivedRpcCall? receivedCall));
+        Assert.That(receivedCall, Is.Not.Null);
+        Assert.That(receivedCall!.Procedure, Is.EqualTo(Procedure));
+        Assert.That(receivedCall!.Version, Is.EqualTo(Version));
+        Assert.That(receivedCall!.RpcEndPoint, Is.Not.Null);
 
         Assert.That(argument.Value, Is.EqualTo(result.Value));
     }

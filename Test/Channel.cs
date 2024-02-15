@@ -15,7 +15,7 @@ internal class Channel<T>
         _itemReceived.Set();
     }
 
-    public bool TryReceive(TimeSpan timeout, out T item)
+    public bool TryReceive(TimeSpan timeout, out T? item)
     {
         item = default;
         return _itemReceived.WaitOne(timeout) && _items.TryDequeue(out item);

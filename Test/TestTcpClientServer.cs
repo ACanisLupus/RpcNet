@@ -24,7 +24,7 @@ internal sealed class TestTcpClientServer
         const int Program = 12;
         const int Version = 13;
 
-        RpcException e = Assert.Throws<RpcException>(() => _ = new RpcTcpClient(_ipAddress, 1, Program, Version));
+        RpcException? e = Assert.Throws<RpcException>(() => _ = new RpcTcpClient(_ipAddress, 1, Program, Version, ClientSettings.Default));
 
         Assert.That(e?.Message, Is.EqualTo("Could not connect to [::1]:1. Socket error code: ConnectionRefused."));
     }
@@ -43,7 +43,8 @@ internal sealed class TestTcpClientServer
             {
                 Version
             },
-            _ => { });
+            _ => { },
+            ServerSettings.Default);
         Assert.DoesNotThrow(() => server.Dispose());
     }
 
@@ -83,7 +84,7 @@ internal sealed class TestTcpClientServer
             serverSettings);
         int port = server.Start();
 
-        using var client = new RpcTcpClient(_ipAddress, port, Program, Version);
+        using var client = new RpcTcpClient(_ipAddress, port, Program, Version, ClientSettings.Default);
         var argument = new SimpleStruct
         {
             Value = 42
@@ -92,10 +93,11 @@ internal sealed class TestTcpClientServer
 
         client.Call(Procedure, Version, argument, result);
 
-        Assert.That(receivedCallChannel.TryReceive(TimeSpan.FromSeconds(10), out ReceivedRpcCall receivedCall));
-        Assert.That(receivedCall.Procedure, Is.EqualTo(Procedure));
-        Assert.That(receivedCall.Version, Is.EqualTo(Version));
-        Assert.That(receivedCall.RpcEndPoint, Is.Not.Null);
+        Assert.That(receivedCallChannel.TryReceive(TimeSpan.FromSeconds(10), out ReceivedRpcCall? receivedCall));
+        Assert.That(receivedCall, Is.Not.Null);
+        Assert.That(receivedCall!.Procedure, Is.EqualTo(Procedure));
+        Assert.That(receivedCall!.Version, Is.EqualTo(Version));
+        Assert.That(receivedCall!.RpcEndPoint, Is.Not.Null);
 
         Assert.That(argument.Value, Is.EqualTo(result.Value));
     }

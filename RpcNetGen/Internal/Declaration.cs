@@ -6,7 +6,7 @@ internal class Declaration
 {
     private readonly Func<bool> _isLinkedList;
 
-    public Declaration(string constantsClassName, RpcParser.DeclarationContext declaration, Func<bool> isLinkedList)
+    public Declaration(Settings settings, RpcParser.DeclarationContext declaration, Func<bool> isLinkedList)
     {
         declaration.Check();
 
@@ -46,6 +46,7 @@ internal class Declaration
             DataType = new DataType(declaration.pointer().dataType());
             Identifier = declaration.pointer().Identifier()?.GetText() ?? DataType.Name;
             IsPointer = true;
+            QuestionMark = "?";
         }
         else if (declaration.array() is not null)
         {
@@ -70,12 +71,12 @@ internal class Declaration
 
         if (!string.IsNullOrWhiteSpace(Length) && !int.TryParse(Length, out _))
         {
-            Length = constantsClassName + '.' + Length;
+            Length = settings.ConstantsClassName + '.' + Length;
         }
 
         if (!string.IsNullOrWhiteSpace(VariableLength) && !int.TryParse(VariableLength, out _))
         {
-            VariableLength = constantsClassName + '.' + VariableLength;
+            VariableLength = settings.ConstantsClassName + '.' + VariableLength;
         }
     }
 
@@ -90,6 +91,7 @@ internal class Declaration
     public bool IsLinkedListDeclaration { get; set; }
     public string NameAsProperty => Identifier.ToUpperFirstLetter();
     public string NameAsVariable => Identifier.ToLowerFirstLetter();
+    public string QuestionMark { get; } = "";
 
     private bool IsArray { get; }
     private bool IsVector { get; }
@@ -126,11 +128,15 @@ internal class Declaration
         }
         else if (IsPointer)
         {
-            writer.WriteLine(indent, $"public {DataType.Declaration} {NameAsProperty} {{ get; set; }}");
+            writer.WriteLine(indent, $"public {DataType.Declaration}? {NameAsProperty} {{ get; set; }}");
         }
         else if (DataType.Kind is DataTypeKind.CustomType or DataTypeKind.Unknown)
         {
             writer.WriteLine(indent, $"public {DataType.Declaration} {NameAsProperty} {{ get; set; }} = new {DataType.Declaration}();");
+        }
+        else if (DataType.Declaration == "string")
+        {
+            writer.WriteLine(indent, $"public {DataType.Declaration} {NameAsProperty} {{ get; set; }} = \"\";");
         }
         else
         {

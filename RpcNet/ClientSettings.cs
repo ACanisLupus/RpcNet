@@ -7,6 +7,8 @@ using RpcNet.PortMapper;
 
 public sealed class ClientSettings
 {
+    public static ClientSettings Default { get; } = new ClientSettings();
+
     public ILogger? Logger { get; set; }
     public int PortMapperPort { get; set; } = PortMapperConstants.PortMapperPort;
     public TimeSpan SendTimeout { get; set; } = Utilities.DefaultClientSendTimeout;

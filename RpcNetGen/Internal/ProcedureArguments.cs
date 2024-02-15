@@ -11,7 +11,7 @@ internal class ProcedureArguments
     private Struct _tempParsedStructForClient;
     private Struct _tempParsedStructForServer;
 
-    public ProcedureArguments(string constantsClassName, RpcParser.ArgumentsContext arguments, string procedureName)
+    public ProcedureArguments(Settings settings, RpcParser.ArgumentsContext arguments, string procedureName)
     {
         _procedureName = procedureName;
 
@@ -33,7 +33,7 @@ internal class ProcedureArguments
             arguments.argumentList().Check();
             foreach (RpcParser.DeclarationContext declaration in arguments.argumentList().declaration())
             {
-                _arguments.Add(new Declaration(constantsClassName, declaration, () => false));
+                _arguments.Add(new Declaration(settings, declaration, () => false));
             }
         }
         else
@@ -97,7 +97,7 @@ internal class ProcedureArguments
             return "";
         }
 
-        return string.Join(", ", _arguments.Select(p => p.DataType.Declaration + " " + p.NameAsVariable));
+        return string.Join(", ", _arguments.Select(p => p.DataType.Declaration + p.QuestionMark + " " + p.NameAsVariable));
     }
 
     public string GetArgumentsForServer()

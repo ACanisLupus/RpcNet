@@ -20,7 +20,7 @@ internal class StubNetwork : INetworkReader, INetworkWriter
     public int ReadIndex { get; private set; }
     public int WriteIndex { get; private set; }
 
-    public IPEndPoint BeginReading() => new(0, 0);
+    public EndPoint BeginReading() => new IPEndPoint(0, 0);
 
     public void EndReading()
     {
@@ -30,7 +30,7 @@ internal class StubNetwork : INetworkReader, INetworkWriter
     {
     }
 
-    public void EndWriting(IPEndPoint remoteIpEndPoint)
+    public void EndWriting(EndPoint remoteEndPoint)
     {
     }
 

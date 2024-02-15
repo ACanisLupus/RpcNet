@@ -13,19 +13,19 @@ internal sealed class TestPortMapper
     private readonly IPAddress _ipAddress = IPAddress.Loopback;
 
     private int _portMapperPort;
-    private PortMapperServer _server;
+    private PortMapperServer _server = null!;
 
     [SetUp]
     public void SetUp()
     {
         _portMapperPort = 0;
-        _server = new PortMapperServer(Protocol.TcpAndUdp, _ipAddress, _portMapperPort);
+        _server = new PortMapperServer(Protocol.Tcp | Protocol.Udp, _ipAddress, _portMapperPort);
         _server.Start();
         _portMapperPort = _server.TcpPort;
     }
 
     [TearDown]
-    public void TearDown() => Interlocked.Exchange(ref _server, null)?.Dispose();
+    public void TearDown() => _server?.Dispose();
 
     [Test]
     [TestCase(4711, 4712, ProtocolKind.Tcp, 4713)]

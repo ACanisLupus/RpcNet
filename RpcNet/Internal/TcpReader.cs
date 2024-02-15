@@ -11,7 +11,7 @@ public sealed class TcpReader : INetworkReader
     private const int TcpHeaderLength = 4;
 
     private readonly byte[] _buffer;
-    private readonly Socket _tcpClient;
+    private readonly Socket _socket;
 
     private int _bodyIndex;
     private int _headerIndex;
@@ -20,22 +20,22 @@ public sealed class TcpReader : INetworkReader
     private int _readIndex;
     private int _writeIndex;
 
-    public TcpReader(Socket tcpClient) : this(tcpClient, 65536)
+    public TcpReader(Socket socket) : this(socket, 65536)
     {
     }
 
-    public TcpReader(Socket tcpClient, int bufferSize)
+    public TcpReader(Socket socket, int bufferSize)
     {
         if ((bufferSize < (TcpHeaderLength + sizeof(int))) || ((bufferSize % 4) != 0))
         {
             throw new ArgumentOutOfRangeException(nameof(bufferSize));
         }
 
-        _tcpClient = tcpClient;
+        _socket = socket;
         _buffer = new byte[bufferSize];
     }
 
-    public IPEndPoint BeginReading()
+    public EndPoint BeginReading()
     {
         _readIndex = 0;
         _writeIndex = 0;
@@ -45,7 +45,7 @@ public sealed class TcpReader : INetworkReader
         _packetState = PacketState.Header;
 
         FillBuffer();
-        return (IPEndPoint)_tcpClient.RemoteEndPoint!;
+        return _socket.RemoteEndPoint!;
     }
 
     public void EndReading()
@@ -153,17 +153,17 @@ public sealed class TcpReader : INetworkReader
     {
         try
         {
-            int receivedLength = _tcpClient.Receive(_buffer.AsSpan(_writeIndex, _buffer.Length - _writeIndex));
+            int receivedLength = _socket.Receive(_buffer.AsSpan(_writeIndex, _buffer.Length - _writeIndex));
             if (receivedLength == 0)
             {
-                throw new RpcException($"{_tcpClient.RemoteEndPoint} disconnected.");
+                throw new RpcException($"{_socket.RemoteEndPoint} disconnected.");
             }
 
             _writeIndex += receivedLength;
         }
         catch (SocketException e)
         {
-            throw new RpcException($"Could not read from {_tcpClient.RemoteEndPoint}. Socket error code: {e.SocketErrorCode}.");
+            throw new RpcException($"Could not read from {_socket.RemoteEndPoint}. Socket error code: {e.SocketErrorCode}.");
         }
     }
 

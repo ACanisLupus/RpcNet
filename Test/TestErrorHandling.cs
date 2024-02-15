@@ -11,7 +11,7 @@ internal sealed class TestErrorHandling
 {
     private readonly IPAddress _ipAddress = IPAddress.Loopback;
 
-    private TestServer _testServer;
+    private TestServer _testServer = null!;
 
     [SetUp]
     public void SetUp()
@@ -21,7 +21,7 @@ internal sealed class TestErrorHandling
             PortMapperPort = 0
         };
 
-        _testServer = new TestServer(Protocol.TcpAndUdp, _ipAddress, 0, serverSettings);
+        _testServer = new TestServer(Protocol.Tcp | Protocol.Udp, _ipAddress, 0, serverSettings);
         _testServer.Start();
     }
 
@@ -40,7 +40,7 @@ internal sealed class TestErrorHandling
         // For TCP, the argument is bigger than the internal buffer size, so that the handling of buffer overflows is checked as well
         byte[] value = protocol == Protocol.Tcp ? new byte[128000] : new byte[100];
 
-        RpcException e = Assert.Throws<RpcException>(() => client.NonExistingProcedure_1(value));
+        RpcException? e = Assert.Throws<RpcException>(() => client.NonExistingProcedure_1(value));
         Assert.That(e?.Message, Is.EqualTo("Call was unsuccessful: ProcedureUnavailable."));
 
         // Make sure the communication works after an error
@@ -59,7 +59,7 @@ internal sealed class TestErrorHandling
         // For TCP, the argument is bigger than the internal buffer size, so that the handling of buffer overflows is checked as well
         byte[] value = protocol == Protocol.Tcp ? new byte[128000] : new byte[100];
 
-        RpcException e = Assert.Throws<RpcException>(() => client.NonExistingProcedure_3(value));
+        RpcException? e = Assert.Throws<RpcException>(() => client.NonExistingProcedure_3(value));
         Assert.That(e?.Message, Is.EqualTo("Call was unsuccessful: ProgramMismatch."));
 
         // Make sure the communication works after an error
@@ -75,7 +75,7 @@ internal sealed class TestErrorHandling
 
         using var client = new TestService2Client(protocol, _ipAddress, port);
 
-        RpcException e = Assert.Throws<RpcException>(() => client.ThrowsException_1());
+        RpcException? e = Assert.Throws<RpcException>(() => client.ThrowsException_1());
         Assert.That(e?.Message, Is.EqualTo("Call was unsuccessful: SystemError."));
 
         // Make sure the communication works after an error

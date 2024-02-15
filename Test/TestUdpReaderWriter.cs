@@ -11,11 +11,11 @@ using RpcNet.Internal;
 [TestFixture]
 internal sealed class TestUdpReaderWriter
 {
-    private UdpClient _client;
-    private UdpReader _reader;
-    private IPEndPoint _remoteIpEndPoint;
-    private UdpClient _server;
-    private UdpWriter _writer;
+    private UdpClient _client = null!;
+    private UdpReader _reader = null!;
+    private IPEndPoint _remoteIpEndPoint = null!;
+    private UdpClient _server = null!;
+    private UdpWriter _writer = null!;
 
     [SetUp]
     public void SetUp()
@@ -24,7 +24,8 @@ internal sealed class TestUdpReaderWriter
 
         _server = new UdpClient(0, iPAddress.AddressFamily);
 
-        int port = ((IPEndPoint)_server.Client.LocalEndPoint)?.Port ?? throw new InvalidOperationException("Could not find local end point.");
+        var localIpEndPoint = _server.Client.LocalEndPoint as IPEndPoint;
+        int port = localIpEndPoint?.Port ?? throw new InvalidOperationException("Could not find local end point.");
         _remoteIpEndPoint = new IPEndPoint(iPAddress, port);
 
         _client = new UdpClient(iPAddress.AddressFamily);
@@ -53,7 +54,7 @@ internal sealed class TestUdpReaderWriter
 
         Assert.DoesNotThrow(() => _writer.EndWriting(_remoteIpEndPoint));
 
-        IPEndPoint remoteIdEndPoint = _reader.BeginReading();
+        var remoteIdEndPoint = (IPEndPoint)_reader.BeginReading();
 
         Assert.That(remoteIdEndPoint.Address, Is.EqualTo(_remoteIpEndPoint.Address));
         Assert.That(remoteIdEndPoint.Port, Is.Not.EqualTo(_remoteIpEndPoint.Port));
@@ -134,7 +135,7 @@ internal sealed class TestUdpReaderWriter
         var task = Task.Run(() => _reader.BeginReading());
         Thread.Sleep(100);
         _server.Dispose();
-        RpcException e = Assert.Throws<RpcException>(() => task.GetAwaiter().GetResult());
+        RpcException? e = Assert.Throws<RpcException>(() => task.GetAwaiter().GetResult());
         Assert.That(e?.Message, Is.EqualTo("Could not receive data from UDP socket. Socket error code: Interrupted."));
     }
 

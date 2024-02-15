@@ -57,7 +57,7 @@ struct CallResult3 {
  * a universal transport address.
  */
 struct NetworkBuffer {
- unsigned int Maxlen;
+ unsigned int MaxLen;
  opaque Buffer<>;
 };
 

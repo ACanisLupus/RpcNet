@@ -7,7 +7,7 @@ using System.Net;
 // Public for tests
 public interface INetworkReader
 {
-    IPEndPoint BeginReading();
+    EndPoint BeginReading();
     void EndReading();
     ReadOnlySpan<byte> Read(int length);
 }

@@ -8,7 +8,7 @@ using TestService;
 
 internal sealed class TestServer : TestServiceServerStub
 {
-    public TestServer(Protocol protocol, IPAddress ipAddress, int port, ServerSettings serverSettings = null) : base(protocol, ipAddress, port, serverSettings)
+    public TestServer(Protocol protocol, IPAddress ipAddress, int port, ServerSettings serverSettings) : base(protocol, ipAddress, port, serverSettings)
     {
     }
 
