@@ -97,7 +97,7 @@ internal class ProcedureArguments
             return "";
         }
 
-        return string.Join(", ", _arguments.Select(p => p.DataType.Declaration + " " + p.NameAsVariable));
+        return string.Join(", ", _arguments.Select(p => p.DataType.Declaration + p.QuestionMark + " " + p.NameAsVariable));
     }
 
     public string GetArgumentsForServer()

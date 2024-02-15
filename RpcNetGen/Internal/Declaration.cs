@@ -46,6 +46,7 @@ internal class Declaration
             DataType = new DataType(declaration.pointer().dataType());
             Identifier = declaration.pointer().Identifier()?.GetText() ?? DataType.Name;
             IsPointer = true;
+            QuestionMark = "?";
         }
         else if (declaration.array() is not null)
         {
@@ -90,6 +91,7 @@ internal class Declaration
     public bool IsLinkedListDeclaration { get; set; }
     public string NameAsProperty => Identifier.ToUpperFirstLetter();
     public string NameAsVariable => Identifier.ToLowerFirstLetter();
+    public string QuestionMark { get; } = "";
 
     private bool IsArray { get; }
     private bool IsVector { get; }
