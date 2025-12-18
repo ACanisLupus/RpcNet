@@ -24,7 +24,7 @@ internal sealed class TestUdpReaderWriter
 
         _server = new UdpClient(0, iPAddress.AddressFamily);
 
-        var localIpEndPoint = _server.Client.LocalEndPoint as IPEndPoint;
+        IPEndPoint? localIpEndPoint = _server.Client.LocalEndPoint as IPEndPoint;
         int port = localIpEndPoint?.Port ?? throw new InvalidOperationException("Could not find local end point.");
         _remoteIpEndPoint = new IPEndPoint(iPAddress, port);
 
@@ -54,7 +54,7 @@ internal sealed class TestUdpReaderWriter
 
         Assert.DoesNotThrow(() => _writer.EndWriting(_remoteIpEndPoint));
 
-        var remoteIdEndPoint = (IPEndPoint)_reader.BeginReading();
+        IPEndPoint remoteIdEndPoint = (IPEndPoint)_reader.BeginReading();
 
         Assert.That(remoteIdEndPoint.Address, Is.EqualTo(_remoteIpEndPoint.Address));
         Assert.That(remoteIdEndPoint.Port, Is.Not.EqualTo(_remoteIpEndPoint.Port));
@@ -126,13 +126,13 @@ internal sealed class TestUdpReaderWriter
             _ = _reader.Read(arguments[i]);
         }
 
-        _ = Assert.Throws<RpcException>(() => _ = _reader.Read(arguments[^1]));
+        _ = Assert.Throws<RpcException>(() => _reader.Read(arguments[^1]));
     }
 
     [Test]
     public void AbortReading()
     {
-        var task = Task.Run(() => _reader.BeginReading());
+        Task<EndPoint> task = Task.Run(_reader.BeginReading);
         Thread.Sleep(100);
         _server.Dispose();
         RpcException? e = Assert.Throws<RpcException>(() => task.GetAwaiter().GetResult());

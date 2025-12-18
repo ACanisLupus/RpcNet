@@ -30,7 +30,7 @@ else
 
 static void StartActualClients(string protocol)
 {
-    var stopwatch = Stopwatch.StartNew();
+    Stopwatch stopwatch = Stopwatch.StartNew();
 
     List<Process> processes = new(CountProcesses);
     for (int i = 0; i < CountProcesses; i++)
@@ -45,7 +45,7 @@ static void StartActualClients(string protocol)
                 Arguments = protocol + " " + i
             }
         };
-        process.Start();
+        _ = process.Start();
         processes.Add(process);
     }
 
@@ -71,7 +71,7 @@ static int CallServer(IPAddress ipAddress, string protocol)
 static int CallTcpServer(IPAddress ipAddress)
 {
     int result = 0;
-    using var testTcpClient = new TestServiceClient(Protocol.Tcp, ipAddress, Port);
+    using TestServiceClient testTcpClient = new(Protocol.Tcp, ipAddress, Port);
     for (int i = 0; i < CountCalls; i++)
     {
         result += testTcpClient.Echo_1(i);
@@ -83,7 +83,7 @@ static int CallTcpServer(IPAddress ipAddress)
 static int CallUdpServer(IPAddress ipAddress)
 {
     int result = 0;
-    using var testUdpClient = new TestServiceClient(Protocol.Udp, ipAddress, Port);
+    using TestServiceClient testUdpClient = new(Protocol.Udp, ipAddress, Port);
     for (int i = 0; i < CountCalls; i++)
     {
         result += testUdpClient.Echo_1(i);

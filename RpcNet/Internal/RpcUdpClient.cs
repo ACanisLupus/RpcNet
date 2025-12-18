@@ -21,15 +21,15 @@ public sealed class RpcUdpClient : INetworkClient
                 : PortMapperUtilities.GetPort(ProtocolKind.Udp, ipAddress, clientSettings.PortMapperPort, program, version, clientSettings);
         }
 
-        var remoteIpEndPoint = new IPEndPoint(ipAddress, port);
+        IPEndPoint remoteIpEndPoint = new(ipAddress, port);
         _socket = new Socket(ipAddress.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
         Utilities.FixUdpSocket(_socket);
 
         ReceiveTimeout = clientSettings.ReceiveTimeout;
         SendTimeout = clientSettings.SendTimeout;
 
-        var reader = new UdpReader(_socket);
-        var writer = new UdpWriter(_socket);
+        UdpReader reader = new(_socket);
+        UdpWriter writer = new(_socket);
         _call = new RpcCall(program, remoteIpEndPoint, reader, writer);
     }
 

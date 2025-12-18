@@ -9,12 +9,12 @@ public sealed class PortMapperServer : PortMapperServerStub
     private static readonly CallResult2 _callResult = new()
     {
         Port = 0,
-        Result = Array.Empty<byte>()
+        Result = []
     };
 
     private readonly object _lock = new();
-    private readonly List<Mapping2> _mappings2 = new();
-    private readonly List<Mapping3> _mappings3 = new();
+    private readonly List<Mapping2> _mappings2 = [];
+    private readonly List<Mapping3> _mappings3 = [];
 
     public PortMapperServer(
         Protocol protocol,
@@ -108,7 +108,7 @@ public sealed class PortMapperServer : PortMapperServerStub
     {
         lock (_lock)
         {
-            var mappingNodeNullable = new MappingNodeHead2();
+            MappingNodeHead2 mappingNodeNullable = new();
 
             MappingNode2? currentNode = null;
             foreach (Mapping2 mapping in _mappings2)
@@ -123,7 +123,7 @@ public sealed class PortMapperServer : PortMapperServerStub
                 }
                 else if (currentNode is not null)
                 {
-                    var mappingNode = new MappingNode2
+                    MappingNode2 mappingNode = new()
                     {
                         Mapping = mapping
                     };

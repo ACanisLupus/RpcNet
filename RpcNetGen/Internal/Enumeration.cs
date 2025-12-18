@@ -5,7 +5,7 @@ namespace RpcNetGen.Internal;
 internal class Enumeration
 {
     private readonly string _access;
-    private readonly List<EnumerationValue> _enumItems = new();
+    private readonly List<EnumerationValue> _enumItems = [];
 
     public Enumeration(RpcParser.EnumContext @enum, string access, Content content)
     {

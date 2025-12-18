@@ -20,14 +20,9 @@ public sealed class RpcTcpClient : INetworkClient
 
         if (port == 0)
         {
-            if (program == PortMapperConstants.PortMapperProgram)
-            {
-                port = PortMapperConstants.PortMapperPort;
-            }
-            else
-            {
-                port = PortMapperUtilities.GetPort(ProtocolKind.Tcp, ipAddress, _clientSettings.PortMapperPort, program, version, clientSettings);
-            }
+            port = program == PortMapperConstants.PortMapperProgram
+                ? PortMapperConstants.PortMapperPort
+                : PortMapperUtilities.GetPort(ProtocolKind.Tcp, ipAddress, _clientSettings.PortMapperPort, program, version, clientSettings);
         }
 
         try
@@ -65,7 +60,7 @@ public sealed class RpcTcpClient : INetworkClient
     {
         try
         {
-            var socket = new Socket(_remoteEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            Socket socket = new(_remoteEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
             Utilities.SetReceiveTimeout(socket, _clientSettings.ReceiveTimeout);
             Utilities.SetSendTimeout(socket, _clientSettings.SendTimeout);

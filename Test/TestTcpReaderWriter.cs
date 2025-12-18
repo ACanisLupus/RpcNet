@@ -23,7 +23,7 @@ internal sealed class TestTcpReaderWriter
         TcpListener listener = new(ipAddress, 0);
         listener.Start();
 
-        var localIpEndPoint = listener.Server.LocalEndPoint as IPEndPoint;
+        IPEndPoint? localIpEndPoint = listener.Server.LocalEndPoint as IPEndPoint;
         int port = localIpEndPoint?.Port ?? throw new InvalidOperationException("Could not find local end point.");
         _readerTcpClient = new TcpClient();
         Task task = Task.Run(() => _writerTcpClient = listener.AcceptTcpClient());
@@ -54,8 +54,8 @@ internal sealed class TestTcpReaderWriter
         _reader = new TcpReader(_readerTcpClient.Client, maxReadLength);
         _writer = new TcpWriter(_writerTcpClient.Client, maxReserveLength);
 
-        var xdrReader = new XdrReader(_reader);
-        var xdrWriter = new XdrWriter(_writer);
+        XdrReader xdrReader = new(_reader);
+        XdrWriter xdrWriter = new(_writer);
 
         byte[] value = TestXdr.GenerateByteTestData(17);
 
@@ -86,12 +86,12 @@ internal sealed class TestTcpReaderWriter
 
         _writerTcpClient.Client.SendBufferSize = 1;
 
-        var xdrReader = new XdrReader(_reader);
-        var xdrWriter = new XdrWriter(_writer);
+        XdrReader xdrReader = new(_reader);
+        XdrWriter xdrWriter = new(_writer);
 
         byte[] value = TestXdr.GenerateByteTestData(17);
 
-        var task = Task.Run(
+        Task task = Task.Run(
             () =>
             {
                 Assert.DoesNotThrow(() => _reader.BeginReading());

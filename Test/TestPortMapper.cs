@@ -34,7 +34,7 @@ internal sealed class TestPortMapper
     [TestCase(4720, 4721, ProtocolKind.Udp, 4721)]
     public void TestSetAndGet(int port, int program, ProtocolKind protocol, int version)
     {
-        using var client = new PortMapperClient(Protocol.Tcp, _ipAddress, _portMapperPort);
+        using PortMapperClient client = new(Protocol.Tcp, _ipAddress, _portMapperPort);
         _ = client.Set_2(
             new Mapping2
             {
@@ -60,7 +60,7 @@ internal sealed class TestPortMapper
     [TestCase(1, 2, 3, 42, 3)]
     public void TestSetAndWrongGet(int port, int program, int version, int program2, int version2)
     {
-        using var client = new PortMapperClient(Protocol.Tcp, _ipAddress, _portMapperPort);
+        using PortMapperClient client = new(Protocol.Tcp, _ipAddress, _portMapperPort);
         _ = client.Set_2(
             new Mapping2
             {

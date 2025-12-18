@@ -4,7 +4,7 @@ namespace RpcNetGen.Internal;
 
 internal class ProcedureArguments
 {
-    private readonly List<Declaration> _arguments = new();
+    private readonly List<Declaration> _arguments = [];
     private readonly string _procedureName;
     private string _structName;
     private bool _isSingleCustomType;
@@ -124,11 +124,11 @@ internal class ProcedureArguments
 
         if (IsSingleVoid)
         {
-            writer.WriteLine(indent, $"var {VariableName} = Void;");
+            writer.WriteLine(indent, $"XdrVoid {VariableName} = Void;");
         }
         else
         {
-            writer.WriteLine(indent, $"var {VariableName} = new {_structName}");
+            writer.WriteLine(indent, $"{_structName} {VariableName} = new()");
             writer.WriteLine(indent, "{");
             foreach (Declaration argument in _arguments)
             {
@@ -143,11 +143,11 @@ internal class ProcedureArguments
     {
         if (IsSingleVoid)
         {
-            writer.WriteLine(indent, $"var {VariableName} = Void;");
+            writer.WriteLine(indent, $"XdrVoid {VariableName} = Void;");
         }
         else
         {
-            writer.WriteLine(indent, $"var {VariableName} = new {_structName}();");
+            writer.WriteLine(indent, $"{_structName} {VariableName} = new();");
         }
     }
 }

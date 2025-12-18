@@ -7,21 +7,21 @@ internal class Service
     private readonly string _access;
     private readonly string _clientVersionNumber;
     private readonly string _name;
-    private readonly List<Procedure> _parsedProcedures = new();
+    private readonly List<Procedure> _parsedProcedures = [];
     private readonly string _programNumberConstant;
-    private readonly List<string> _versionConstants = new();
-    private readonly Dictionary<string, List<Procedure>> _parsedProceduresPerVersionConstant = new();
+    private readonly List<string> _versionConstants = [];
+    private readonly Dictionary<string, List<Procedure>> _parsedProceduresPerVersionConstant = [];
 
     public Service(Settings settings, RpcParser.ProgramContext program, string access, Content content)
     {
         _access = access;
         _name = content.Name;
         string programName = program.Identifier().GetText();
-        string programNumber = content.GetConstant(program.constant());
+        string programNumber = Content.GetConstant(program.constant());
         _programNumberConstant = content.AddConstant(programName, programNumber);
         foreach (RpcParser.VersionContext version in program.version())
         {
-            string versionConstant = content.GetConstant(version.constant());
+            string versionConstant = Content.GetConstant(version.constant());
             string versionName = version.Identifier().GetText();
             string versionConstantFullName = content.AddConstant(versionName, versionConstant);
             _versionConstants.Add(versionConstantFullName);
@@ -31,12 +31,12 @@ internal class Service
 
             foreach (RpcParser.ProcedureContext procedure in version.procedure())
             {
-                var parsedProcedure = new Procedure(settings, versionConstant, versionConstantFullName, procedure, content);
+                Procedure parsedProcedure = new(settings, versionConstant, versionConstantFullName, procedure, content);
                 _parsedProcedures.Add(parsedProcedure);
 
                 if (!_parsedProceduresPerVersionConstant.TryGetValue(versionConstantFullName, out List<Procedure> procedureList))
                 {
-                    procedureList = new List<Procedure>();
+                    procedureList = [];
                     _parsedProceduresPerVersionConstant[versionConstantFullName] = procedureList;
                 }
 

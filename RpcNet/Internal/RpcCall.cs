@@ -34,12 +34,12 @@ internal sealed class RpcCall
                     Credential =
                     {
                         AuthenticationFlavor = AuthenticationFlavor.None,
-                        Body = Array.Empty<byte>()
+                        Body = []
                     },
                     Verifier =
                     {
                         AuthenticationFlavor = AuthenticationFlavor.None,
-                        Body = Array.Empty<byte>()
+                        Body = []
                     }
                 }
             }
@@ -69,7 +69,7 @@ internal sealed class RpcCall
 
     private void ReceiveReply(IXdrDataType result)
     {
-        var reply = new RpcMessage();
+        RpcMessage reply = new();
         reply.ReadFrom(_xdrReader);
 
         if (reply.Xid != _rpcMessage.Xid)

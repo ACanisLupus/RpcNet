@@ -17,7 +17,7 @@ internal class Struct
         for (int i = 0; i < declarations.Length; i++)
         {
             DeclarationContext declaration = declarations[i];
-            var parsedDeclaration = new Declaration(settings, declaration, () => _isLinkedList);
+            Declaration parsedDeclaration = new(settings, declaration, () => _isLinkedList);
             StructItems.Add(parsedDeclaration);
 
             if ((i == (declarations.Length - 1)) && (Name == parsedDeclaration.DataType.Name))
@@ -31,7 +31,7 @@ internal class Struct
     public Struct(Settings settings, TypedefContext typedef, string access)
     {
         Access = access;
-        var parsedDeclaration = new Declaration(settings, typedef.declaration(), () => _isLinkedList);
+        Declaration parsedDeclaration = new(settings, typedef.declaration(), () => _isLinkedList);
         StructItems.Add(parsedDeclaration);
         Name = parsedDeclaration.Identifier;
         parsedDeclaration.Identifier = "Value";
@@ -45,7 +45,7 @@ internal class Struct
     public string Access { get; set; }
     public bool Partial { get; set; } = true;
     public bool GenerateConstructors { get; set; } = true;
-    public List<Declaration> StructItems { get; } = new();
+    public List<Declaration> StructItems { get; } = [];
 
     public void Prepare(Content content)
     {
@@ -101,8 +101,8 @@ internal class Struct
         int nextIndent = indent + 2;
         if (_isLinkedList)
         {
-            writer.WriteLine(indent + 2, "var current = this;");
-            writer.WriteLine(indent + 2, "do");
+            writer.WriteLine(indent + 2, $"{Name}? current = this;");
+            writer.WriteLine(indent + 2, "while (current is not null)");
             writer.WriteLine(indent + 2, "{");
             nextIndent++;
         }
@@ -114,7 +114,7 @@ internal class Struct
 
         if (_isLinkedList)
         {
-            writer.WriteLine(indent + 2, "} while (current is not null);");
+            writer.WriteLine(indent + 2, "}");
         }
 
         writer.WriteLine(indent + 1, "}");
@@ -126,9 +126,8 @@ internal class Struct
         nextIndent = indent + 2;
         if (_isLinkedList)
         {
-            writer.WriteLine(indent + 2, "var current = this;");
-            writer.WriteLine(indent + 2, $"{Name}? next;");
-            writer.WriteLine(indent + 2, "do");
+            writer.WriteLine(indent + 2, $"{Name}? current = this;");
+            writer.WriteLine(indent + 2, "while (current is not null)");
             writer.WriteLine(indent + 2, "{");
             nextIndent++;
         }
@@ -140,7 +139,7 @@ internal class Struct
 
         if (_isLinkedList)
         {
-            writer.WriteLine(indent + 2, "} while (current is not null);");
+            writer.WriteLine(indent + 2, "}");
         }
 
         writer.WriteLine(indent + 1, "}");
@@ -152,10 +151,10 @@ internal class Struct
         nextIndent = indent + 2;
         if (_isLinkedList)
         {
-            writer.WriteLine(indent + 2, "var current = this;");
+            writer.WriteLine(indent + 2, $"{Name}? current = this;");
             writer.WriteLine(indent + 2, "sb.Append(\"[\");");
             writer.WriteLine(indent + 2, "bool _first = true;");
-            writer.WriteLine(indent + 2, "do");
+            writer.WriteLine(indent + 2, "while (current is not null)");
             writer.WriteLine(indent + 2, "{");
             writer.WriteLine(indent + 3, "if (_first)");
             writer.WriteLine(indent + 3, "{");
@@ -181,7 +180,7 @@ internal class Struct
 
         if (_isLinkedList)
         {
-            writer.WriteLine(indent + 2, "} while (current is not null);");
+            writer.WriteLine(indent + 2, "}");
             writer.WriteLine(indent + 2, "sb.Append(\" ]\");");
         }
         else
@@ -194,7 +193,7 @@ internal class Struct
         writer.WriteLine();
         writer.WriteLine(indent + 1, "public override string ToString()");
         writer.WriteLine(indent + 1, "{");
-        writer.WriteLine(indent + 2, "var sb = new StringBuilder();");
+        writer.WriteLine(indent + 2, "StringBuilder sb = new();");
         writer.WriteLine(indent + 2, "ToString(sb);");
         writer.WriteLine(indent + 2, "return sb.ToString();");
         writer.WriteLine(indent + 1, "}");

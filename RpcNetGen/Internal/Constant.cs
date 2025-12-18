@@ -9,7 +9,7 @@ internal class Constant : IEquatable<Constant>
     public Constant(RpcParser.ConstContext @const, Content content)
     {
         Name = @const.Identifier().GetText();
-        _value = content.GetConstant(@const.constant());
+        _value = Content.GetConstant(@const.constant());
     }
 
     public Constant(string name, string value)

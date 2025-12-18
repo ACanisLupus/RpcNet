@@ -5,10 +5,10 @@ namespace RpcNetGen.Internal;
 internal class Union
 {
     private readonly string _access;
-    private readonly List<string> _caseNames = new();
+    private readonly List<string> _caseNames = [];
     private readonly Declaration _defaultCase;
     private readonly Declaration _switchDeclaration;
-    private readonly List<Declaration> _unionItems = new();
+    private readonly List<Declaration> _unionItems = [];
 
     public Union(Settings settings, RpcParser.UnionContext union, string access, Content content)
     {
@@ -35,7 +35,7 @@ internal class Union
 
         foreach (RpcParser.CaseContext @case in cases)
         {
-            string caseName = content.GetValue(@case.value());
+            string caseName = Content.GetValue(@case.value());
             caseName = _switchDeclaration.DataType.Name + "." + caseName;
             _caseNames.Add(caseName);
             if (@case.unionItem().declaration() is not null)
@@ -156,7 +156,7 @@ internal class Union
         writer.WriteLine();
         writer.WriteLine(indent + 1, "public override string ToString()");
         writer.WriteLine(indent + 1, "{");
-        writer.WriteLine(indent + 2, "var sb = new StringBuilder();");
+        writer.WriteLine(indent + 2, "StringBuilder sb = new();");
         writer.WriteLine(indent + 2, "ToString(sb);");
         writer.WriteLine(indent + 2, "return sb.ToString();");
         writer.WriteLine(indent + 1, "}");

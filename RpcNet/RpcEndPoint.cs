@@ -3,7 +3,6 @@
 namespace RpcNet;
 
 using System.Net;
-using RpcNet.Internal;
 
 public sealed class RpcEndPoint
 {

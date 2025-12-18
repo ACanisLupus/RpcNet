@@ -6,7 +6,7 @@ using TestService;
 
 const int Port = 2223;
 
-using var testServer = new TestServer(IPAddress.Any, Port);
+using TestServer testServer = new(IPAddress.Any, Port);
 testServer.Start();
 
 long lastValue = -1;
@@ -22,20 +22,16 @@ while (true)
     Thread.Sleep(1000);
 }
 
-internal class TestServer : TestServiceServerStub
+internal class TestServer(IPAddress ipAddress, int port) : TestServiceServerStub(
+    Protocol.Tcp | Protocol.Udp,
+    ipAddress,
+    port,
+    new ServerSettings
+    {
+        PortMapperPort = 0
+    })
 {
     public static long Counter;
-
-    public TestServer(IPAddress ipAddress, int port) : base(
-        Protocol.Tcp | Protocol.Udp,
-        ipAddress,
-        port,
-        new ServerSettings
-        {
-            PortMapperPort = 0
-        })
-    {
-    }
 
     public override void ThrowsException_1(RpcEndPoint rpcEndPoint)
     {

@@ -20,41 +20,38 @@ internal sealed class TestUdpClientServer
         const int Version = 13;
         const int Procedure = 14;
 
-        var receivedCallChannel = new Channel<ReceivedRpcCall>();
+        Channel<ReceivedRpcCall> receivedCallChannel = new();
 
         void Dispatcher(ReceivedRpcCall call)
         {
             // To assert it on the main thread
             receivedCallChannel.Send(call);
 
-            var pingStruct = new SimpleStruct();
+            SimpleStruct pingStruct = new();
             call.RetrieveCall(pingStruct);
             call.Reply(pingStruct);
         }
 
-        var serverSettings = new ServerSettings
+        ServerSettings serverSettings = new()
         {
             PortMapperPort = 0 // Don't register at port mapper
         };
 
-        using var server = new RpcUdpServer(
+        using RpcUdpServer server = new(
             ipAddress,
             0,
             Program,
-            new[]
-            {
-                Version
-            },
+            [Version],
             Dispatcher,
             serverSettings);
         int port = server.Start();
 
-        using var client = new RpcUdpClient(ipAddress, port, Program, Version, ClientSettings.Default);
-        var argument = new SimpleStruct
+        using RpcUdpClient client = new(ipAddress, port, Program, Version, ClientSettings.Default);
+        SimpleStruct argument = new()
         {
             Value = 42
         };
-        var result = new SimpleStruct();
+        SimpleStruct result = new();
 
         client.Call(Procedure, Version, argument, result);
 

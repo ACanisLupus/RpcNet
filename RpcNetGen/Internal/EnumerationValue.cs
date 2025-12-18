@@ -7,7 +7,7 @@ internal class EnumerationValue
     public EnumerationValue(RpcParser.EnumValueContext enumValue, Content content)
     {
         Name = enumValue.Identifier().GetText();
-        Value = content.GetValue(enumValue.value());
+        Value = Content.GetValue(enumValue.value());
     }
 
     public string Name { get; }

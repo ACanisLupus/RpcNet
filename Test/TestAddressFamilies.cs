@@ -31,20 +31,20 @@ internal sealed class TestAddressFamilies
         [Values("127.0.0.1", "::1")] string clientAddress,
         [Values(Protocol.Tcp, Protocol.Udp)] Protocol protocol)
     {
-        var portMapperIpAddress = IPAddress.Parse(portMapperAddress);
-        var serverIpAddress = IPAddress.Parse(serverAddress);
-        var clientIpAddress = IPAddress.Parse(clientAddress);
+        IPAddress portMapperIpAddress = IPAddress.Parse(portMapperAddress);
+        IPAddress serverIpAddress = IPAddress.Parse(serverAddress);
+        IPAddress clientIpAddress = IPAddress.Parse(clientAddress);
 
         FilterNotWorkingTests(portMapperIpAddress, serverIpAddress, clientIpAddress, protocol);
 
         SetUp(portMapperIpAddress, serverIpAddress);
 
-        var clientSettings = new ClientSettings
+        ClientSettings clientSettings = new()
         {
             PortMapperPort = _portMapperServer.TcpPort
         };
 
-        using var client = new TestServiceClient(protocol, clientIpAddress, 0, clientSettings);
+        using TestServiceClient client = new(protocol, clientIpAddress, 0, clientSettings);
 
         int result = client.Echo_1(42);
         Assert.That(result, Is.EqualTo(42));
@@ -89,7 +89,7 @@ internal sealed class TestAddressFamilies
         _portMapperServer = new PortMapperServer(Protocol.Tcp, portMapperIpAddress, 0);
         _portMapperServer.Start();
 
-        var serverSettings = new ServerSettings
+        ServerSettings serverSettings = new()
         {
             PortMapperPort = _portMapperServer.TcpPort
         };

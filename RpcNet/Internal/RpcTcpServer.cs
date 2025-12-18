@@ -9,7 +9,7 @@ using RpcNet.PortMapper;
 // Public for tests
 public sealed class RpcTcpServer : IDisposable
 {
-    private readonly Dictionary<Socket, RpcTcpConnection> _connections = new();
+    private readonly Dictionary<Socket, RpcTcpConnection> _connections = [];
     private readonly IPAddress _ipAddress;
     private readonly ILogger? _logger;
     private readonly int _portMapperPort;
@@ -56,10 +56,7 @@ public sealed class RpcTcpServer : IDisposable
 
     public int Start()
     {
-        if (_isDisposed)
-        {
-            throw new ObjectDisposedException(nameof(RpcTcpServer));
-        }
+        ObjectDisposedException.ThrowIf(_isDisposed, nameof(RpcTcpServer));
 
         if (_acceptingThread is not null)
         {
@@ -90,7 +87,7 @@ public sealed class RpcTcpServer : IDisposable
         {
             lock (_connections)
             {
-                var clientSettings = new ClientSettings
+                ClientSettings clientSettings = new()
                 {
                     Logger = _serverSettings.Logger,
                     ReceiveTimeout = _serverSettings.ReceiveTimeout,
@@ -145,7 +142,7 @@ public sealed class RpcTcpServer : IDisposable
 
     private void Accepting()
     {
-        var sockets = new List<Socket>();
+        List<Socket> sockets = [];
         while (!_stopAccepting)
         {
             try
@@ -172,7 +169,7 @@ public sealed class RpcTcpServer : IDisposable
                         if (sockets[i] == _socket)
                         {
                             Socket acceptedSocket = _socket.Accept();
-                            var connection = new RpcTcpConnection(acceptedSocket, _program, _versions, _receivedCallDispatcher, _logger);
+                            RpcTcpConnection connection = new(acceptedSocket, _program, _versions, _receivedCallDispatcher, _logger);
 
                             _connections.Add(acceptedSocket, connection);
                         }

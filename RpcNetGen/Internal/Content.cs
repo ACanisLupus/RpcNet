@@ -8,14 +8,14 @@ using static RpcParser;
 
 internal class Content
 {
-    private readonly HashSet<string> _knownElements = new();
+    private readonly HashSet<string> _knownElements = [];
     private readonly string _namespaceName;
     private readonly string _access;
-    private readonly Dictionary<string, Constant> _parsedConstants = new();
-    private readonly Dictionary<string, Enumeration> _parsedEnums = new();
-    private readonly List<Service> _parsedServices = new();
-    private readonly Dictionary<string, Struct> _parsedStructs = new();
-    private readonly Dictionary<string, Union> _parsedUnions = new();
+    private readonly Dictionary<string, Constant> _parsedConstants = [];
+    private readonly Dictionary<string, Enumeration> _parsedEnums = [];
+    private readonly List<Service> _parsedServices = [];
+    private readonly Dictionary<string, Struct> _parsedStructs = [];
+    private readonly Dictionary<string, Union> _parsedUnions = [];
     private readonly Settings _settings;
 
     public Content(string name, string namespaceName, string access, RpcSpecificationContext rpcSpecificationContext)
@@ -133,7 +133,7 @@ internal class Content
     public bool IsCustomType(string identifier) =>
         _parsedStructs.ContainsKey(identifier) || _parsedUnions.ContainsKey(identifier);
 
-    public string GetValue(ValueContext valueContext)
+    public static string GetValue(ValueContext valueContext)
     {
         if (valueContext is null)
         {
@@ -155,7 +155,7 @@ internal class Content
         throw new ParserException("Could not parse value.");
     }
 
-    public string GetConstant(ConstantContext @const)
+    public static string GetConstant(ConstantContext @const)
     {
         @const.Check();
 
@@ -183,7 +183,7 @@ internal class Content
     public string AddConstant(string name, string value)
     {
         string fullName = $"{_settings.ConstantsClassName}.{name}";
-        var constant = new Constant(name, value);
+        Constant constant = new(name, value);
         if (_parsedConstants.TryGetValue(name, out Constant existingConstant))
         {
             if (!existingConstant.Equals(constant))

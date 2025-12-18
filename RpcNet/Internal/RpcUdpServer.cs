@@ -65,7 +65,7 @@ public sealed class RpcUdpServer : IDisposable
 
         if ((program != PortMapperConstants.PortMapperProgram) && (serverSettings.PortMapperPort != 0))
         {
-            var clientSettings = new ClientSettings
+            ClientSettings clientSettings = new()
             {
                 Logger = serverSettings.Logger,
                 ReceiveTimeout = serverSettings.ReceiveTimeout,
@@ -89,10 +89,7 @@ public sealed class RpcUdpServer : IDisposable
 
     public int Start()
     {
-        if (_isDisposed)
-        {
-            throw new ObjectDisposedException(nameof(RpcUdpServer));
-        }
+        ObjectDisposedException.ThrowIf(_isDisposed, nameof(RpcUdpServer));
 
         if (_receivingThread is not null)
         {

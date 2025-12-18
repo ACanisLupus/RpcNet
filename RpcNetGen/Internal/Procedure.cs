@@ -14,7 +14,7 @@ internal class Procedure
         _versionConstant = versionConstant;
         Name = procedureContext.Identifier().GetText();
         FullName = Name + "_" + version;
-        _argumentConstant = content.AddConstant(Name, content.GetConstant(procedureContext.constant()));
+        _argumentConstant = content.AddConstant(Name, Content.GetConstant(procedureContext.constant()));
 
         _procedureArguments = new ProcedureArguments(settings, procedureContext.arguments(), FullName);
         _procedureResult = new ProcedureResult(settings, procedureContext.@return(), FullName);
@@ -63,14 +63,7 @@ internal class Procedure
     public void DumpAbstractFunctionForServer(XdrFileWriter writer, int indent)
     {
         string arguments = _procedureArguments.GetArgumentsForClient();
-        if (string.IsNullOrWhiteSpace(arguments))
-        {
-            arguments = "RpcEndPoint rpcEndPoint";
-        }
-        else
-        {
-            arguments = "RpcEndPoint rpcEndPoint, " + arguments;
-        }
+        arguments = string.IsNullOrWhiteSpace(arguments) ? "RpcEndPoint rpcEndPoint" : "RpcEndPoint rpcEndPoint, " + arguments;
 
         writer.WriteLine(indent, $"public abstract {_procedureResult.Declaration} {FullName}({arguments});");
     }

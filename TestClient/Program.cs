@@ -10,8 +10,8 @@ if ((args.Length != 1) || !IPEndPoint.TryParse(args[0], out IPEndPoint? ipEndPoi
     ipEndPoint = new IPEndPoint(IPAddress.IPv6Any, 0);
 }
 
-var logger = new TestLogger("Test Client");
-using (var testTcpClient = new TestServiceClient(
+TestLogger logger = new("Test Client");
+using (TestServiceClient testTcpClient = new(
            Protocol.Tcp,
            ipEndPoint.Address,
            ipEndPoint.Port,
@@ -26,7 +26,7 @@ using (var testTcpClient = new TestServiceClient(
     }
 }
 
-using var testUdpClient = new TestServiceClient(
+using TestServiceClient testUdpClient = new(
     Protocol.Udp,
     ipEndPoint.Address,
     ipEndPoint.Port,

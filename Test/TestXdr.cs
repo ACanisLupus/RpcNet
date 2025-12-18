@@ -43,9 +43,9 @@ internal sealed class TestXdr
     [TestCase(4, 8)]
     public void ReserveMultipleFragmentsOpaque(int maxReadLength, int maxReserveLength)
     {
-        var stubNetwork = new StubNetwork(maxReadLength, maxReserveLength);
-        var reader = new XdrReader(stubNetwork);
-        var writer = new XdrWriter(stubNetwork);
+        StubNetwork stubNetwork = new(maxReadLength, maxReserveLength);
+        XdrReader reader = new(stubNetwork);
+        XdrWriter writer = new(stubNetwork);
 
         byte[] value = GenerateByteTestData(21);
         writer.WriteOpaque(value);
