@@ -26,10 +26,10 @@ jobs:
       - name: Test
         run: dotnet test --verbosity normal
       - name: Upload a Build Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           path: bin/Release/RpcNet.*.nupkg
       - name: Upload a Build Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           path: bin/Release/RpcNetGen.*.nupkg
