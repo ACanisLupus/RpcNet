@@ -108,7 +108,7 @@ public sealed class PortMapperServer : PortMapperServerStub
     {
         lock (_lock)
         {
-            var mappingNodeNullable = new MappingNodeHead2();
+            MappingNodeHead2 mappingNodeNullable = new();
 
             MappingNode2? currentNode = null;
             foreach (Mapping2 mapping in _mappings2)
@@ -123,7 +123,7 @@ public sealed class PortMapperServer : PortMapperServerStub
                 }
                 else if (currentNode is not null)
                 {
-                    var mappingNode = new MappingNode2
+                    MappingNode2 mappingNode = new()
                     {
                         Mapping = mapping
                     };

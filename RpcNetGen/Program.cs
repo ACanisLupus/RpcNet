@@ -22,20 +22,20 @@ internal class Program
         }
 
         string fileContent = File.ReadAllText(arguments.InputFilePath);
-        var stream = new AntlrInputStream(fileContent);
+        AntlrInputStream stream = new(fileContent);
 
-        var lexer = new RpcLexer(stream);
-        var tokens = new CommonTokenStream(lexer);
-        var parser = new RpcParser(tokens)
+        RpcLexer lexer = new(stream);
+        CommonTokenStream tokens = new(lexer);
+        RpcParser parser = new(tokens)
         {
             BuildParseTree = true
         };
 
         RpcParser.RpcSpecificationContext xdrSpecificationContext = parser.rpcSpecification();
-        var parsedContent =
-            new Content(arguments.Name, arguments.Namespace, arguments.Public ? "public" : "internal", xdrSpecificationContext);
+        Content parsedContent =
+            new(arguments.Name, arguments.Namespace, arguments.Public ? "public" : "internal", xdrSpecificationContext);
 
-        using var writer = new XdrFileWriter(arguments.OutputFilePath);
+        using XdrFileWriter writer = new(arguments.OutputFilePath);
 
         parsedContent.Dump(writer, 0);
 

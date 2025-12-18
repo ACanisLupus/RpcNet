@@ -10,7 +10,7 @@ if ((args.Length != 1) || !IPEndPoint.TryParse(args[0], out IPEndPoint? ipEndPoi
     ipEndPoint = new IPEndPoint(IPAddress.IPv6Any, 0);
 }
 
-using var testServer = new TestServer(ipEndPoint);
+using TestServer testServer = new(ipEndPoint);
 testServer.Start();
 
 Thread.Sleep(-1);

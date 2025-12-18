@@ -19,7 +19,7 @@ internal sealed class TestRpc
     [SetUp]
     public void SetUp()
     {
-        var portMapperSettings = new ServerSettings
+        ServerSettings portMapperSettings = new()
         {
             //Logger = new TestLogger("Port Mapper")
         };
@@ -27,7 +27,7 @@ internal sealed class TestRpc
         _portMapperServer = new PortMapperServer(Protocol.Tcp, _ipAddress, 0, portMapperSettings);
         _portMapperServer.Start();
 
-        var serverSettings = new ServerSettings
+        ServerSettings serverSettings = new()
         {
             PortMapperPort = _portMapperServer.TcpPort
         };
@@ -48,11 +48,11 @@ internal sealed class TestRpc
     [TestCase(Protocol.Udp)]
     public void OneClient(Protocol protocol)
     {
-        var clientSettings = new ClientSettings
+        ClientSettings clientSettings = new()
         {
             PortMapperPort = _portMapperServer.TcpPort
         };
-        using var client = new TestServiceClient(protocol, _ipAddress, 0, clientSettings);
+        using TestServiceClient client = new(protocol, _ipAddress, 0, clientSettings);
         SimpleStruct result = client.SimpleStructSimpleStruct_2(
             new SimpleStruct
             {

@@ -55,7 +55,7 @@ internal class ProcedureResult
                 Partial = false
             };
 
-            var valueDeclaration = new Declaration(_dataType, "Value");
+            Declaration valueDeclaration = new(_dataType, "Value");
             _tempParsedStructForClient.StructItems.Add(valueDeclaration);
             _tempParsedStructForServer.StructItems.Add(valueDeclaration);
         }
@@ -72,11 +72,11 @@ internal class ProcedureResult
     {
         if (_dataType.Kind == DataTypeKind.Void)
         {
-            writer.WriteLine(indent, $"var {VariableName} = Void;");
+            writer.WriteLine(indent, $"XdrVoid {VariableName} = Void;");
         }
         else
         {
-            writer.WriteLine(indent, $"var {VariableName} = new {_structName}();");
+            writer.WriteLine(indent, $"{_structName} {VariableName} = new();");
         }
     }
 
@@ -100,11 +100,11 @@ internal class ProcedureResult
     {
         if (_dataType.Kind == DataTypeKind.Void)
         {
-            writer.WriteLine(indent, $"var {VariableName} = Void;");
+            writer.WriteLine(indent, $"XdrVoid {VariableName} = Void;");
         }
         else if (_dataType.Kind != DataTypeKind.CustomType)
         {
-            writer.WriteLine(indent, $"var {VariableName} = new {_structName}();");
+            writer.WriteLine(indent, $"{_structName} {VariableName} = new();");
         }
     }
 

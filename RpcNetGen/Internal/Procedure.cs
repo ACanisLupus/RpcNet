@@ -14,7 +14,7 @@ internal class Procedure
         _versionConstant = versionConstant;
         Name = procedureContext.Identifier().GetText();
         FullName = Name + "_" + version;
-        _argumentConstant = content.AddConstant(Name, content.GetConstant(procedureContext.constant()));
+        _argumentConstant = content.AddConstant(Name, Content.GetConstant(procedureContext.constant()));
 
         _procedureArguments = new ProcedureArguments(settings, procedureContext.arguments(), FullName);
         _procedureResult = new ProcedureResult(settings, procedureContext.@return(), FullName);

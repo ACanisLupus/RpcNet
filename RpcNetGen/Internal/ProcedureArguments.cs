@@ -124,11 +124,11 @@ internal class ProcedureArguments
 
         if (IsSingleVoid)
         {
-            writer.WriteLine(indent, $"var {VariableName} = Void;");
+            writer.WriteLine(indent, $"XdrVoid {VariableName} = Void;");
         }
         else
         {
-            writer.WriteLine(indent, $"var {VariableName} = new {_structName}");
+            writer.WriteLine(indent, $"{_structName} {VariableName} = new()");
             writer.WriteLine(indent, "{");
             foreach (Declaration argument in _arguments)
             {
@@ -143,11 +143,11 @@ internal class ProcedureArguments
     {
         if (IsSingleVoid)
         {
-            writer.WriteLine(indent, $"var {VariableName} = Void;");
+            writer.WriteLine(indent, $"XdrVoid {VariableName} = Void;");
         }
         else
         {
-            writer.WriteLine(indent, $"var {VariableName} = new {_structName}();");
+            writer.WriteLine(indent, $"{_structName} {VariableName} = new();");
         }
     }
 }

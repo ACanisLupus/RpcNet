@@ -35,7 +35,7 @@ internal class Union
 
         foreach (RpcParser.CaseContext @case in cases)
         {
-            string caseName = content.GetValue(@case.value());
+            string caseName = Content.GetValue(@case.value());
             caseName = _switchDeclaration.DataType.Name + "." + caseName;
             _caseNames.Add(caseName);
             if (@case.unionItem().declaration() is not null)
@@ -156,7 +156,7 @@ internal class Union
         writer.WriteLine();
         writer.WriteLine(indent + 1, "public override string ToString()");
         writer.WriteLine(indent + 1, "{");
-        writer.WriteLine(indent + 2, "var sb = new StringBuilder();");
+        writer.WriteLine(indent + 2, "StringBuilder sb = new();");
         writer.WriteLine(indent + 2, "ToString(sb);");
         writer.WriteLine(indent + 2, "return sb.ToString();");
         writer.WriteLine(indent + 1, "}");

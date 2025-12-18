@@ -67,7 +67,7 @@ public sealed class ReceivedRpcCall
 
     internal void HandleCall(RpcEndPoint rpcEndPoint)
     {
-        var rpcMessage = new RpcMessage(_xdrReader);
+        RpcMessage rpcMessage = new(_xdrReader);
         _xid = rpcMessage.Xid;
         if (rpcMessage.Body.MessageType != MessageType.Call)
         {
@@ -134,7 +134,7 @@ public sealed class ReceivedRpcCall
                     Verifier = new OpaqueAuthentication
                     {
                         AuthenticationFlavor = AuthenticationFlavor.None,
-                        Body = Array.Empty<byte>()
+                        Body = []
                     },
                     ReplyData = replyData
                 }

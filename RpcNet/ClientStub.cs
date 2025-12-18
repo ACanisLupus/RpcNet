@@ -14,10 +14,7 @@ public abstract class ClientStub : IDisposable
 
     protected ClientStub(Protocol protocol, IPAddress ipAddress, int port, int program, int version, ClientSettings? clientSettings = default)
     {
-        if (ipAddress is null)
-        {
-            throw new ArgumentNullException(nameof(ipAddress));
-        }
+        ArgumentNullException.ThrowIfNull(ipAddress);
 
         Settings = clientSettings ?? new ClientSettings();
         RpcEndPoint = new RpcEndPoint(new IPEndPoint(ipAddress, port), protocol);

@@ -6,7 +6,7 @@ using TestService;
 
 const int Port = 2223;
 
-using var testServer = new TestServer(IPAddress.Any, Port);
+using TestServer testServer = new(IPAddress.Any, Port);
 testServer.Start();
 
 long lastValue = -1;

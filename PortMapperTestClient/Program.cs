@@ -11,7 +11,7 @@ internal class Program
 {
     private static int Main(string[] args)
     {
-        var arguments = new List<string>(args);
+        List<string> arguments = [.. args];
         if (!TryReadCommand(arguments, out Command command))
         {
             PrintUsage();
@@ -52,7 +52,7 @@ internal class Program
         return true;
     }
 
-    private static bool TryReadIpEndPoint(IList<string> args, out IPEndPoint ipEndPoint)
+    private static bool TryReadIpEndPoint(List<string> args, out IPEndPoint ipEndPoint)
     {
         ipEndPoint = new IPEndPoint(IPAddress.Loopback, 111);
 
@@ -91,7 +91,7 @@ internal class Program
         return 0;
     }
 
-    private static int Get(IPEndPoint ipEndPoint, IReadOnlyList<string> args)
+    private static int Get(IPEndPoint ipEndPoint, List<string> args)
     {
         if ((args.Count != 3) ||
             !int.TryParse(args[0], out int program) ||
@@ -115,7 +115,7 @@ internal class Program
         return 0;
     }
 
-    private static int Set(IPEndPoint ipEndPoint, IReadOnlyList<string> args)
+    private static int Set(IPEndPoint ipEndPoint, List<string> args)
     {
         if ((args.Count != 4) ||
             !int.TryParse(args[0], out int program) ||
@@ -141,7 +141,7 @@ internal class Program
         return 0;
     }
 
-    private static int Unset(IPEndPoint ipEndPoint, IReadOnlyList<string> args)
+    private static int Unset(IPEndPoint ipEndPoint, List<string> args)
     {
         if (args.Count is < 2 or > 3)
         {

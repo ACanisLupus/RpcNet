@@ -34,7 +34,7 @@ public static class PortMapperUtilities
         int version,
         ClientSettings? clientSettings)
     {
-        using var portMapperClient = new PortMapperClient(Protocol.Tcp, ipAddress, portMapperPort, clientSettings);
+        using PortMapperClient portMapperClient = new(Protocol.Tcp, ipAddress, portMapperPort, clientSettings);
         return portMapperClient.GetPort_2(
             new Mapping2
             {
@@ -73,7 +73,7 @@ public static class PortMapperUtilities
         int version,
         ClientSettings? clientSettings)
     {
-        using var portMapperClient = new PortMapperClient(Protocol.Tcp, ipAddress, portMapperPort, clientSettings);
+        using PortMapperClient portMapperClient = new(Protocol.Tcp, ipAddress, portMapperPort, clientSettings);
         portMapperClient.Unset_2(
             new Mapping2
             {
