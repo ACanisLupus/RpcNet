@@ -55,10 +55,10 @@ internal partial class ComplexStruct : IXdrDataType
     public ulong UInt64Value { get; set; }
     public float Float32Value { get; set; }
     public double Float64Value { get; set; }
-    public SimpleStruct SimpleStructValue { get; set; } = new SimpleStruct();
+    public SimpleStruct SimpleStructValue { get; set; } = new();
     public SimpleEnum SimpleEnumValue { get; set; }
-    public byte[] DynamicOpaque { get; set; } = Array.Empty<byte>();
-    public byte[] DynamicLimitedOpaque { get; set; } = Array.Empty<byte>();
+    public byte[] DynamicOpaque { get; set; } = [];
+    public byte[] DynamicLimitedOpaque { get; set; } = [];
     public byte[] FixedLengthOpaque { get; } = new byte[10];
     public List<byte> DynamicUInt8Array { get; set; } = new List<byte>();
     public List<byte> DynamicLimitedUInt8Array { get; set; } = new List<byte>(10);

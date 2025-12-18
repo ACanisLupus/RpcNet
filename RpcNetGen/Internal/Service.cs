@@ -7,10 +7,10 @@ internal class Service
     private readonly string _access;
     private readonly string _clientVersionNumber;
     private readonly string _name;
-    private readonly List<Procedure> _parsedProcedures = new();
+    private readonly List<Procedure> _parsedProcedures = [];
     private readonly string _programNumberConstant;
-    private readonly List<string> _versionConstants = new();
-    private readonly Dictionary<string, List<Procedure>> _parsedProceduresPerVersionConstant = new();
+    private readonly List<string> _versionConstants = [];
+    private readonly Dictionary<string, List<Procedure>> _parsedProceduresPerVersionConstant = [];
 
     public Service(Settings settings, RpcParser.ProgramContext program, string access, Content content)
     {

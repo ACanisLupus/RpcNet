@@ -70,8 +70,8 @@ public partial class AddressStatistics : IXdrDataType
 
     public void WriteTo(IXdrWriter writer)
     {
-        AddressStatistics current = this;
-        do
+        AddressStatistics? current = this;
+        while (current is not null)
         {
             writer.Write(current.ProgramNumber);
             writer.Write(current.VersionNumber);
@@ -80,32 +80,30 @@ public partial class AddressStatistics : IXdrDataType
             writer.Write(current.NetworkId);
             current = current.Next;
             writer.Write(current is not null);
-        } while (current is not null);
+        }
     }
 
     public void ReadFrom(IXdrReader reader)
     {
-        AddressStatistics current = this;
-        AddressStatistics? next;
-        do
+        AddressStatistics? current = this;
+        while (current is not null)
         {
             current.ProgramNumber = reader.ReadUInt32();
             current.VersionNumber = reader.ReadUInt32();
             current.Success = reader.ReadInt32();
             current.Failure = reader.ReadInt32();
             current.NetworkId = reader.ReadString();
-            next = reader.ReadBool() ? new AddressStatistics() : null;
-            current.Next = next;
-            current = next;
-        } while (current is not null);
+            current.Next = reader.ReadBool() ? new AddressStatistics() : null;
+            current = current.Next;
+        }
     }
 
     public void ToString(StringBuilder sb)
     {
-        AddressStatistics current = this;
+        AddressStatistics? current = this;
         sb.Append("[");
         bool _first = true;
-        do
+        while (current is not null)
         {
             if (_first)
             {
@@ -126,7 +124,7 @@ public partial class AddressStatistics : IXdrDataType
             sb.Append(", NetworkId = ");
             sb.Append(current.NetworkId);
             current = current.Next;
-        } while (current is not null);
+        }
         sb.Append(" ]");
     }
 
@@ -210,7 +208,7 @@ public partial class CallArguments : IXdrDataType
     public int ProgramNumber { get; set; }
     public int VersionNumber { get; set; }
     public int ProcedureNumber { get; set; }
-    public byte[] Arguments { get; set; } = Array.Empty<byte>();
+    public byte[] Arguments { get; set; } = [];
 
     public void WriteTo(IXdrWriter writer)
     {
@@ -278,7 +276,7 @@ public partial class CallResult2 : IXdrDataType
     }
 
     public int Port { get; set; }
-    public byte[] Result { get; set; } = Array.Empty<byte>();
+    public byte[] Result { get; set; } = [];
 
     public void WriteTo(IXdrWriter writer)
     {
@@ -338,7 +336,7 @@ public partial class CallResult3 : IXdrDataType
     }
 
     public string RemoteUniversalAddress { get; set; } = "";
-    public byte[] Result { get; set; } = Array.Empty<byte>();
+    public byte[] Result { get; set; } = [];
 
     public void WriteTo(IXdrWriter writer)
     {
@@ -456,13 +454,13 @@ public partial class EntryNode : IXdrDataType
         ReadFrom(reader);
     }
 
-    public Entry Entry { get; set; } = new Entry();
+    public Entry Entry { get; set; } = new();
     public EntryNode? Next { get; set; }
 
     public void WriteTo(IXdrWriter writer)
     {
-        EntryNode current = this;
-        do
+        EntryNode? current = this;
+        while (current is not null)
         {
             if (current.Entry is null)
             {
@@ -471,14 +469,13 @@ public partial class EntryNode : IXdrDataType
             current.Entry.WriteTo(writer);
             current = current.Next;
             writer.Write(current is not null);
-        } while (current is not null);
+        }
     }
 
     public void ReadFrom(IXdrReader reader)
     {
-        EntryNode current = this;
-        EntryNode? next;
-        do
+        EntryNode? current = this;
+        while (current is not null)
         {
             if (current.Entry is null)
             {
@@ -488,18 +485,17 @@ public partial class EntryNode : IXdrDataType
             {
                 current.Entry.ReadFrom(reader);
             }
-            next = reader.ReadBool() ? new EntryNode() : null;
-            current.Next = next;
-            current = next;
-        } while (current is not null);
+            current.Next = reader.ReadBool() ? new EntryNode() : null;
+            current = current.Next;
+        }
     }
 
     public void ToString(StringBuilder sb)
     {
-        EntryNode current = this;
+        EntryNode? current = this;
         sb.Append("[");
         bool _first = true;
-        do
+        while (current is not null)
         {
             if (_first)
             {
@@ -519,7 +515,7 @@ public partial class EntryNode : IXdrDataType
                 current.Entry.ToString(sb);
             }
             current = current.Next;
-        } while (current is not null);
+        }
         sb.Append(" ]");
     }
 
@@ -713,13 +709,13 @@ public partial class MappingNode2 : IXdrDataType
         ReadFrom(reader);
     }
 
-    public Mapping2 Mapping { get; set; } = new Mapping2();
+    public Mapping2 Mapping { get; set; } = new();
     public MappingNode2? Next { get; set; }
 
     public void WriteTo(IXdrWriter writer)
     {
-        MappingNode2 current = this;
-        do
+        MappingNode2? current = this;
+        while (current is not null)
         {
             if (current.Mapping is null)
             {
@@ -728,14 +724,13 @@ public partial class MappingNode2 : IXdrDataType
             current.Mapping.WriteTo(writer);
             current = current.Next;
             writer.Write(current is not null);
-        } while (current is not null);
+        }
     }
 
     public void ReadFrom(IXdrReader reader)
     {
-        MappingNode2 current = this;
-        MappingNode2? next;
-        do
+        MappingNode2? current = this;
+        while (current is not null)
         {
             if (current.Mapping is null)
             {
@@ -745,18 +740,17 @@ public partial class MappingNode2 : IXdrDataType
             {
                 current.Mapping.ReadFrom(reader);
             }
-            next = reader.ReadBool() ? new MappingNode2() : null;
-            current.Next = next;
-            current = next;
-        } while (current is not null);
+            current.Next = reader.ReadBool() ? new MappingNode2() : null;
+            current = current.Next;
+        }
     }
 
     public void ToString(StringBuilder sb)
     {
-        MappingNode2 current = this;
+        MappingNode2? current = this;
         sb.Append("[");
         bool _first = true;
-        do
+        while (current is not null)
         {
             if (_first)
             {
@@ -776,7 +770,7 @@ public partial class MappingNode2 : IXdrDataType
                 current.Mapping.ToString(sb);
             }
             current = current.Next;
-        } while (current is not null);
+        }
         sb.Append(" ]");
     }
 
@@ -799,13 +793,13 @@ public partial class MappingNode3 : IXdrDataType
         ReadFrom(reader);
     }
 
-    public Mapping3 Mapping { get; set; } = new Mapping3();
+    public Mapping3 Mapping { get; set; } = new();
     public MappingNode3? Next { get; set; }
 
     public void WriteTo(IXdrWriter writer)
     {
-        MappingNode3 current = this;
-        do
+        MappingNode3? current = this;
+        while (current is not null)
         {
             if (current.Mapping is null)
             {
@@ -814,14 +808,13 @@ public partial class MappingNode3 : IXdrDataType
             current.Mapping.WriteTo(writer);
             current = current.Next;
             writer.Write(current is not null);
-        } while (current is not null);
+        }
     }
 
     public void ReadFrom(IXdrReader reader)
     {
-        MappingNode3 current = this;
-        MappingNode3? next;
-        do
+        MappingNode3? current = this;
+        while (current is not null)
         {
             if (current.Mapping is null)
             {
@@ -831,18 +824,17 @@ public partial class MappingNode3 : IXdrDataType
             {
                 current.Mapping.ReadFrom(reader);
             }
-            next = reader.ReadBool() ? new MappingNode3() : null;
-            current.Next = next;
-            current = next;
-        } while (current is not null);
+            current.Next = reader.ReadBool() ? new MappingNode3() : null;
+            current = current.Next;
+        }
     }
 
     public void ToString(StringBuilder sb)
     {
-        MappingNode3 current = this;
+        MappingNode3? current = this;
         sb.Append("[");
         bool _first = true;
-        do
+        while (current is not null)
         {
             if (_first)
             {
@@ -862,7 +854,7 @@ public partial class MappingNode3 : IXdrDataType
                 current.Mapping.ToString(sb);
             }
             current = current.Next;
-        } while (current is not null);
+        }
         sb.Append(" ]");
     }
 
@@ -1002,7 +994,7 @@ public partial class NetworkBuffer : IXdrDataType
     }
 
     public uint MaxLen { get; set; }
-    public byte[] Buffer { get; set; } = Array.Empty<byte>();
+    public byte[] Buffer { get; set; } = [];
 
     public void WriteTo(IXdrWriter writer)
     {
@@ -1133,8 +1125,8 @@ public partial class RemoteCallStatistics : IXdrDataType
 
     public void WriteTo(IXdrWriter writer)
     {
-        RemoteCallStatistics current = this;
-        do
+        RemoteCallStatistics? current = this;
+        while (current is not null)
         {
             writer.Write(current.ProgramNumber);
             writer.Write(current.VersionNumber);
@@ -1145,14 +1137,13 @@ public partial class RemoteCallStatistics : IXdrDataType
             writer.Write(current.NetworkId);
             current = current.Next;
             writer.Write(current is not null);
-        } while (current is not null);
+        }
     }
 
     public void ReadFrom(IXdrReader reader)
     {
-        RemoteCallStatistics current = this;
-        RemoteCallStatistics? next;
-        do
+        RemoteCallStatistics? current = this;
+        while (current is not null)
         {
             current.ProgramNumber = reader.ReadUInt32();
             current.VersionNumber = reader.ReadUInt32();
@@ -1161,18 +1152,17 @@ public partial class RemoteCallStatistics : IXdrDataType
             current.Failure = reader.ReadInt32();
             current.Indirect = reader.ReadInt32();
             current.NetworkId = reader.ReadString();
-            next = reader.ReadBool() ? new RemoteCallStatistics() : null;
-            current.Next = next;
-            current = next;
-        } while (current is not null);
+            current.Next = reader.ReadBool() ? new RemoteCallStatistics() : null;
+            current = current.Next;
+        }
     }
 
     public void ToString(StringBuilder sb)
     {
-        RemoteCallStatistics current = this;
+        RemoteCallStatistics? current = this;
         sb.Append("[");
         bool _first = true;
-        do
+        while (current is not null)
         {
             if (_first)
             {
@@ -1197,7 +1187,7 @@ public partial class RemoteCallStatistics : IXdrDataType
             sb.Append(", NetworkId = ");
             sb.Append(current.NetworkId);
             current = current.Next;
-        } while (current is not null);
+        }
         sb.Append(" ]");
     }
 
@@ -1278,11 +1268,11 @@ public partial class Statistics : IXdrDataType
         ReadFrom(reader);
     }
 
-    public ProcedureInfo Info { get; set; } = new ProcedureInfo();
+    public ProcedureInfo Info { get; set; } = new();
     public int SetInfo { get; set; }
     public int UnsetInfo { get; set; }
-    public AddressStatisticsHead AddressInfo { get; set; } = new AddressStatisticsHead();
-    public RemoteCallStatisticsHead RemoteCallInfo { get; set; } = new RemoteCallStatisticsHead();
+    public AddressStatisticsHead AddressInfo { get; set; } = new();
+    public RemoteCallStatisticsHead RemoteCallInfo { get; set; } = new();
 
     public void WriteTo(IXdrWriter writer)
     {

@@ -4,7 +4,7 @@ namespace RpcNetGen.Internal;
 
 internal class ProcedureArguments
 {
-    private readonly List<Declaration> _arguments = new();
+    private readonly List<Declaration> _arguments = [];
     private readonly string _procedureName;
     private string _structName;
     private bool _isSingleCustomType;

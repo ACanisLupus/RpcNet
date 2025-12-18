@@ -12,7 +12,7 @@ internal class Channel<T>
     public void Send(T item)
     {
         _items.Enqueue(item);
-        _itemReceived.Set();
+        _ = _itemReceived.Set();
     }
 
     public bool TryReceive(TimeSpan timeout, out T? item)

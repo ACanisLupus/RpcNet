@@ -63,14 +63,7 @@ internal class Procedure
     public void DumpAbstractFunctionForServer(XdrFileWriter writer, int indent)
     {
         string arguments = _procedureArguments.GetArgumentsForClient();
-        if (string.IsNullOrWhiteSpace(arguments))
-        {
-            arguments = "RpcEndPoint rpcEndPoint";
-        }
-        else
-        {
-            arguments = "RpcEndPoint rpcEndPoint, " + arguments;
-        }
+        arguments = string.IsNullOrWhiteSpace(arguments) ? "RpcEndPoint rpcEndPoint" : "RpcEndPoint rpcEndPoint, " + arguments;
 
         writer.WriteLine(indent, $"public abstract {_procedureResult.Declaration} {FullName}({arguments});");
     }

@@ -115,7 +115,7 @@ internal class Declaration
             }
             else
             {
-                writer.WriteLine(indent, $"public byte[] {NameAsProperty} {{ get; set; }} = Array.Empty<byte>();");
+                writer.WriteLine(indent, $"public byte[] {NameAsProperty} {{ get; set; }} = [];");
             }
         }
         else if (IsVector)
@@ -132,7 +132,7 @@ internal class Declaration
         }
         else if (DataType.Kind is DataTypeKind.CustomType or DataTypeKind.Unknown)
         {
-            writer.WriteLine(indent, $"public {DataType.Declaration} {NameAsProperty} {{ get; set; }} = new {DataType.Declaration}();");
+            writer.WriteLine(indent, $"public {DataType.Declaration} {NameAsProperty} {{ get; set; }} = new();");
         }
         else if (DataType.Declaration == "string")
         {
@@ -304,9 +304,8 @@ internal class Declaration
         {
             if (IsLinkedListDeclaration)
             {
-                writer.WriteLine(indent, $"next = reader.ReadBool() ? new {DataType.Name}() : null;");
-                writer.WriteLine(indent, $"{name} = next;");
-                writer.WriteLine(indent, "current = next;");
+                writer.WriteLine(indent, $"current.Next = reader.ReadBool() ? new {DataType.Name}() : null;");
+                writer.WriteLine(indent, "current = current.Next;");
             }
             else
             {

@@ -74,14 +74,14 @@ public static class PortMapperUtilities
         ClientSettings? clientSettings)
     {
         using PortMapperClient portMapperClient = new(Protocol.Tcp, ipAddress, portMapperPort, clientSettings);
-        portMapperClient.Unset_2(
+        _ = portMapperClient.Unset_2(
             new Mapping2
             {
                 ProgramNumber = program,
                 Protocol = protocol,
                 VersionNumber = version
             });
-        portMapperClient.Set_2(
+        _ = portMapperClient.Set_2(
             new Mapping2
             {
                 Port = portToSet,

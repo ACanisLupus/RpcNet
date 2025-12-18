@@ -9,12 +9,12 @@ public sealed class PortMapperServer : PortMapperServerStub
     private static readonly CallResult2 _callResult = new()
     {
         Port = 0,
-        Result = Array.Empty<byte>()
+        Result = []
     };
 
     private readonly object _lock = new();
-    private readonly List<Mapping2> _mappings2 = new();
-    private readonly List<Mapping3> _mappings3 = new();
+    private readonly List<Mapping2> _mappings2 = [];
+    private readonly List<Mapping3> _mappings3 = [];
 
     public PortMapperServer(
         Protocol protocol,

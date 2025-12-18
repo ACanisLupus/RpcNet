@@ -115,7 +115,7 @@ internal sealed class TestUdpReaderWriter
     public void Underflow(params int[] arguments)
     {
         _writer.BeginWriting();
-        _writer.Reserve(10);
+        _ = _writer.Reserve(10);
 
         Assert.DoesNotThrow(() => _writer.EndWriting(_remoteIpEndPoint));
 
@@ -123,10 +123,10 @@ internal sealed class TestUdpReaderWriter
 
         for (int i = 0; i < (arguments.Length - 1); i++)
         {
-            _reader.Read(arguments[i]);
+            _ = _reader.Read(arguments[i]);
         }
 
-        Assert.Throws<RpcException>(() => _reader.Read(arguments[^1]));
+        _ = Assert.Throws<RpcException>(() => _reader.Read(arguments[^1]));
     }
 
     [Test]

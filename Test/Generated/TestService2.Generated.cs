@@ -134,7 +134,7 @@ internal class TestService2Client : ClientStub
 
     private class NonExistingProcedure_1_Arguments : IXdrDataType
     {
-        public byte[] SomeBytes { get; set; } = Array.Empty<byte>();
+        public byte[] SomeBytes { get; set; } = [];
 
         public void WriteTo(IXdrWriter writer)
         {
@@ -200,7 +200,7 @@ internal class TestService2Client : ClientStub
 
     private class NonExistingProcedure_3_Arguments : IXdrDataType
     {
-        public byte[] SomeBytes { get; set; } = Array.Empty<byte>();
+        public byte[] SomeBytes { get; set; } = [];
 
         public void WriteTo(IXdrWriter writer)
         {
@@ -334,7 +334,7 @@ internal abstract class TestService2ServerStub : ServerStub
 
     private class NonExistingProcedure_1_Arguments : IXdrDataType
     {
-        public byte[] SomeBytes { get; set; } = Array.Empty<byte>();
+        public byte[] SomeBytes { get; set; } = [];
 
         public void WriteTo(IXdrWriter writer)
         {
@@ -380,7 +380,7 @@ internal abstract class TestService2ServerStub : ServerStub
 
     private class NonExistingProcedure_3_Arguments : IXdrDataType
     {
-        public byte[] SomeBytes { get; set; } = Array.Empty<byte>();
+        public byte[] SomeBytes { get; set; } = [];
 
         public void WriteTo(IXdrWriter writer)
         {

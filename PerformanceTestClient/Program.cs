@@ -45,7 +45,7 @@ static void StartActualClients(string protocol)
                 Arguments = protocol + " " + i
             }
         };
-        process.Start();
+        _ = process.Start();
         processes.Add(process);
     }
 

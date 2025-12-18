@@ -88,8 +88,8 @@ internal partial class AcceptedReply : IXdrDataType
         ReadFrom(reader);
     }
 
-    public OpaqueAuthentication Verifier { get; set; } = new OpaqueAuthentication();
-    public ReplyData ReplyData { get; set; } = new ReplyData();
+    public OpaqueAuthentication Verifier { get; set; } = new();
+    public ReplyData ReplyData { get; set; } = new();
 
     public void WriteTo(IXdrWriter writer)
     {
@@ -172,8 +172,8 @@ internal partial class CallBody : IXdrDataType
     public uint Program { get; set; }
     public uint Version { get; set; }
     public uint Procedure { get; set; }
-    public OpaqueAuthentication Credential { get; set; } = new OpaqueAuthentication();
-    public OpaqueAuthentication Verifier { get; set; } = new OpaqueAuthentication();
+    public OpaqueAuthentication Credential { get; set; } = new();
+    public OpaqueAuthentication Verifier { get; set; } = new();
 
     public void WriteTo(IXdrWriter writer)
     {
@@ -313,7 +313,7 @@ internal partial class OpaqueAuthentication : IXdrDataType
     }
 
     public AuthenticationFlavor AuthenticationFlavor { get; set; }
-    public byte[] Body { get; set; } = Array.Empty<byte>();
+    public byte[] Body { get; set; } = [];
 
     public void WriteTo(IXdrWriter writer)
     {
@@ -381,7 +381,7 @@ internal partial class RpcMessage : IXdrDataType
     }
 
     public uint Xid { get; set; }
-    public Body Body { get; set; } = new Body();
+    public Body Body { get; set; } = new();
 
     public void WriteTo(IXdrWriter writer)
     {
@@ -443,8 +443,8 @@ internal partial class Body : IXdrDataType
     }
 
     public MessageType MessageType { get; set; }
-    public CallBody CallBody { get; set; } = new CallBody();
-    public ReplyBody ReplyBody { get; set; } = new ReplyBody();
+    public CallBody CallBody { get; set; } = new();
+    public ReplyBody ReplyBody { get; set; } = new();
 
     public void WriteTo(IXdrWriter writer)
     {
@@ -547,7 +547,7 @@ internal partial class RejectedReply : IXdrDataType
     }
 
     public RejectStatus RejectStatus { get; set; }
-    public MismatchInfo MismatchInfo { get; set; } = new MismatchInfo();
+    public MismatchInfo MismatchInfo { get; set; } = new();
     public AuthenticationStatus AuthenticationStatus { get; set; }
 
     public void WriteTo(IXdrWriter writer)
@@ -633,8 +633,8 @@ internal partial class ReplyBody : IXdrDataType
     }
 
     public ReplyStatus ReplyStatus { get; set; }
-    public AcceptedReply AcceptedReply { get; set; } = new AcceptedReply();
-    public RejectedReply RejectedReply { get; set; } = new RejectedReply();
+    public AcceptedReply AcceptedReply { get; set; } = new();
+    public RejectedReply RejectedReply { get; set; } = new();
 
     public void WriteTo(IXdrWriter writer)
     {
@@ -737,7 +737,7 @@ internal partial class ReplyData : IXdrDataType
     }
 
     public AcceptStatus AcceptStatus { get; set; }
-    public MismatchInfo MismatchInfo { get; set; } = new MismatchInfo();
+    public MismatchInfo MismatchInfo { get; set; } = new();
 
     public void WriteTo(IXdrWriter writer)
     {

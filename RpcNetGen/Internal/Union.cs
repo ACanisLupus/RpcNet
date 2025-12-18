@@ -5,10 +5,10 @@ namespace RpcNetGen.Internal;
 internal class Union
 {
     private readonly string _access;
-    private readonly List<string> _caseNames = new();
+    private readonly List<string> _caseNames = [];
     private readonly Declaration _defaultCase;
     private readonly Declaration _switchDeclaration;
-    private readonly List<Declaration> _unionItems = new();
+    private readonly List<Declaration> _unionItems = [];
 
     public Union(Settings settings, RpcParser.UnionContext union, string access, Content content)
     {

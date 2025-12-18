@@ -1,6 +1,6 @@
 // Copyright by Artur Wolf
 
-namespace RpcNetGen;
+namespace RpcNetGen.Internal;
 
 internal class Settings
 {

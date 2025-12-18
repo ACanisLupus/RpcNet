@@ -101,8 +101,8 @@ internal class Struct
         int nextIndent = indent + 2;
         if (_isLinkedList)
         {
-            writer.WriteLine(indent + 2, $"{Name} current = this;");
-            writer.WriteLine(indent + 2, "do");
+            writer.WriteLine(indent + 2, $"{Name}? current = this;");
+            writer.WriteLine(indent + 2, "while (current is not null)");
             writer.WriteLine(indent + 2, "{");
             nextIndent++;
         }
@@ -114,7 +114,7 @@ internal class Struct
 
         if (_isLinkedList)
         {
-            writer.WriteLine(indent + 2, "} while (current is not null);");
+            writer.WriteLine(indent + 2, "}");
         }
 
         writer.WriteLine(indent + 1, "}");
@@ -126,9 +126,8 @@ internal class Struct
         nextIndent = indent + 2;
         if (_isLinkedList)
         {
-            writer.WriteLine(indent + 2, $"{Name} current = this;");
-            writer.WriteLine(indent + 2, $"{Name}? next;");
-            writer.WriteLine(indent + 2, "do");
+            writer.WriteLine(indent + 2, $"{Name}? current = this;");
+            writer.WriteLine(indent + 2, "while (current is not null)");
             writer.WriteLine(indent + 2, "{");
             nextIndent++;
         }
@@ -140,7 +139,7 @@ internal class Struct
 
         if (_isLinkedList)
         {
-            writer.WriteLine(indent + 2, "} while (current is not null);");
+            writer.WriteLine(indent + 2, "}");
         }
 
         writer.WriteLine(indent + 1, "}");
@@ -152,10 +151,10 @@ internal class Struct
         nextIndent = indent + 2;
         if (_isLinkedList)
         {
-            writer.WriteLine(indent + 2, $"{Name} current = this;");
+            writer.WriteLine(indent + 2, $"{Name}? current = this;");
             writer.WriteLine(indent + 2, "sb.Append(\"[\");");
             writer.WriteLine(indent + 2, "bool _first = true;");
-            writer.WriteLine(indent + 2, "do");
+            writer.WriteLine(indent + 2, "while (current is not null)");
             writer.WriteLine(indent + 2, "{");
             writer.WriteLine(indent + 3, "if (_first)");
             writer.WriteLine(indent + 3, "{");
@@ -181,7 +180,7 @@ internal class Struct
 
         if (_isLinkedList)
         {
-            writer.WriteLine(indent + 2, "} while (current is not null);");
+            writer.WriteLine(indent + 2, "}");
             writer.WriteLine(indent + 2, "sb.Append(\" ]\");");
         }
         else
