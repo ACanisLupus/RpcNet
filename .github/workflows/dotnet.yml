@@ -25,11 +25,13 @@ jobs:
         run: dotnet build -c Release --no-restore
       - name: Test
         run: dotnet test --verbosity normal
-      - name: Upload a Build Artifact
+      - name: Upload RpcNet Artifact
         uses: actions/upload-artifact@v4
         with:
-          path: bin/Release/RpcNet.*.nupkg
-      - name: Upload a Build Artifact
+          name: RpcNet
+          path: bin/Release/net8.0/RpcNet.*.nupkg
+      - name: Upload RpcNetGen Artifact
         uses: actions/upload-artifact@v4
         with:
-          path: bin/Release/RpcNetGen.*.nupkg
+          name: RpcNetGen
+          path: bin/Release/net8.0/RpcNetGen.*.nupkg
