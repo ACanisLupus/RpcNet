@@ -54,16 +54,6 @@ internal sealed class TestTcpClientServer
 
         Channel<ReceivedRpcCall> receivedCallChannel = new();
 
-        void Dispatcher(ReceivedRpcCall call)
-        {
-            // To assert it on the main thread
-            receivedCallChannel.Send(call);
-
-            SimpleStruct pingStruct = new();
-            call.RetrieveCall(pingStruct);
-            call.Reply(pingStruct);
-        }
-
         ServerSettings serverSettings = new()
         {
             PortMapperPort = 0 // Don't register at port mapper
@@ -90,9 +80,20 @@ internal sealed class TestTcpClientServer
         Assert.That(receivedCallChannel.TryReceive(TimeSpan.FromSeconds(10), out ReceivedRpcCall? receivedCall));
         Assert.That(receivedCall, Is.Not.Null);
         Assert.That(receivedCall!.Procedure, Is.EqualTo(Procedure));
-        Assert.That(receivedCall!.Version, Is.EqualTo(Version));
-        Assert.That(receivedCall!.RpcEndPoint, Is.Not.Null);
+        Assert.That(receivedCall.Version, Is.EqualTo(Version));
+        Assert.That(receivedCall.RpcEndPoint, Is.Not.Null);
 
         Assert.That(argument.Value, Is.EqualTo(result.Value));
+        return;
+
+        void Dispatcher(ReceivedRpcCall call)
+        {
+            // To assert it on the main thread
+            receivedCallChannel.Send(call);
+
+            SimpleStruct pingStruct = new();
+            call.RetrieveCall(pingStruct);
+            call.Reply(pingStruct);
+        }
     }
 }

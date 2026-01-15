@@ -9,8 +9,8 @@ public sealed class ClientSettings
 {
     public static ClientSettings Default { get; } = new();
 
-    public ILogger? Logger { get; set; }
-    public int PortMapperPort { get; set; } = PortMapperConstants.PortMapperPort;
-    public TimeSpan SendTimeout { get; set; } = Utilities.DefaultClientSendTimeout;
-    public TimeSpan ReceiveTimeout { get; set; } = Utilities.DefaultClientReceiveTimeout;
+    public ILogger? Logger { get; init; }
+    public int PortMapperPort { get; init; } = PortMapperConstants.PortMapperPort;
+    public TimeSpan SendTimeout { get; init; } = Utilities.DefaultClientSendTimeout;
+    public TimeSpan ReceiveTimeout { get; init; } = Utilities.DefaultClientReceiveTimeout;
 }

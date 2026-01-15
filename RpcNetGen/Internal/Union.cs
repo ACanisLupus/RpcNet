@@ -10,7 +10,7 @@ internal class Union
     private readonly Declaration _switchDeclaration;
     private readonly List<Declaration> _unionItems = [];
 
-    public Union(Settings settings, RpcParser.UnionContext union, string access, Content content)
+    public Union(Settings settings, RpcParser.UnionContext union, string access)
     {
         _access = access;
         union.Check();
@@ -50,7 +50,6 @@ internal class Union
     }
 
     public string Name { get; }
-    public IReadOnlyList<Declaration> UnionItems => _unionItems;
 
     public void Prepare(Content content)
     {
@@ -79,7 +78,7 @@ internal class Union
 
         writer.WriteLine();
         _switchDeclaration.DumpItem(writer, indent + 1);
-        foreach (Declaration unionItem in UnionItems)
+        foreach (Declaration unionItem in _unionItems)
         {
             unionItem.DumpItem(writer, indent + 1);
         }

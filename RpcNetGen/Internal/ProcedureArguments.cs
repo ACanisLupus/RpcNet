@@ -43,7 +43,7 @@ internal class ProcedureArguments
     }
 
     public string VariableName { get; private set; }
-    public bool IsSingleVoid { get; }
+    private bool IsSingleVoid { get; }
 
     public void Prepare(Content content)
     {

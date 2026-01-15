@@ -26,7 +26,7 @@ public static class PortMapperUtilities
         }
     }
 
-    public static int GetPortInternal(
+    private static int GetPortInternal(
         ProtocolKind protocol,
         IPAddress ipAddress,
         int portMapperPort,

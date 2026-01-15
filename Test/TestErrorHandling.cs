@@ -11,7 +11,9 @@ internal sealed class TestErrorHandling
 {
     private readonly IPAddress _ipAddress = IPAddress.Loopback;
 
-    private TestServer _testServer = null!;
+    private TestServer? _testServer;
+
+    private TestServer TestServer => _testServer ?? throw new InvalidOperationException("Test server is not initialized.");
 
     [SetUp]
     public void SetUp()
@@ -33,7 +35,7 @@ internal sealed class TestErrorHandling
     [TestCase(Protocol.Udp)]
     public void NonExistingProcedure(Protocol protocol)
     {
-        int port = protocol == Protocol.Tcp ? _testServer.TcpPort : _testServer.UdpPort;
+        int port = protocol == Protocol.Tcp ? TestServer.TcpPort : TestServer.UdpPort;
 
         using TestService2Client client = new(protocol, _ipAddress, port);
 
@@ -52,7 +54,7 @@ internal sealed class TestErrorHandling
     [TestCase(Protocol.Udp)]
     public void NonExistingVersion(Protocol protocol)
     {
-        int port = protocol == Protocol.Tcp ? _testServer.TcpPort : _testServer.UdpPort;
+        int port = protocol == Protocol.Tcp ? TestServer.TcpPort : TestServer.UdpPort;
 
         using TestService2Client client = new(protocol, _ipAddress, port);
 
@@ -71,7 +73,7 @@ internal sealed class TestErrorHandling
     [TestCase(Protocol.Udp)]
     public void ServerThrowsException(Protocol protocol)
     {
-        int port = protocol == Protocol.Tcp ? _testServer.TcpPort : _testServer.UdpPort;
+        int port = protocol == Protocol.Tcp ? TestServer.TcpPort : TestServer.UdpPort;
 
         using TestService2Client client = new(protocol, _ipAddress, port);
 

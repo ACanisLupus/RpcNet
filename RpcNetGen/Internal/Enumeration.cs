@@ -7,7 +7,7 @@ internal class Enumeration
     private readonly string _access;
     private readonly List<EnumerationValue> _enumItems = [];
 
-    public Enumeration(RpcParser.EnumContext @enum, string access, Content content)
+    public Enumeration(RpcParser.EnumContext @enum, string access)
     {
         _access = access;
         Name = @enum.Identifier().GetText();
@@ -15,19 +15,18 @@ internal class Enumeration
         RpcParser.EnumValueContext[] enumValues = @enum.enumValue();
         foreach (RpcParser.EnumValueContext enumValue in enumValues)
         {
-            _enumItems.Add(new EnumerationValue(enumValue, content));
+            _enumItems.Add(new EnumerationValue(enumValue));
         }
     }
 
     public string Name { get; }
-    public IReadOnlyList<EnumerationValue> EnumItems => _enumItems;
 
     public void Dump(XdrFileWriter writer, int indent)
     {
         writer.WriteLine();
         writer.WriteLine(indent, $"{_access} enum {Name}");
         writer.WriteLine(indent, "{");
-        foreach (EnumerationValue enumItem in EnumItems)
+        foreach (EnumerationValue enumItem in _enumItems)
         {
             enumItem.Dump(writer, indent + 1);
         }

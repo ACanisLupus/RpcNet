@@ -2,9 +2,4 @@
 
 namespace RpcNetGen.Internal;
 
-internal class ParserException : Exception
-{
-    public ParserException(string message) : base(message)
-    {
-    }
-}
+internal class ParserException(string message) : Exception(message);

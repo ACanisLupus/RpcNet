@@ -6,12 +6,9 @@ using System.Net;
 using RpcNet;
 using TestService;
 
-internal sealed class TestServer : TestServiceServerStub
+internal sealed class TestServer(Protocol protocol, IPAddress ipAddress, int port, ServerSettings serverSettings)
+    : TestServiceServerStub(protocol, ipAddress, port, serverSettings)
 {
-    public TestServer(Protocol protocol, IPAddress ipAddress, int port, ServerSettings serverSettings) : base(protocol, ipAddress, port, serverSettings)
-    {
-    }
-
     public override void ThrowsException_1(RpcEndPoint rpcEndPoint) => throw new NotSupportedException();
     public override int Echo_1(RpcEndPoint rpcEndPoint, int value) => value;
     public override SimpleStruct SimpleStructSimpleStruct_2(RpcEndPoint rpcEndPoint, SimpleStruct value) => value;

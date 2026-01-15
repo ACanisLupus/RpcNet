@@ -2,16 +2,10 @@
 
 namespace RpcNetGen.Internal;
 
-internal class EnumerationValue
+internal class EnumerationValue(RpcParser.EnumValueContext enumValue)
 {
-    public EnumerationValue(RpcParser.EnumValueContext enumValue, Content content)
-    {
-        Name = enumValue.Identifier().GetText();
-        Value = Content.GetValue(enumValue.value());
-    }
-
-    public string Name { get; }
-    public string Value { get; }
+    private string Name { get; } = enumValue.Identifier().GetText();
+    private string Value { get; } = Content.GetValue(enumValue.value());
 
     public void Dump(XdrFileWriter writer, int indent)
     {

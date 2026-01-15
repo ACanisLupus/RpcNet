@@ -15,20 +15,16 @@ testServer.Start();
 
 Thread.Sleep(-1);
 
-internal class TestServer : TestServiceServerStub
+internal class TestServer(IPEndPoint ipEndPoint) : TestServiceServerStub(
+    Protocol.Tcp | Protocol.Udp,
+    ipEndPoint.Address,
+    ipEndPoint.Port,
+    new ServerSettings
+    {
+        Logger = _theLogger
+    })
 {
     private static readonly ILogger _theLogger = new TestLogger("Test Server");
-
-    public TestServer(IPEndPoint ipEndPoint) : base(
-        Protocol.Tcp | Protocol.Udp,
-        ipEndPoint.Address,
-        ipEndPoint.Port,
-        new ServerSettings
-        {
-            Logger = _theLogger
-        })
-    {
-    }
 
     public override void ThrowsException_1(RpcEndPoint rpcEndPoint) => throw new NotImplementedException();
     public override int Echo_1(RpcEndPoint rpcEndPoint, int value) => value;

@@ -5,17 +5,11 @@ namespace RpcNetGen;
 using Antlr4.Runtime;
 using RpcNetGen.Internal;
 
-internal class Program
+internal static class Program
 {
     private static int Main(string[] args)
     {
-        if (!Parse(args, out Arguments arguments))
-        {
-            ShowHelp();
-            return 1;
-        }
-
-        if (!Validate(arguments))
+        if (!Parse(args, out Arguments arguments) || !Validate(arguments))
         {
             ShowHelp();
             return 1;
@@ -90,17 +84,6 @@ internal class Program
             return false;
         }
 
-        bool CheckNextArgument(int index, string arg)
-        {
-            if (index >= args.Length)
-            {
-                Console.WriteLine($"Missing argument after {arg}.");
-                return false;
-            }
-
-            return true;
-        }
-
         for (int i = 0; i < args.Length; i++)
         {
             if (args[i] == "-n")
@@ -134,6 +117,17 @@ internal class Program
         }
 
         return true;
+
+        bool CheckNextArgument(int index, string arg)
+        {
+            if (index >= args.Length)
+            {
+                Console.WriteLine($"Missing argument after {arg}.");
+                return false;
+            }
+
+            return true;
+        }
     }
 
     private class Arguments

@@ -10,10 +10,13 @@ using RpcNet.Internal;
 [TestFixture]
 internal sealed class TestTcpReaderWriter
 {
-    private TcpReader _reader = null!;
-    private TcpClient _readerTcpClient = null!;
-    private TcpWriter _writer = null!;
-    private TcpClient _writerTcpClient = null!;
+    private TcpReader? _reader;
+    private TcpClient? _readerTcpClient;
+    private TcpWriter? _writer;
+    private TcpClient? _writerTcpClient;
+
+    private TcpClient ReaderTcpClient => _readerTcpClient ?? throw new InvalidOperationException("Reader TPC client is not initialized.");
+    private TcpClient WriterTcpClient => _writerTcpClient ?? throw new InvalidOperationException("Writer TPC client is not initialized.");
 
     [SetUp]
     public void SetUp()
@@ -26,9 +29,9 @@ internal sealed class TestTcpReaderWriter
         IPEndPoint? localIpEndPoint = listener.Server.LocalEndPoint as IPEndPoint;
         int port = localIpEndPoint?.Port ?? throw new InvalidOperationException("Could not find local end point.");
         _readerTcpClient = new TcpClient();
-        Task task = Task.Run(() => _writerTcpClient = listener.AcceptTcpClient());
+        Task<TcpClient> task = Task.Run(() => listener.AcceptTcpClient());
         _readerTcpClient.Connect(ipAddress, port);
-        task.GetAwaiter().GetResult();
+        _writerTcpClient = task.GetAwaiter().GetResult();
         _reader = new TcpReader(_readerTcpClient.Client);
         _writer = new TcpWriter(_writerTcpClient.Client);
 
@@ -51,8 +54,8 @@ internal sealed class TestTcpReaderWriter
     [TestCase(8, 12)]
     public void ReadAndWriteMultipleFragments(int maxReadLength, int maxReserveLength)
     {
-        _reader = new TcpReader(_readerTcpClient.Client, maxReadLength);
-        _writer = new TcpWriter(_writerTcpClient.Client, maxReserveLength);
+        _reader = new TcpReader(ReaderTcpClient.Client, maxReadLength);
+        _writer = new TcpWriter(WriterTcpClient.Client, maxReserveLength);
 
         XdrReader xdrReader = new(_reader);
         XdrWriter xdrWriter = new(_writer);
@@ -81,10 +84,10 @@ internal sealed class TestTcpReaderWriter
     [TestCase(8, 12)]
     public void ReadAndWriteMultipleFragmentsThreaded(int maxReadLength, int maxReserveLength)
     {
-        _reader = new TcpReader(_readerTcpClient.Client, maxReadLength);
-        _writer = new TcpWriter(_writerTcpClient.Client, maxReserveLength);
+        _reader = new TcpReader(ReaderTcpClient.Client, maxReadLength);
+        _writer = new TcpWriter(WriterTcpClient.Client, maxReserveLength);
 
-        _writerTcpClient.Client.SendBufferSize = 1;
+        WriterTcpClient.Client.SendBufferSize = 1;
 
         XdrReader xdrReader = new(_reader);
         XdrWriter xdrWriter = new(_writer);

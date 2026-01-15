@@ -2,23 +2,15 @@
 
 namespace RpcNetGen.Internal;
 
-internal class Constant : IEquatable<Constant>
+internal class Constant(string name, string value) : IEquatable<Constant>
 {
-    private readonly string _value;
+    private readonly string _value = value;
 
-    public Constant(RpcParser.ConstContext @const, Content content)
+    public Constant(RpcParser.ConstContext @const) : this(@const.Identifier().GetText(), Content.GetConstant(@const.constant()))
     {
-        Name = @const.Identifier().GetText();
-        _value = Content.GetConstant(@const.constant());
     }
 
-    public Constant(string name, string value)
-    {
-        Name = name;
-        _value = value;
-    }
-
-    public string Name { get; }
+    public string Name { get; } = name;
 
     public void Dump(XdrFileWriter writer, int indent) => writer.WriteLine(indent, $"public const int {Name} = {_value};");
 

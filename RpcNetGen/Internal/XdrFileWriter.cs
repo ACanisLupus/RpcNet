@@ -2,11 +2,9 @@
 
 namespace RpcNetGen.Internal;
 
-internal class XdrFileWriter : IDisposable
+internal class XdrFileWriter(string filePath) : IDisposable
 {
-    private readonly TextWriter _writer;
-
-    public XdrFileWriter(string filePath) => _writer = new StreamWriter(filePath);
+    private readonly StreamWriter _writer = new(filePath);
 
     public void WriteLine(int indent, string line) => _writer.Write(GetIndentString(indent) + line + '\n');
     public void WriteLine() => _writer.Write('\n');

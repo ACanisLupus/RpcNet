@@ -13,7 +13,7 @@ internal sealed class TestPortMapper
     private readonly IPAddress _ipAddress = IPAddress.Loopback;
 
     private int _portMapperPort;
-    private PortMapperServer _server = null!;
+    private PortMapperServer? _server;
 
     [SetUp]
     public void SetUp()

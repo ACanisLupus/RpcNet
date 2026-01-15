@@ -4,47 +4,34 @@ namespace RpcNet.Internal;
 
 using System.Net;
 
-internal sealed class RpcCall
+internal sealed class RpcCall(int program, EndPoint remoteEndPoint, INetworkReader networkReader, INetworkWriter networkWriter)
 {
-    private readonly INetworkReader _networkReader;
-    private readonly INetworkWriter _networkWriter;
-    private readonly EndPoint _remoteEndPoint;
-    private readonly RpcMessage _rpcMessage;
-    private readonly IXdrReader _xdrReader;
-    private readonly IXdrWriter _xdrWriter;
-
-    private uint _nextXid = (uint)new Random().Next();
-
-    public RpcCall(int program, EndPoint remoteEndPoint, INetworkReader networkReader, INetworkWriter networkWriter)
+    private readonly RpcMessage _rpcMessage = new()
     {
-        _remoteEndPoint = remoteEndPoint;
-        _networkReader = networkReader;
-        _networkWriter = networkWriter;
-        _xdrReader = new XdrReader(networkReader);
-        _xdrWriter = new XdrWriter(networkWriter);
-        _rpcMessage = new RpcMessage
+        Body =
         {
-            Body =
+            MessageType = MessageType.Call,
+            CallBody =
             {
-                MessageType = MessageType.Call,
-                CallBody =
+                RpcVersion = Utilities.RpcVersion,
+                Program = (uint)program,
+                Credential =
                 {
-                    RpcVersion = Utilities.RpcVersion,
-                    Program = (uint)program,
-                    Credential =
-                    {
-                        AuthenticationFlavor = AuthenticationFlavor.None,
-                        Body = []
-                    },
-                    Verifier =
-                    {
-                        AuthenticationFlavor = AuthenticationFlavor.None,
-                        Body = []
-                    }
+                    AuthenticationFlavor = AuthenticationFlavor.None,
+                    Body = []
+                },
+                Verifier =
+                {
+                    AuthenticationFlavor = AuthenticationFlavor.None,
+                    Body = []
                 }
             }
-        };
-    }
+        }
+    };
+    private readonly IXdrReader _xdrReader = new XdrReader(networkReader);
+    private readonly IXdrWriter _xdrWriter = new XdrWriter(networkWriter);
+
+    private uint _nextXid = (uint)new Random().Next();
 
     public void SendCall(int procedure, int version, IXdrDataType argument, IXdrDataType result)
     {
@@ -54,7 +41,7 @@ internal sealed class RpcCall
 
     private void SendMessage(int procedure, int version, IXdrDataType argument)
     {
-        _networkWriter.BeginWriting();
+        networkWriter.BeginWriting();
 
         _rpcMessage.Xid = _nextXid++;
         _rpcMessage.Body.CallBody.Procedure = (uint)procedure;
@@ -62,9 +49,9 @@ internal sealed class RpcCall
         _rpcMessage.WriteTo(_xdrWriter);
         argument.WriteTo(_xdrWriter);
 
-        _networkWriter.EndWriting(_remoteEndPoint);
+        networkWriter.EndWriting(remoteEndPoint);
 
-        _ = _networkReader.BeginReading();
+        _ = networkReader.BeginReading();
     }
 
     private void ReceiveReply(IXdrDataType result)
@@ -93,6 +80,6 @@ internal sealed class RpcCall
         }
 
         result.ReadFrom(_xdrReader);
-        _networkReader.EndReading();
+        networkReader.EndReading();
     }
 }

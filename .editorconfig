@@ -271,3 +271,5 @@ resharper_arrange_redundant_parentheses_highlighting = warning
 resharper_arrange_static_member_qualifier_highlighting = warning
 resharper_arrange_var_keywords_in_deconstructing_declaration_highlighting = warning
 resharper_suggest_discard_declaration_var_style_highlighting = warning
+
+dotnet_diagnostic.ide0045.severity = none

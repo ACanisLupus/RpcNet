@@ -120,10 +120,9 @@ internal static class Utilities
             const uint SioUdpConnectionReset = IocIn | IocVendor | 12;
             _ = socket.IOControl(
                 unchecked((int)SioUdpConnectionReset),
-                new[]
-                {
+                [
                     Convert.ToByte(false)
-                },
+                ],
                 null);
         }
     }

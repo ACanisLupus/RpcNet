@@ -5,19 +5,11 @@ namespace Test;
 using System.Net;
 using RpcNet.Internal;
 
-internal class StubNetwork : INetworkReader, INetworkWriter
+internal class StubNetwork(int maxReadLength, int maxReserveLength) : INetworkReader, INetworkWriter
 {
     private readonly byte[] _buffer = new byte[65536];
-    private readonly int _maxReadLength;
-    private readonly int _maxReserveLength;
 
-    public StubNetwork(int maxReadLength, int maxReserveLength)
-    {
-        _maxReadLength = maxReadLength;
-        _maxReserveLength = maxReserveLength;
-    }
-
-    public int ReadIndex { get; private set; }
+    private int ReadIndex { get; set; }
     public int WriteIndex { get; private set; }
 
     public EndPoint BeginReading() => new IPEndPoint(0, 0);
@@ -42,7 +34,7 @@ internal class StubNetwork : INetworkReader, INetworkWriter
 
     public ReadOnlySpan<byte> Read(int length)
     {
-        length = Math.Min(length, _maxReadLength);
+        length = Math.Min(length, maxReadLength);
         Span<byte> span = _buffer.AsSpan(ReadIndex, length);
         ReadIndex += length;
         return span;
@@ -50,7 +42,7 @@ internal class StubNetwork : INetworkReader, INetworkWriter
 
     public Span<byte> Reserve(int length)
     {
-        length = Math.Min(length, _maxReserveLength);
+        length = Math.Min(length, maxReserveLength);
         Span<byte> span = _buffer.AsSpan(WriteIndex, length);
         WriteIndex += length;
         return span;

@@ -7,18 +7,12 @@ using System.Net;
 using RpcNet;
 using RpcNet.PortMapper;
 
-internal class Program
+internal static class Program
 {
     private static int Main(string[] args)
     {
         List<string> arguments = [.. args];
-        if (!TryReadCommand(arguments, out Command command))
-        {
-            PrintUsage();
-            return 1;
-        }
-
-        if (!TryReadIpEndPoint(arguments, out IPEndPoint ipEndPoint))
+        if (!TryReadCommand(arguments, out Command command) || !TryReadIpEndPoint(arguments, out IPEndPoint ipEndPoint))
         {
             PrintUsage();
             return 1;
@@ -143,13 +137,7 @@ internal class Program
 
     private static int Unset(IPEndPoint ipEndPoint, List<string> args)
     {
-        if (args.Count is < 2 or > 3)
-        {
-            PrintUsage();
-            return 1;
-        }
-
-        if (!int.TryParse(args[0], out int program) || !int.TryParse(args[1], out int version))
+        if (args.Count is < 2 or > 3 || !int.TryParse(args[0], out int program) || !int.TryParse(args[1], out int version))
         {
             PrintUsage();
             return 1;
