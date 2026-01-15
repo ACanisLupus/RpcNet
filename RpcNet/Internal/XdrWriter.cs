@@ -5,12 +5,9 @@ namespace RpcNet.Internal;
 using System.Text;
 
 // Public for tests
-public sealed class XdrWriter : IXdrWriter
+public sealed class XdrWriter(INetworkWriter networkWriter) : IXdrWriter
 {
     private readonly Encoding _encoding = Encoding.UTF8;
-    private readonly INetworkWriter _networkWriter;
-
-    public XdrWriter(INetworkWriter networkWriter) => _networkWriter = networkWriter;
 
     public void Write(long value)
     {
@@ -19,7 +16,7 @@ public sealed class XdrWriter : IXdrWriter
     }
 
     public void Write(ulong value) => Write((long)value);
-    public void Write(int value) => Utilities.WriteBytesBigEndian(_networkWriter.Reserve(sizeof(int)), value);
+    public void Write(int value) => Utilities.WriteBytesBigEndian(networkWriter.Reserve(sizeof(int)), value);
     public void Write(uint value) => Write((int)value);
     public void Write(short value) => Write((int)value);
     public void Write(ushort value) => Write((int)value);
@@ -37,13 +34,13 @@ public sealed class XdrWriter : IXdrWriter
 
         while (length > 0)
         {
-            Span<byte> span = _networkWriter.Reserve(length);
+            Span<byte> span = networkWriter.Reserve(length);
             value.Slice(readIndex, span.Length).CopyTo(span);
             readIndex += span.Length;
             length -= span.Length;
         }
 
-        FillWithZeros(_networkWriter.Reserve(padding));
+        FillWithZeros(networkWriter.Reserve(padding));
     }
 
     public void WriteOpaque(ReadOnlySpan<byte> value)

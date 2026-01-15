@@ -248,7 +248,7 @@ internal sealed class TestXdr
     [TestCase("ab", 8)]
     [TestCase("abc", 8)]
     [TestCase("text", 8)]
-    public void ReadAndWriteString(string value, int expectedWriteIndex)
+    public void ReadAndWriteString(string? value, int expectedWriteIndex)
     {
         _writer.Write(value);
 

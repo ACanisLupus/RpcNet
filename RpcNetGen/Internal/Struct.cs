@@ -41,10 +41,10 @@ internal class Struct
     {
     }
 
-    public string Name { get; set; }
-    public string Access { get; set; }
-    public bool Partial { get; set; } = true;
-    public bool GenerateConstructors { get; set; } = true;
+    public string Name { get; init; }
+    public string Access { get; init; }
+    public bool Partial { get; init; } = true;
+    public bool GenerateConstructors { get; init; } = true;
     public List<Declaration> StructItems { get; } = [];
 
     public void Prepare(Content content)

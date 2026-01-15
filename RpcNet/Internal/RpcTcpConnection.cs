@@ -16,7 +16,7 @@ public sealed class RpcTcpConnection : IDisposable
     private readonly Socket _socket;
     private readonly TcpWriter _writer;
 
-    public RpcTcpConnection(Socket socket, int program, int[] versions, Action<ReceivedRpcCall> receivedCallDispatcher, ILogger? logger = default)
+    public RpcTcpConnection(Socket socket, int program, int[] versions, Action<ReceivedRpcCall> receivedCallDispatcher, ILogger? logger = null)
     {
         _socket = socket;
         if (socket.RemoteEndPoint is not IPEndPoint remoteIpEndPoint)

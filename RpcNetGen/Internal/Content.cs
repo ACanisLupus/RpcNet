@@ -23,7 +23,7 @@ internal class Content
         Name = name;
         _namespaceName = namespaceName;
         _access = access;
-        _settings = new Settings()
+        _settings = new Settings
         {
             ConstantsClassName = $"{name}Constants"
         };
@@ -34,7 +34,7 @@ internal class Content
             ConstContext @const = definition.@const();
             if (@const is not null)
             {
-                Add(new Constant(@const, this));
+                Add(new Constant(@const));
             }
 
             TypedefContext typedef = definition.typedef();
@@ -46,7 +46,7 @@ internal class Content
             EnumContext @enum = definition.@enum();
             if (@enum is not null)
             {
-                Add(new Enumeration(@enum, access, this));
+                Add(new Enumeration(@enum, access));
             }
 
             StructContext @struct = definition.@struct();
@@ -58,7 +58,7 @@ internal class Content
             UnionContext union = definition.union();
             if (union is not null)
             {
-                Add(new Union(_settings, union, access, this));
+                Add(new Union(_settings, union, access));
             }
         }
 
@@ -84,7 +84,8 @@ internal class Content
     }
 
     public string Name { get; }
-    public void Add(Constant parsedConstant)
+
+    private void Add(Constant parsedConstant)
     {
         string name = parsedConstant.Name;
         if (!_knownElements.Add(name))
@@ -95,7 +96,7 @@ internal class Content
         _parsedConstants[name] = parsedConstant;
     }
 
-    public void Add(Enumeration parsedEnum)
+    private void Add(Enumeration parsedEnum)
     {
         string name = parsedEnum.Name;
         if (!_knownElements.Add(name))
@@ -106,7 +107,7 @@ internal class Content
         _parsedEnums[name] = parsedEnum;
     }
 
-    public void Add(Struct parsedStruct)
+    private void Add(Struct parsedStruct)
     {
         string name = parsedStruct.Name;
         if (!_knownElements.Add(name))
@@ -117,7 +118,7 @@ internal class Content
         _parsedStructs[name] = parsedStruct;
     }
 
-    public void Add(Union parsedUnion)
+    private void Add(Union parsedUnion)
     {
         string name = parsedUnion.Name;
         if (!_knownElements.Add(name))
@@ -210,7 +211,7 @@ internal class Content
         writer.WriteLine(indent, "// </auto-generated>");
         writer.WriteLine(indent, "//------------------------------------------------------------------------------");
         writer.WriteLine();
-        writer.WriteLine(indent, $"#nullable enable");
+        writer.WriteLine(indent, "#nullable enable");
 
         writer.WriteLine();
         if (!string.IsNullOrWhiteSpace(_namespaceName))

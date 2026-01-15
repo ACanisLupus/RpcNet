@@ -5,16 +5,13 @@ namespace RpcNet.Internal;
 using System.Text;
 
 // Public for tests
-public sealed class XdrReader : IXdrReader
+public sealed class XdrReader(INetworkReader networkReader) : IXdrReader
 {
     private readonly Encoding _encoding = Encoding.UTF8;
-    private readonly INetworkReader _networkReader;
-
-    public XdrReader(INetworkReader networkReader) => _networkReader = networkReader;
 
     public long ReadInt64() => ((long)ReadInt32() << 32) | (ReadInt32() & 0xffffffff);
     public ulong ReadUInt64() => (ulong)ReadInt64();
-    public int ReadInt32() => Utilities.ToInt32BigEndian(_networkReader.Read(sizeof(int)));
+    public int ReadInt32() => Utilities.ToInt32BigEndian(networkReader.Read(sizeof(int)));
     public uint ReadUInt32() => (uint)ReadInt32();
     public short ReadInt16() => (short)ReadInt32();
     public ushort ReadUInt16() => (ushort)ReadInt32();
@@ -40,12 +37,12 @@ public sealed class XdrReader : IXdrReader
 
         while (length > 0)
         {
-            ReadOnlySpan<byte> span = _networkReader.Read(length);
+            ReadOnlySpan<byte> span = networkReader.Read(length);
             span.CopyTo(array.AsSpan(writeIndex, span.Length));
             writeIndex += span.Length;
             length -= span.Length;
         }
 
-        _ = _networkReader.Read(padding);
+        _ = networkReader.Read(padding);
     }
 }

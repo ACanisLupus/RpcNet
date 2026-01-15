@@ -7,11 +7,11 @@ using RpcNet.PortMapper;
 
 public sealed class ServerSettings
 {
-    public static ServerSettings Default { get; } = new ServerSettings();
+    public static ServerSettings Default { get; } = new();
 
-    public ILogger? Logger { get; set; }
-    public int PortMapperPort { get; set; } = PortMapperConstants.PortMapperPort;
-    public TimeSpan SendTimeout { get; set; } = Utilities.DefaultServerSendTimeout;
-    public TimeSpan ReceiveTimeout { get; set; } = Utilities.DefaultServerReceiveTimeout;
-    public bool LockFreeDispatcher { get; set; }
+    public ILogger? Logger { get; init; }
+    public int PortMapperPort { get; init; } = PortMapperConstants.PortMapperPort;
+    public TimeSpan SendTimeout { get; init; } = Utilities.DefaultServerSendTimeout;
+    public TimeSpan ReceiveTimeout { get; init; } = Utilities.DefaultServerReceiveTimeout;
+    public bool LockFreeDispatcher { get; init; }
 }

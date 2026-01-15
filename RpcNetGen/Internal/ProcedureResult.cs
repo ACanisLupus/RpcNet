@@ -27,7 +27,7 @@ internal class ProcedureResult
     }
 
     public string Declaration => _dataType.Declaration;
-    public string VariableName => "result";
+    public static string VariableName => "result";
 
     public void Prepare(Content content)
     {

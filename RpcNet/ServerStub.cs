@@ -16,7 +16,7 @@ public abstract class ServerStub : IDisposable
 
     private bool _isDisposed;
 
-    protected ServerStub(Protocol protocol, IPAddress ipAddress, int port, int program, int[] versions, ServerSettings? serverSettings = default)
+    protected ServerStub(Protocol protocol, IPAddress ipAddress, int port, int program, int[] versions, ServerSettings? serverSettings = null)
     {
         if (ipAddress is null)
         {

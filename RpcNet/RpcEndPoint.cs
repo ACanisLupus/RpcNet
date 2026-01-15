@@ -4,16 +4,10 @@ namespace RpcNet;
 
 using System.Net;
 
-public sealed class RpcEndPoint
+public sealed class RpcEndPoint(EndPoint endPoint, Protocol protocol)
 {
-    public RpcEndPoint(EndPoint endPoint, Protocol protocol)
-    {
-        EndPoint = endPoint;
-        Protocol = protocol;
-    }
-
-    public EndPoint EndPoint { get; }
-    public Protocol Protocol { get; }
+    public EndPoint EndPoint { get; } = endPoint;
+    public Protocol Protocol { get; } = protocol;
 
     public override string ToString() => $"{Protocol.ToString().ToUpper()}:{EndPoint}";
 }

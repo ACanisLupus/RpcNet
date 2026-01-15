@@ -13,15 +13,17 @@ internal sealed class TestRpc
 {
     private readonly IPAddress _ipAddress = IPAddress.Loopback;
 
-    private PortMapperServer _portMapperServer = null!;
-    private TestServer _testServer = null!;
+    private PortMapperServer? _portMapperServer;
+    private TestServer? _testServer;
+
+    private PortMapperServer PortMapperServer => _portMapperServer ?? throw new InvalidOperationException("Port mapper server is not initialized.");
 
     [SetUp]
     public void SetUp()
     {
         ServerSettings portMapperSettings = new()
         {
-            //Logger = new TestLogger("Port Mapper")
+            Logger = new TestLogger("Port Mapper")
         };
 
         _portMapperServer = new PortMapperServer(Protocol.Tcp, _ipAddress, 0, portMapperSettings);
@@ -50,7 +52,7 @@ internal sealed class TestRpc
     {
         ClientSettings clientSettings = new()
         {
-            PortMapperPort = _portMapperServer.TcpPort
+            PortMapperPort = PortMapperServer.TcpPort
         };
         using TestServiceClient client = new(protocol, _ipAddress, 0, clientSettings);
         SimpleStruct result = client.SimpleStructSimpleStruct_2(

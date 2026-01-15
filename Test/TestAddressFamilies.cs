@@ -12,8 +12,10 @@ using TestService;
 [TestFixture]
 internal sealed class TestAddressFamilies
 {
-    private PortMapperServer _portMapperServer = null!;
-    private TestServer _testServer = null!;
+    private PortMapperServer? _portMapperServer;
+    private TestServer? _testServer;
+
+    private PortMapperServer PortMapperServer => _portMapperServer ?? throw new InvalidOperationException("Port mapper server is not initialized.");
 
     [TearDown]
     public void TearDown()
@@ -41,7 +43,7 @@ internal sealed class TestAddressFamilies
 
         ClientSettings clientSettings = new()
         {
-            PortMapperPort = _portMapperServer.TcpPort
+            PortMapperPort = PortMapperServer.TcpPort
         };
 
         using TestServiceClient client = new(protocol, clientIpAddress, 0, clientSettings);

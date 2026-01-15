@@ -437,6 +437,10 @@ internal class Declaration
             case DataTypeKind.Enum:
                 writer.WriteLine(indent, $"writer.Write((int){element});");
                 break;
+            case DataTypeKind.Unknown:
+            case DataTypeKind.CustomType:
+            case DataTypeKind.Opaque:
+            case DataTypeKind.Void:
             default:
                 writer.WriteLine(indent, $"if ({element} is null)");
                 writer.WriteLine(indent, "{");

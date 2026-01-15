@@ -20,7 +20,7 @@ public sealed class PortMapperServer : PortMapperServerStub
         Protocol protocol,
         IPAddress ipAddress,
         int port = PortMapperConstants.PortMapperPort,
-        ServerSettings? serverSettings = default) : base(
+        ServerSettings? serverSettings = null) : base(
         protocol,
         ipAddress,
         port,

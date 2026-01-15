@@ -2,9 +2,4 @@
 
 namespace RpcNet;
 
-public sealed class RpcException : Exception
-{
-    public RpcException(string message) : base(message)
-    {
-    }
-}
+public sealed class RpcException(string message) : Exception(message);

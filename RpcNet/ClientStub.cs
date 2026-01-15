@@ -12,7 +12,7 @@ public abstract class ClientStub : IDisposable
 
     private readonly INetworkClient _networkClient;
 
-    protected ClientStub(Protocol protocol, IPAddress ipAddress, int port, int program, int version, ClientSettings? clientSettings = default)
+    protected ClientStub(Protocol protocol, IPAddress ipAddress, int port, int program, int version, ClientSettings? clientSettings = null)
     {
         ArgumentNullException.ThrowIfNull(ipAddress);
 
@@ -27,7 +27,7 @@ public abstract class ClientStub : IDisposable
         };
     }
 
-    public RpcEndPoint RpcEndPoint { get; }
+    protected RpcEndPoint RpcEndPoint { get; }
 
     public TimeSpan ReceiveTimeout
     {
@@ -41,7 +41,7 @@ public abstract class ClientStub : IDisposable
         set => _networkClient.SendTimeout = value;
     }
 
-    public void Call(int procedure, int version, IXdrDataType argument, IXdrDataType result)
+    protected void Call(int procedure, int version, IXdrDataType argument, IXdrDataType result)
     {
         lock (_networkClient)
         {
