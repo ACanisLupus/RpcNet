@@ -10,7 +10,7 @@ public abstract class ServerStub : IDisposable
     protected readonly ServerSettings Settings;
     protected readonly XdrVoid Void = new();
 
-    private readonly object _lock = new();
+    private readonly Lock _lock = new();
     private readonly RpcTcpServer? _rpcTcpServer;
     private readonly RpcUdpServer? _rpcUdpServer;
 

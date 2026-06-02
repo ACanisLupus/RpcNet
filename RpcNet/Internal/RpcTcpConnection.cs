@@ -5,8 +5,7 @@ namespace RpcNet.Internal;
 using System.Net;
 using System.Net.Sockets;
 
-// Public for tests
-public sealed class RpcTcpConnection : IDisposable
+internal sealed class RpcTcpConnection : IDisposable
 {
     private readonly ILogger? _logger;
     private readonly TcpReader _reader;

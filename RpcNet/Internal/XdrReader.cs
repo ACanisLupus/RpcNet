@@ -4,8 +4,7 @@ namespace RpcNet.Internal;
 
 using System.Text;
 
-// Public for tests
-public sealed class XdrReader(INetworkReader networkReader) : IXdrReader
+internal sealed class XdrReader(INetworkReader networkReader) : IXdrReader
 {
     private readonly Encoding _encoding = Encoding.UTF8;
 

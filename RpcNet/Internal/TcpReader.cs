@@ -5,8 +5,7 @@ namespace RpcNet.Internal;
 using System.Net;
 using System.Net.Sockets;
 
-// Public for tests
-public sealed class TcpReader : INetworkReader
+internal sealed class TcpReader : INetworkReader
 {
     private const int TcpHeaderLength = 4;
 

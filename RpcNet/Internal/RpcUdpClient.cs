@@ -6,8 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 using RpcNet.PortMapper;
 
-// Public for tests
-public sealed class RpcUdpClient : INetworkClient
+internal sealed class RpcUdpClient : INetworkClient
 {
     private readonly RpcCall _call;
     private readonly Socket _socket;

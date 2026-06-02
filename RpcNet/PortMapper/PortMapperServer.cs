@@ -12,7 +12,7 @@ public sealed class PortMapperServer : PortMapperServerStub
         Result = []
     };
 
-    private readonly object _lock = new();
+    private readonly Lock _lock = new();
     private readonly List<Mapping2> _mappings2 = [];
     private readonly List<Mapping3> _mappings3 = [];
 

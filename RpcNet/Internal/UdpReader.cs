@@ -5,8 +5,7 @@ namespace RpcNet.Internal;
 using System.Net;
 using System.Net.Sockets;
 
-// Public for tests
-public sealed class UdpReader : INetworkReader
+internal sealed class UdpReader : INetworkReader
 {
     private readonly byte[] _buffer;
     private readonly Socket _socket;

@@ -5,8 +5,7 @@ namespace RpcNet.Internal;
 using System.Net;
 using System.Net.Sockets;
 
-// Public for tests
-public sealed class TcpWriter : INetworkWriter
+internal sealed class TcpWriter : INetworkWriter
 {
     private const int TcpHeaderLength = 4;
 

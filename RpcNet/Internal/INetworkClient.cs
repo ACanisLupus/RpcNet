@@ -2,8 +2,7 @@
 
 namespace RpcNet.Internal;
 
-// Public for tests
-public interface INetworkClient : IDisposable
+internal interface INetworkClient : IDisposable
 {
     TimeSpan ReceiveTimeout { get; set; }
     TimeSpan SendTimeout { get; set; }

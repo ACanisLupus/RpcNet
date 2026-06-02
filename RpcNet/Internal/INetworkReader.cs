@@ -4,8 +4,7 @@ namespace RpcNet.Internal;
 
 using System.Net;
 
-// Public for tests
-public interface INetworkReader
+internal interface INetworkReader
 {
     EndPoint BeginReading();
     void EndReading();

@@ -6,8 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 using RpcNet.PortMapper;
 
-// Public for tests
-public sealed class RpcTcpServer : IDisposable
+internal sealed class RpcTcpServer : IDisposable
 {
     private readonly Dictionary<Socket, RpcTcpConnection> _connections = [];
     private readonly IPAddress _ipAddress;

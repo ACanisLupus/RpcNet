@@ -29,7 +29,7 @@ internal sealed class TestTcpReaderWriter
         IPEndPoint? localIpEndPoint = listener.Server.LocalEndPoint as IPEndPoint;
         int port = localIpEndPoint?.Port ?? throw new InvalidOperationException("Could not find local end point.");
         _readerTcpClient = new TcpClient();
-        Task<TcpClient> task = Task.Run(() => listener.AcceptTcpClient());
+        Task<TcpClient> task = Task.Run(listener.AcceptTcpClient);
         _readerTcpClient.Connect(ipAddress, port);
         _writerTcpClient = task.GetAwaiter().GetResult();
         _reader = new TcpReader(_readerTcpClient.Client);

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
@@ -18,5 +18,9 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <IsPackable>true</IsPackable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Test" PublicKey="002400000480000094000000060200000024000052534131000400000100010029f4d34761bed23cb575a439aeab8a43ba8b17e4901bc2603672b130d165c09797ac6b87c0b4cb7b93b87078cd477e485f8ded845f4f9e079ddadec924d8c0189d3006782ae5599cadfc2d12fc4b972ae1d0a7d841c7eacafbf640d62cf046d38695b8771e9c8f3672666b9827daf55d6621d50512fbaa503ecc6917c6c3e7d8" />
+  </ItemGroup>
 
 </Project>

@@ -6,8 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 using RpcNet.PortMapper;
 
-// Public for tests
-public sealed class RpcUdpServer : IDisposable
+internal sealed class RpcUdpServer : IDisposable
 {
     private readonly ILogger? _logger;
     private readonly int _port;

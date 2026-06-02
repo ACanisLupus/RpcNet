@@ -4,8 +4,7 @@ namespace RpcNet.Internal;
 
 using System.Text;
 
-// Public for tests
-public sealed class XdrWriter(INetworkWriter networkWriter) : IXdrWriter
+internal sealed class XdrWriter(INetworkWriter networkWriter) : IXdrWriter
 {
     private readonly Encoding _encoding = Encoding.UTF8;
 

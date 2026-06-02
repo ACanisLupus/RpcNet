@@ -42,6 +42,7 @@ internal sealed class TestErrorHandling
         // For TCP, the argument is bigger than the internal buffer size, so that the handling of buffer overflows is checked as well
         byte[] value = protocol == Protocol.Tcp ? new byte[128000] : new byte[100];
 
+        // ReSharper disable once AccessToDisposedClosure
         RpcException? e = Assert.Throws<RpcException>(() => client.NonExistingProcedure_1(value));
         Assert.That(e?.Message, Is.EqualTo("Call was unsuccessful: ProcedureUnavailable."));
 
@@ -61,6 +62,7 @@ internal sealed class TestErrorHandling
         // For TCP, the argument is bigger than the internal buffer size, so that the handling of buffer overflows is checked as well
         byte[] value = protocol == Protocol.Tcp ? new byte[128000] : new byte[100];
 
+        // ReSharper disable once AccessToDisposedClosure
         RpcException? e = Assert.Throws<RpcException>(() => client.NonExistingProcedure_3(value));
         Assert.That(e?.Message, Is.EqualTo("Call was unsuccessful: ProgramMismatch."));
 
