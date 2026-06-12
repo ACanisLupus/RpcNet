@@ -29,26 +29,41 @@ internal static class TestService2Constants
 
 internal class TestService2Client : ClientStub
 {
-    public TestService2Client(Protocol protocol, IPAddress ipAddress, int port = 0, ClientSettings? clientSettings = default) :
-        base(protocol, ipAddress, port, TestService2Constants.TestServiceProgram2, TestService2Constants.NonExistingVersion, clientSettings)
+    private TestService2Client(INetworkClient networkClient, RpcEndPoint rpcEndPoint, ClientSettings clientSettings) :
+        base(networkClient, rpcEndPoint, clientSettings)
     {
+    }
+
+    public static TestService2Client Connect(Protocol protocol, IPAddress ipAddress, int port = 0, ClientSettings? clientSettings = default)
+    {
+        ArgumentNullException.ThrowIfNull(ipAddress);
+        if (clientSettings is null)
+        {
+            clientSettings = new ClientSettings();
+        }
+
+        RpcEndPoint rpcEndPoint = new(new IPEndPoint(ipAddress, port), protocol);
+
+        INetworkClient networkClient = Connect(protocol, ipAddress, port, TestService2Constants.TestServiceProgram2, TestService2Constants.NonExistingVersion, clientSettings);
+
+        return new TestService2Client(networkClient, rpcEndPoint, clientSettings);
     }
 
     public void ThrowsException_1()
     {
         XdrVoid args = Void;
         XdrVoid result = Void;
-        Settings?.Logger?.BeginCall(RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.ThrowsException, "ThrowsException_1", args);
+        Settings.Logger?.BeginCall(RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.ThrowsException, "ThrowsException_1", args);
         try
         {
             Call(TestService2Constants.ThrowsException, TestService2Constants.TestServiceVersion, args, result);
         }
         catch (Exception e)
         {
-            Settings?.Logger?.EndCall(RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.ThrowsException, "ThrowsException_1", args, e);
+            Settings.Logger?.EndCall(RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.ThrowsException, "ThrowsException_1", args, e);
             throw;
         }
-        Settings?.Logger?.EndCall(RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.ThrowsException, "ThrowsException_1", args, result);
+        Settings.Logger?.EndCall(RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.ThrowsException, "ThrowsException_1", args, result);
     }
 
     private class Echo_1_Arguments : IXdrDataType
@@ -118,17 +133,17 @@ internal class TestService2Client : ClientStub
             Value = value,
         };
         Echo_1_Result result = new();
-        Settings?.Logger?.BeginCall(RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.Echo, "Echo_1", args);
+        Settings.Logger?.BeginCall(RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.Echo, "Echo_1", args);
         try
         {
             Call(TestService2Constants.Echo, TestService2Constants.TestServiceVersion, args, result);
         }
         catch (Exception e)
         {
-            Settings?.Logger?.EndCall(RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.Echo, "Echo_1", args, e);
+            Settings.Logger?.EndCall(RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.Echo, "Echo_1", args, e);
             throw;
         }
-        Settings?.Logger?.EndCall(RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.Echo, "Echo_1", args, result);
+        Settings.Logger?.EndCall(RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.Echo, "Echo_1", args, result);
         return result.Value;
     }
 
@@ -185,17 +200,17 @@ internal class TestService2Client : ClientStub
             SomeBytes = someBytes,
         };
         XdrVoid result = Void;
-        Settings?.Logger?.BeginCall(RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.NonExistingProcedure, "NonExistingProcedure_1", args);
+        Settings.Logger?.BeginCall(RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.NonExistingProcedure, "NonExistingProcedure_1", args);
         try
         {
             Call(TestService2Constants.NonExistingProcedure, TestService2Constants.TestServiceVersion, args, result);
         }
         catch (Exception e)
         {
-            Settings?.Logger?.EndCall(RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.NonExistingProcedure, "NonExistingProcedure_1", args, e);
+            Settings.Logger?.EndCall(RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.NonExistingProcedure, "NonExistingProcedure_1", args, e);
             throw;
         }
-        Settings?.Logger?.EndCall(RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.NonExistingProcedure, "NonExistingProcedure_1", args, result);
+        Settings.Logger?.EndCall(RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.NonExistingProcedure, "NonExistingProcedure_1", args, result);
     }
 
     private class NonExistingProcedure_3_Arguments : IXdrDataType
@@ -251,17 +266,17 @@ internal class TestService2Client : ClientStub
             SomeBytes = someBytes,
         };
         XdrVoid result = Void;
-        Settings?.Logger?.BeginCall(RpcEndPoint, TestService2Constants.NonExistingVersion, TestService2Constants.NonExistingProcedure, "NonExistingProcedure_3", args);
+        Settings.Logger?.BeginCall(RpcEndPoint, TestService2Constants.NonExistingVersion, TestService2Constants.NonExistingProcedure, "NonExistingProcedure_3", args);
         try
         {
             Call(TestService2Constants.NonExistingProcedure, TestService2Constants.NonExistingVersion, args, result);
         }
         catch (Exception e)
         {
-            Settings?.Logger?.EndCall(RpcEndPoint, TestService2Constants.NonExistingVersion, TestService2Constants.NonExistingProcedure, "NonExistingProcedure_3", args, e);
+            Settings.Logger?.EndCall(RpcEndPoint, TestService2Constants.NonExistingVersion, TestService2Constants.NonExistingProcedure, "NonExistingProcedure_3", args, e);
             throw;
         }
-        Settings?.Logger?.EndCall(RpcEndPoint, TestService2Constants.NonExistingVersion, TestService2Constants.NonExistingProcedure, "NonExistingProcedure_3", args, result);
+        Settings.Logger?.EndCall(RpcEndPoint, TestService2Constants.NonExistingVersion, TestService2Constants.NonExistingProcedure, "NonExistingProcedure_3", args, result);
     }
 }
 
@@ -439,17 +454,17 @@ internal abstract class TestService2ServerStub : ServerStub
                 {
                     XdrVoid args = Void;
                     call.RetrieveCall(args);
-                    Settings?.Logger?.BeginCall(call.RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.ThrowsException, "ThrowsException_1", args);
+                    Settings.Logger?.BeginCall(call.RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.ThrowsException, "ThrowsException_1", args);
                     XdrVoid result = Void;
                     try
                     {
                         ThrowsException_1(call.RpcEndPoint);
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.ThrowsException, "ThrowsException_1", args, result);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.ThrowsException, "ThrowsException_1", args, result);
                         call.Reply(result);
                     }
                     catch (Exception e) when (!(e is RpcException))
                     {
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.ThrowsException, "ThrowsException_1", args, e);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.ThrowsException, "ThrowsException_1", args, e);
                         call.SystemError();
                         return;
                     }
@@ -459,17 +474,17 @@ internal abstract class TestService2ServerStub : ServerStub
                 {
                     Echo_1_Arguments args = new();
                     call.RetrieveCall(args);
-                    Settings?.Logger?.BeginCall(call.RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.Echo, "Echo_1", args);
+                    Settings.Logger?.BeginCall(call.RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.Echo, "Echo_1", args);
                     Echo_1_Result result = new();
                     try
                     {
                         result.Value = Echo_1(call.RpcEndPoint, args.Value);
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.Echo, "Echo_1", args, result);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.Echo, "Echo_1", args, result);
                         call.Reply(result);
                     }
                     catch (Exception e) when (!(e is RpcException))
                     {
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.Echo, "Echo_1", args, e);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.Echo, "Echo_1", args, e);
                         call.SystemError();
                         return;
                     }
@@ -479,24 +494,24 @@ internal abstract class TestService2ServerStub : ServerStub
                 {
                     NonExistingProcedure_1_Arguments args = new();
                     call.RetrieveCall(args);
-                    Settings?.Logger?.BeginCall(call.RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.NonExistingProcedure, "NonExistingProcedure_1", args);
+                    Settings.Logger?.BeginCall(call.RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.NonExistingProcedure, "NonExistingProcedure_1", args);
                     XdrVoid result = Void;
                     try
                     {
                         NonExistingProcedure_1(call.RpcEndPoint, args.SomeBytes);
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.NonExistingProcedure, "NonExistingProcedure_1", args, result);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.NonExistingProcedure, "NonExistingProcedure_1", args, result);
                         call.Reply(result);
                     }
                     catch (Exception e) when (!(e is RpcException))
                     {
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.NonExistingProcedure, "NonExistingProcedure_1", args, e);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.NonExistingProcedure, "NonExistingProcedure_1", args, e);
                         call.SystemError();
                         return;
                     }
                     break;
                 }
                 default:
-                    Settings?.Logger?.Error($"Procedure unavailable (Version: {call.Version}, Procedure: {call.Procedure}).");
+                    Settings.Logger?.Error($"Procedure unavailable (Version: {call.Version}, Procedure: {call.Procedure}).");
                     call.ProcedureUnavailable();
                     break;
             }
@@ -509,31 +524,31 @@ internal abstract class TestService2ServerStub : ServerStub
                 {
                     NonExistingProcedure_3_Arguments args = new();
                     call.RetrieveCall(args);
-                    Settings?.Logger?.BeginCall(call.RpcEndPoint, TestService2Constants.NonExistingVersion, TestService2Constants.NonExistingProcedure, "NonExistingProcedure_3", args);
+                    Settings.Logger?.BeginCall(call.RpcEndPoint, TestService2Constants.NonExistingVersion, TestService2Constants.NonExistingProcedure, "NonExistingProcedure_3", args);
                     XdrVoid result = Void;
                     try
                     {
                         NonExistingProcedure_3(call.RpcEndPoint, args.SomeBytes);
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, TestService2Constants.NonExistingVersion, TestService2Constants.NonExistingProcedure, "NonExistingProcedure_3", args, result);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, TestService2Constants.NonExistingVersion, TestService2Constants.NonExistingProcedure, "NonExistingProcedure_3", args, result);
                         call.Reply(result);
                     }
                     catch (Exception e) when (!(e is RpcException))
                     {
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, TestService2Constants.NonExistingVersion, TestService2Constants.NonExistingProcedure, "NonExistingProcedure_3", args, e);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, TestService2Constants.NonExistingVersion, TestService2Constants.NonExistingProcedure, "NonExistingProcedure_3", args, e);
                         call.SystemError();
                         return;
                     }
                     break;
                 }
                 default:
-                    Settings?.Logger?.Error($"Procedure unavailable (Version: {call.Version}, Procedure: {call.Procedure}).");
+                    Settings.Logger?.Error($"Procedure unavailable (Version: {call.Version}, Procedure: {call.Procedure}).");
                     call.ProcedureUnavailable();
                     break;
             }
         }
         else
         {
-            Settings?.Logger?.Error($"Program mismatch (Version: {call.Version}).");
+            Settings.Logger?.Error($"Program mismatch (Version: {call.Version}).");
             call.ProgramMismatch();
         }
     }

@@ -11,7 +11,7 @@ if ((args.Length != 1) || !IPEndPoint.TryParse(args[0], out IPEndPoint? ipEndPoi
 }
 
 TestLogger logger = new("Test Client");
-using (TestServiceClient testTcpClient = new(
+using (TestServiceClient testTcpClient = TestServiceClient.Connect(
            Protocol.Tcp,
            ipEndPoint.Address,
            ipEndPoint.Port,
@@ -26,7 +26,7 @@ using (TestServiceClient testTcpClient = new(
     }
 }
 
-using TestServiceClient testUdpClient = new(
+using TestServiceClient testUdpClient = TestServiceClient.Connect(
     Protocol.Udp,
     ipEndPoint.Address,
     ipEndPoint.Port,

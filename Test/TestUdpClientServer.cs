@@ -36,7 +36,7 @@ internal sealed class TestUdpClientServer
             serverSettings);
         int port = server.Start();
 
-        using RpcUdpClient client = new(ipAddress, port, Program, Version, ClientSettings.Default);
+        using RpcUdpClient client = RpcUdpClient.Connect(ipAddress, port, Program, Version, ClientSettings.Default);
         SimpleStruct argument = new()
         {
             Value = 42

@@ -11,25 +11,14 @@ internal sealed class RpcUdpClient : INetworkClient
     private readonly RpcCall _call;
     private readonly Socket _socket;
 
-    public RpcUdpClient(IPAddress ipAddress, int port, int program, int version, ClientSettings clientSettings)
+    public RpcUdpClient(Socket socket, IPAddress ipAddress, int port, int program)
     {
-        if (port == 0)
-        {
-            port = program == PortMapperConstants.PortMapperProgram
-                ? PortMapperConstants.PortMapperPort
-                : PortMapperUtilities.GetPort(ProtocolKind.Udp, ipAddress, clientSettings.PortMapperPort, program, version, clientSettings);
-        }
+        _socket = socket;
 
-        IPEndPoint remoteIpEndPoint = new(ipAddress, port);
-        _socket = new Socket(ipAddress.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
-        Utilities.FixUdpSocket(_socket);
-
-        ReceiveTimeout = clientSettings.ReceiveTimeout;
-        SendTimeout = clientSettings.SendTimeout;
-
-        UdpReader reader = new(_socket);
-        UdpWriter writer = new(_socket);
-        _call = new RpcCall(program, remoteIpEndPoint, reader, writer);
+        IPEndPoint remoteEndPoint = new(ipAddress, port);
+        UdpReader reader = new(socket);
+        UdpWriter writer = new(socket);
+        _call = new RpcCall(program, remoteEndPoint, reader, writer);
     }
 
     public TimeSpan ReceiveTimeout
@@ -42,6 +31,24 @@ internal sealed class RpcUdpClient : INetworkClient
     {
         get => Utilities.GetSendTimeout(_socket);
         set => Utilities.SetSendTimeout(_socket, value);
+    }
+
+    public static RpcUdpClient Connect(IPAddress ipAddress, int port, int program, int version, ClientSettings clientSettings)
+    {
+        if (port == 0)
+        {
+            port = program == PortMapperConstants.PortMapperProgram
+                ? PortMapperConstants.PortMapperPort
+                : PortMapperUtilities.GetPort(ProtocolKind.Udp, ipAddress, clientSettings.PortMapperPort, program, version, clientSettings);
+        }
+
+        Socket socket = new(ipAddress.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
+        Utilities.FixUdpSocket(socket);
+
+        Utilities.SetReceiveTimeout(socket, clientSettings.ReceiveTimeout);
+        Utilities.SetSendTimeout(socket, clientSettings.SendTimeout);
+
+        return new RpcUdpClient(socket, ipAddress, port, program);
     }
 
     public void Call(int procedure, int version, IXdrDataType argument, IXdrDataType result) =>

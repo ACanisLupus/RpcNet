@@ -10,7 +10,7 @@ public abstract class ServerStub : IDisposable
     protected readonly ServerSettings Settings;
     protected readonly XdrVoid Void = new();
 
-    private readonly Lock _lock = new();
+    private readonly SemaphoreSlim _lock = new(1, 1);
     private readonly RpcTcpServer? _rpcTcpServer;
     private readonly RpcUdpServer? _rpcUdpServer;
 
@@ -80,9 +80,14 @@ public abstract class ServerStub : IDisposable
 
     private void DispatchReceivedCallWithLock(ReceivedRpcCall call)
     {
-        lock (_lock)
+        _lock.Wait();
+        try
         {
             DispatchReceivedCall(call);
+        }
+        finally
+        {
+            _lock.Release();
         }
     }
 }

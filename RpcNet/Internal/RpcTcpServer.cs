@@ -10,8 +10,7 @@ internal sealed class RpcTcpServer : IDisposable
 {
     private readonly Dictionary<Socket, RpcTcpConnection> _connections = [];
     private readonly IPAddress _ipAddress;
-    private readonly ILogger? _logger;
-    private readonly int _portMapperPort;
+    private readonly SemaphoreSlim _lockConnections = new(1, 1);
     private readonly int _program;
     private readonly Action<ReceivedRpcCall> _receivedCallDispatcher;
     private readonly Socket _socket;
@@ -35,11 +34,10 @@ internal sealed class RpcTcpServer : IDisposable
         _program = program;
         _versions = versions;
         _receivedCallDispatcher = receivedCallDispatcher;
-        _logger = serverSettings.Logger;
         _ipAddress = ipAddress;
         _port = port;
-        _portMapperPort = serverSettings.PortMapperPort;
         _socket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
         if (ipAddress.AddressFamily == AddressFamily.InterNetworkV6)
         {
             try
@@ -48,7 +46,7 @@ internal sealed class RpcTcpServer : IDisposable
             }
             catch (SocketException e)
             {
-                _logger?.Error($"Could not enable dual mode. Socket error code: {e.SocketErrorCode}. Only IPv6 is available.");
+                serverSettings.Logger?.Error($"Could not enable dual mode. Socket error code: {e.SocketErrorCode}. Only IPv6 is available.");
             }
         }
     }
@@ -82,9 +80,10 @@ internal sealed class RpcTcpServer : IDisposable
             _port = localEndPoint.Port;
         }
 
-        if ((_program != PortMapperConstants.PortMapperProgram) && (_portMapperPort != 0))
+        if ((_program != PortMapperConstants.PortMapperProgram) && (_serverSettings.PortMapperPort != 0))
         {
-            lock (_connections)
+            _lockConnections.Wait();
+            try
             {
                 ClientSettings clientSettings = new()
                 {
@@ -94,12 +93,16 @@ internal sealed class RpcTcpServer : IDisposable
                 };
                 foreach (int version in _versions)
                 {
-                    PortMapperUtilities.UnsetAndSetPort(_ipAddress.AddressFamily, ProtocolKind.Tcp, _portMapperPort, _port, _program, version, clientSettings);
+                    PortMapperUtilities.UnsetAndSetPort(_ipAddress.AddressFamily, ProtocolKind.Tcp, _serverSettings.PortMapperPort, _port, _program, version, clientSettings);
                 }
+            }
+            finally
+            {
+                _lockConnections.Release();
             }
         }
 
-        _logger?.Info($"TCP Server listening on {localEndPoint}...");
+        _serverSettings.Logger?.Info($"TCP Server listening on {localEndPoint}...");
 
         _acceptingThread = new Thread(Accepting)
         {
@@ -125,7 +128,8 @@ internal sealed class RpcTcpServer : IDisposable
 
         _socket.Dispose();
 
-        lock (_connections)
+        _lockConnections.Wait();
+        try
         {
             foreach (RpcTcpConnection connection in _connections.Values)
             {
@@ -133,6 +137,10 @@ internal sealed class RpcTcpServer : IDisposable
             }
 
             _connections.Clear();
+        }
+        finally
+        {
+            _lockConnections.Release();
         }
 
         Interlocked.Exchange(ref _acceptingThread, null)?.Join();
@@ -147,7 +155,8 @@ internal sealed class RpcTcpServer : IDisposable
             try
             {
                 sockets.Clear();
-                lock (_connections)
+                _lockConnections.Wait();
+                try
                 {
                     // + 1 for the server
                     sockets.Capacity = _connections.Count + 1;
@@ -156,19 +165,24 @@ internal sealed class RpcTcpServer : IDisposable
                         sockets.Add(socket);
                     }
                 }
+                finally
+                {
+                    _lockConnections.Release();
+                }
 
                 sockets.Add(_socket);
 
                 Socket.Select(sockets, null, null, 1000000);
 
-                lock (_connections)
+                _lockConnections.Wait();
+                try
                 {
                     for (int i = sockets.Count - 1; i >= 0; i--)
                     {
                         if (sockets[i] == _socket)
                         {
                             Socket acceptedSocket = _socket.Accept();
-                            RpcTcpConnection connection = new(acceptedSocket, _program, _versions, _receivedCallDispatcher, _logger);
+                            RpcTcpConnection connection = new(acceptedSocket, _program, _versions, _receivedCallDispatcher, _serverSettings.Logger);
 
                             _connections.Add(acceptedSocket, connection);
                         }
@@ -183,19 +197,23 @@ internal sealed class RpcTcpServer : IDisposable
                         }
                     }
                 }
+                finally
+                {
+                    _lockConnections.Release();
+                }
             }
             catch (SocketException e)
             {
                 if (!_stopAccepting)
                 {
-                    _logger?.Error($"Could not accept TCP client. Socket error code: {e.SocketErrorCode}");
+                    _serverSettings.Logger?.Error($"Could not accept TCP client. Socket error code: {e.SocketErrorCode}");
                 }
             }
             catch (Exception e)
             {
                 if (!_stopAccepting)
                 {
-                    _logger?.Error($"The following error occurred while accepting TCP clients: {e}");
+                    _serverSettings.Logger?.Error($"The following error occurred while accepting TCP clients: {e}");
                 }
             }
         }

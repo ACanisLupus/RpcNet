@@ -37,7 +37,7 @@ internal sealed class TestErrorHandling
     {
         int port = protocol == Protocol.Tcp ? TestServer.TcpPort : TestServer.UdpPort;
 
-        using TestService2Client client = new(protocol, _ipAddress, port);
+        using TestService2Client client = TestService2Client.Connect(protocol, _ipAddress, port);
 
         // For TCP, the argument is bigger than the internal buffer size, so that the handling of buffer overflows is checked as well
         byte[] value = protocol == Protocol.Tcp ? new byte[128000] : new byte[100];
@@ -57,7 +57,7 @@ internal sealed class TestErrorHandling
     {
         int port = protocol == Protocol.Tcp ? TestServer.TcpPort : TestServer.UdpPort;
 
-        using TestService2Client client = new(protocol, _ipAddress, port);
+        using TestService2Client client = TestService2Client.Connect(protocol, _ipAddress, port);
 
         // For TCP, the argument is bigger than the internal buffer size, so that the handling of buffer overflows is checked as well
         byte[] value = protocol == Protocol.Tcp ? new byte[128000] : new byte[100];
@@ -77,7 +77,7 @@ internal sealed class TestErrorHandling
     {
         int port = protocol == Protocol.Tcp ? TestServer.TcpPort : TestServer.UdpPort;
 
-        using TestService2Client client = new(protocol, _ipAddress, port);
+        using TestService2Client client = TestService2Client.Connect(protocol, _ipAddress, port);
 
         RpcException? e = Assert.Throws<RpcException>(client.ThrowsException_1);
         Assert.That(e?.Message, Is.EqualTo("Call was unsuccessful: SystemError."));

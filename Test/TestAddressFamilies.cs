@@ -46,7 +46,7 @@ internal sealed class TestAddressFamilies
             PortMapperPort = PortMapperServer.TcpPort
         };
 
-        using TestServiceClient client = new(protocol, clientIpAddress, 0, clientSettings);
+        using TestServiceClient client = TestServiceClient.Connect(protocol, clientIpAddress, 0, clientSettings);
 
         int result = client.Echo_1(42);
         Assert.That(result, Is.EqualTo(42));

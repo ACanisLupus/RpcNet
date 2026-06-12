@@ -12,7 +12,7 @@ public sealed class PortMapperServer : PortMapperServerStub
         Result = []
     };
 
-    private readonly Lock _lock = new();
+    private readonly SemaphoreSlim _lock = new(1, 1);
     private readonly List<Mapping2> _mappings2 = [];
     private readonly List<Mapping3> _mappings3 = [];
 
@@ -57,7 +57,8 @@ public sealed class PortMapperServer : PortMapperServerStub
 
     public override bool Set_2(RpcEndPoint rpcEndPoint, Mapping2 mapping)
     {
-        lock (_lock)
+        _lock.Wait();
+        try
         {
             if (_mappings2.Any(m => IsProgramAndVersionAndProtocolEqual(m, mapping)))
             {
@@ -67,11 +68,16 @@ public sealed class PortMapperServer : PortMapperServerStub
             _mappings2.Add(mapping);
             return true;
         }
+        finally
+        {
+            _lock.Release();
+        }
     }
 
     public override bool Unset_2(RpcEndPoint rpcEndPoint, Mapping2 mapping)
     {
-        lock (_lock)
+        _lock.Wait();
+        try
         {
             Equal2 equal = IsProgramAndVersionAndProtocolEqual;
             if (mapping.Protocol == ProtocolKind.Unknown)
@@ -81,11 +87,16 @@ public sealed class PortMapperServer : PortMapperServerStub
 
             return _mappings2.RemoveAll(tmpMapping => equal(tmpMapping, mapping)) > 0;
         }
+        finally
+        {
+            _lock.Release();
+        }
     }
 
     public override int GetPort_2(RpcEndPoint rpcEndPoint, Mapping2 mapping2)
     {
-        lock (_lock)
+        _lock.Wait();
+        try
         {
             Mapping2? found2 = _mappings2.FirstOrDefault(m => IsProgramAndVersionAndProtocolEqual(m, mapping2));
             if (found2 is not null)
@@ -102,11 +113,16 @@ public sealed class PortMapperServer : PortMapperServerStub
 
             return 0;
         }
+        finally
+        {
+            _lock.Release();
+        }
     }
 
     public override MappingNodeHead2 Dump_2(RpcEndPoint rpcEndPoint)
     {
-        lock (_lock)
+        _lock.Wait();
+        try
         {
             MappingNodeHead2 mappingNodeNullable = new();
 
@@ -135,13 +151,18 @@ public sealed class PortMapperServer : PortMapperServerStub
 
             return mappingNodeNullable;
         }
+        finally
+        {
+            _lock.Release();
+        }
     }
 
     public override CallResult2 Call_2(RpcEndPoint rpcEndPoint, CallArguments callArguments) => _callResult;
 
     public override bool Set_3(RpcEndPoint rpcEndPoint, Mapping3 mapping3)
     {
-        lock (_lock)
+        _lock.Wait();
+        try
         {
             if (_mappings3.Any(m => IsProgramAndVersionAndProtocolEqual(m, mapping3)))
             {
@@ -151,21 +172,31 @@ public sealed class PortMapperServer : PortMapperServerStub
             _mappings3.Add(mapping3);
             return true;
         }
+        finally
+        {
+            _lock.Release();
+        }
     }
 
     public override bool Unset_3(RpcEndPoint rpcEndPoint, Mapping3 mapping3)
     {
-        lock (_lock)
+        _lock.Wait();
+        try
         {
             Equal3 equal = IsProgramAndVersionAndProtocolEqual;
 
             return _mappings3.RemoveAll(tmpMapping => equal(tmpMapping, mapping3)) > 0;
         }
+        finally
+        {
+            _lock.Release();
+        }
     }
 
     public override string GetAddress_3(RpcEndPoint rpcEndPoint, Mapping3 mapping3)
     {
-        lock (_lock)
+        _lock.Wait();
+        try
         {
             Mapping3? found3 = _mappings3.FirstOrDefault(m => IsProgramAndVersionAndProtocolEqual(m, mapping3));
             if (found3 is not null)
@@ -181,6 +212,10 @@ public sealed class PortMapperServer : PortMapperServerStub
             }
 
             return string.Empty;
+        }
+        finally
+        {
+            _lock.Release();
         }
     }
 

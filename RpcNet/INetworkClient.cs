@@ -1,8 +1,8 @@
 // Copyright by Artur Wolf
 
-namespace RpcNet.Internal;
+namespace RpcNet;
 
-internal interface INetworkClient : IDisposable
+public interface INetworkClient : IDisposable
 {
     TimeSpan ReceiveTimeout { get; set; }
     TimeSpan SendTimeout { get; set; }

@@ -10,34 +10,15 @@ internal sealed class RpcTcpClient : INetworkClient
 {
     private readonly RpcCall _call;
     private readonly Socket _socket;
-    private readonly ClientSettings _clientSettings;
-    private readonly EndPoint _remoteEndPoint;
 
-    public RpcTcpClient(IPAddress ipAddress, int port, int program, int version, ClientSettings clientSettings)
+    private RpcTcpClient(Socket socket, IPAddress ipAddress, int port, int program)
     {
-        _clientSettings = clientSettings;
+        _socket = socket;
 
-        if (port == 0)
-        {
-            port = program == PortMapperConstants.PortMapperProgram
-                ? PortMapperConstants.PortMapperPort
-                : PortMapperUtilities.GetPort(ProtocolKind.Tcp, ipAddress, _clientSettings.PortMapperPort, program, version, clientSettings);
-        }
-
-        try
-        {
-            _remoteEndPoint = new IPEndPoint(ipAddress, port);
-            _socket = EstablishConnection();
-        }
-        catch (RpcException)
-        {
-            _remoteEndPoint = new IPEndPoint(Utilities.GetAlternateIpAddress(ipAddress), port);
-            _socket = EstablishConnection();
-        }
-
+        IPEndPoint remoteEndPoint = new(ipAddress, port);
         TcpReader tcpReader = new(_socket);
         TcpWriter tcpWriter = new(_socket);
-        _call = new RpcCall(program, _remoteEndPoint, tcpReader, tcpWriter);
+        _call = new RpcCall(program, remoteEndPoint, tcpReader, tcpWriter);
     }
 
     public TimeSpan ReceiveTimeout
@@ -52,25 +33,44 @@ internal sealed class RpcTcpClient : INetworkClient
         set => Utilities.SetSendTimeout(_socket, value);
     }
 
+    public static RpcTcpClient Connect(IPAddress ipAddress, int port, int program, int version, ClientSettings clientSettings)
+    {
+        if (port == 0)
+        {
+            port = program == PortMapperConstants.PortMapperProgram
+                ? PortMapperConstants.PortMapperPort
+                : PortMapperUtilities.GetPort(ProtocolKind.Tcp, ipAddress, clientSettings.PortMapperPort, program, version, clientSettings);
+        }
+
+        Socket socket = new(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
+        Utilities.SetReceiveTimeout(socket, clientSettings.ReceiveTimeout);
+        Utilities.SetSendTimeout(socket, clientSettings.SendTimeout);
+
+        try
+        {
+            EstablishConnection(socket, ipAddress, port);
+        }
+        catch (RpcException)
+        {
+            EstablishConnection(socket, Utilities.GetAlternateIpAddress(ipAddress), port);
+        }
+
+        return new RpcTcpClient(socket, ipAddress, port, program);
+    }
+
     public void Call(int procedure, int version, IXdrDataType argument, IXdrDataType result) => _call.SendCall(procedure, version, argument, result);
     public void Dispose() => _socket.Dispose();
 
-    private Socket EstablishConnection()
+    private static void EstablishConnection(Socket socket, IPAddress ipAddress, int port)
     {
         try
         {
-            Socket socket = new(_remoteEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-
-            Utilities.SetReceiveTimeout(socket, _clientSettings.ReceiveTimeout);
-            Utilities.SetSendTimeout(socket, _clientSettings.SendTimeout);
-
-            socket.Connect(_remoteEndPoint);
-
-            return socket;
+            socket.Connect(ipAddress, port);
         }
         catch (SocketException e)
         {
-            throw new RpcException($"Could not connect to {_remoteEndPoint}. Socket error code: {e.SocketErrorCode}.");
+            throw new RpcException($"Could not connect to {ipAddress}:{port}. Socket error code: {e.SocketErrorCode}.");
         }
     }
 }

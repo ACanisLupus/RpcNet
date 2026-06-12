@@ -41,7 +41,7 @@ internal class Procedure
         _procedureResult.DumpClientResultCreation(writer, indent + 1);
         writer.WriteLine(
             indent + 1,
-            $"Settings?.Logger?.BeginCall(RpcEndPoint, {_versionConstant}, {_argumentConstant}, \"{FullName}\", {_procedureArguments.VariableName});");
+            $"Settings.Logger?.BeginCall(RpcEndPoint, {_versionConstant}, {_argumentConstant}, \"{FullName}\", {_procedureArguments.VariableName});");
         writer.WriteLine(indent + 1, "try");
         writer.WriteLine(indent + 1, "{");
         writer.WriteLine(indent + 2, $"Call({_argumentConstant}, {_versionConstant}, {_procedureArguments.VariableName}, {ProcedureResult.VariableName});");
@@ -50,12 +50,12 @@ internal class Procedure
         writer.WriteLine(indent + 1, "{");
         writer.WriteLine(
             indent + 2,
-            $"Settings?.Logger?.EndCall(RpcEndPoint, {_versionConstant}, {_argumentConstant}, \"{FullName}\", {_procedureArguments.VariableName}, e);");
+            $"Settings.Logger?.EndCall(RpcEndPoint, {_versionConstant}, {_argumentConstant}, \"{FullName}\", {_procedureArguments.VariableName}, e);");
         writer.WriteLine(indent + 2, "throw;");
         writer.WriteLine(indent + 1, "}");
         writer.WriteLine(
             indent + 1,
-            $"Settings?.Logger?.EndCall(RpcEndPoint, {_versionConstant}, {_argumentConstant}, \"{FullName}\", {_procedureArguments.VariableName}, {ProcedureResult.VariableName});");
+            $"Settings.Logger?.EndCall(RpcEndPoint, {_versionConstant}, {_argumentConstant}, \"{FullName}\", {_procedureArguments.VariableName}, {ProcedureResult.VariableName});");
         _procedureResult.DumpClientReturn(writer, indent + 1);
         writer.WriteLine(indent, "}");
     }
@@ -82,7 +82,7 @@ internal class Procedure
         writer.WriteLine(indent + 1, $"call.RetrieveCall({_procedureArguments.VariableName});");
         writer.WriteLine(
             indent + 1,
-            $"Settings?.Logger?.BeginCall(call.RpcEndPoint, {_versionConstant}, {_argumentConstant}, \"{FullName}\", {_procedureArguments.VariableName});");
+            $"Settings.Logger?.BeginCall(call.RpcEndPoint, {_versionConstant}, {_argumentConstant}, \"{FullName}\", {_procedureArguments.VariableName});");
         _procedureResult.DumpServerResultCreation(writer, indent + 1);
         string result = _procedureResult.GetServerResult();
         string arguments = _procedureArguments.GetArgumentsForServer();
@@ -96,14 +96,14 @@ internal class Procedure
         writer.WriteLine(indent + 2, $"{result}{FullName}(call.RpcEndPoint{arguments});");
         writer.WriteLine(
             indent + 2,
-            $"Settings?.Logger?.EndCall(call.RpcEndPoint, {_versionConstant}, {_argumentConstant}, \"{FullName}\", {_procedureArguments.VariableName}, {ProcedureResult.VariableName});");
+            $"Settings.Logger?.EndCall(call.RpcEndPoint, {_versionConstant}, {_argumentConstant}, \"{FullName}\", {_procedureArguments.VariableName}, {ProcedureResult.VariableName});");
         writer.WriteLine(indent + 2, "call.Reply(result);");
         writer.WriteLine(indent + 1, "}");
         writer.WriteLine(indent + 1, "catch (Exception e) when (!(e is RpcException))");
         writer.WriteLine(indent + 1, "{");
         writer.WriteLine(
             indent + 2,
-            $"Settings?.Logger?.EndCall(call.RpcEndPoint, {_versionConstant}, {_argumentConstant}, \"{FullName}\", {_procedureArguments.VariableName}, e);");
+            $"Settings.Logger?.EndCall(call.RpcEndPoint, {_versionConstant}, {_argumentConstant}, \"{FullName}\", {_procedureArguments.VariableName}, e);");
         writer.WriteLine(indent + 2, "call.SystemError();");
         writer.WriteLine(indent + 2, "return;");
         writer.WriteLine(indent + 1, "}");

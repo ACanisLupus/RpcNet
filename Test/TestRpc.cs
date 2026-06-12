@@ -54,7 +54,7 @@ internal sealed class TestRpc
         {
             PortMapperPort = PortMapperServer.TcpPort
         };
-        using TestServiceClient client = new(protocol, _ipAddress, 0, clientSettings);
+        using TestServiceClient client = TestServiceClient.Connect(protocol, _ipAddress, 0, clientSettings);
         SimpleStruct result = client.SimpleStructSimpleStruct_2(
             new SimpleStruct
             {

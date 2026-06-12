@@ -164,7 +164,7 @@ internal static class Program
     }
 
     private static PortMapperClient CreateClient(IPEndPoint ipEndPoint) =>
-        new(Protocol.Tcp, ipEndPoint.Address, ipEndPoint.Port);
+        PortMapperClient.Connect(Protocol.Tcp, ipEndPoint.Address, ipEndPoint.Port);
 
     private static void PrintUsage()
     {

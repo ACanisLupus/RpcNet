@@ -1451,26 +1451,41 @@ public partial class StatisticsByVersion : IXdrDataType
 
 public class PortMapperClient : ClientStub
 {
-    public PortMapperClient(Protocol protocol, IPAddress ipAddress, int port = 0, ClientSettings? clientSettings = default) :
-        base(protocol, ipAddress, port, PortMapperConstants.PortMapperProgram, PortMapperConstants.PortMapperVersion4, clientSettings)
+    private PortMapperClient(INetworkClient networkClient, RpcEndPoint rpcEndPoint, ClientSettings clientSettings) :
+        base(networkClient, rpcEndPoint, clientSettings)
     {
+    }
+
+    public static PortMapperClient Connect(Protocol protocol, IPAddress ipAddress, int port = 0, ClientSettings? clientSettings = default)
+    {
+        ArgumentNullException.ThrowIfNull(ipAddress);
+        if (clientSettings is null)
+        {
+            clientSettings = new ClientSettings();
+        }
+
+        RpcEndPoint rpcEndPoint = new(new IPEndPoint(ipAddress, port), protocol);
+
+        INetworkClient networkClient = Connect(protocol, ipAddress, port, PortMapperConstants.PortMapperProgram, PortMapperConstants.PortMapperVersion4, clientSettings);
+
+        return new PortMapperClient(networkClient, rpcEndPoint, clientSettings);
     }
 
     public void Ping_2()
     {
         XdrVoid args = Void;
         XdrVoid result = Void;
-        Settings?.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Ping, "Ping_2", args);
+        Settings.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Ping, "Ping_2", args);
         try
         {
             Call(PortMapperConstants.Ping, PortMapperConstants.PortMapperVersion2, args, result);
         }
         catch (Exception e)
         {
-            Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Ping, "Ping_2", args, e);
+            Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Ping, "Ping_2", args, e);
             throw;
         }
-        Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Ping, "Ping_2", args, result);
+        Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Ping, "Ping_2", args, result);
     }
 
     private class Set_2_Result : IXdrDataType
@@ -1506,17 +1521,17 @@ public class PortMapperClient : ClientStub
     public bool Set_2(Mapping2 mapping2)
     {
         Set_2_Result result = new();
-        Settings?.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Set, "Set_2", mapping2);
+        Settings.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Set, "Set_2", mapping2);
         try
         {
             Call(PortMapperConstants.Set, PortMapperConstants.PortMapperVersion2, mapping2, result);
         }
         catch (Exception e)
         {
-            Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Set, "Set_2", mapping2, e);
+            Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Set, "Set_2", mapping2, e);
             throw;
         }
-        Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Set, "Set_2", mapping2, result);
+        Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Set, "Set_2", mapping2, result);
         return result.Value;
     }
 
@@ -1553,17 +1568,17 @@ public class PortMapperClient : ClientStub
     public bool Unset_2(Mapping2 mapping2)
     {
         Unset_2_Result result = new();
-        Settings?.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Unset, "Unset_2", mapping2);
+        Settings.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Unset, "Unset_2", mapping2);
         try
         {
             Call(PortMapperConstants.Unset, PortMapperConstants.PortMapperVersion2, mapping2, result);
         }
         catch (Exception e)
         {
-            Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Unset, "Unset_2", mapping2, e);
+            Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Unset, "Unset_2", mapping2, e);
             throw;
         }
-        Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Unset, "Unset_2", mapping2, result);
+        Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Unset, "Unset_2", mapping2, result);
         return result.Value;
     }
 
@@ -1600,17 +1615,17 @@ public class PortMapperClient : ClientStub
     public int GetPort_2(Mapping2 mapping2)
     {
         GetPort_2_Result result = new();
-        Settings?.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.GetPort, "GetPort_2", mapping2);
+        Settings.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.GetPort, "GetPort_2", mapping2);
         try
         {
             Call(PortMapperConstants.GetPort, PortMapperConstants.PortMapperVersion2, mapping2, result);
         }
         catch (Exception e)
         {
-            Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.GetPort, "GetPort_2", mapping2, e);
+            Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.GetPort, "GetPort_2", mapping2, e);
             throw;
         }
-        Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.GetPort, "GetPort_2", mapping2, result);
+        Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.GetPort, "GetPort_2", mapping2, result);
         return result.Value;
     }
 
@@ -1618,34 +1633,34 @@ public class PortMapperClient : ClientStub
     {
         XdrVoid args = Void;
         MappingNodeHead2 result = new();
-        Settings?.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Dump, "Dump_2", args);
+        Settings.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Dump, "Dump_2", args);
         try
         {
             Call(PortMapperConstants.Dump, PortMapperConstants.PortMapperVersion2, args, result);
         }
         catch (Exception e)
         {
-            Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Dump, "Dump_2", args, e);
+            Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Dump, "Dump_2", args, e);
             throw;
         }
-        Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Dump, "Dump_2", args, result);
+        Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Dump, "Dump_2", args, result);
         return result;
     }
 
     public CallResult2 Call_2(CallArguments callArguments)
     {
         CallResult2 result = new();
-        Settings?.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Call, "Call_2", callArguments);
+        Settings.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Call, "Call_2", callArguments);
         try
         {
             Call(PortMapperConstants.Call, PortMapperConstants.PortMapperVersion2, callArguments, result);
         }
         catch (Exception e)
         {
-            Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Call, "Call_2", callArguments, e);
+            Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Call, "Call_2", callArguments, e);
             throw;
         }
-        Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Call, "Call_2", callArguments, result);
+        Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Call, "Call_2", callArguments, result);
         return result;
     }
 
@@ -1682,17 +1697,17 @@ public class PortMapperClient : ClientStub
     public bool Set_3(Mapping3 mapping3)
     {
         Set_3_Result result = new();
-        Settings?.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Set, "Set_3", mapping3);
+        Settings.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Set, "Set_3", mapping3);
         try
         {
             Call(PortMapperConstants.Set, PortMapperConstants.PortMapperVersion3, mapping3, result);
         }
         catch (Exception e)
         {
-            Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Set, "Set_3", mapping3, e);
+            Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Set, "Set_3", mapping3, e);
             throw;
         }
-        Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Set, "Set_3", mapping3, result);
+        Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Set, "Set_3", mapping3, result);
         return result.Value;
     }
 
@@ -1729,17 +1744,17 @@ public class PortMapperClient : ClientStub
     public bool Unset_3(Mapping3 mapping3)
     {
         Unset_3_Result result = new();
-        Settings?.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Unset, "Unset_3", mapping3);
+        Settings.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Unset, "Unset_3", mapping3);
         try
         {
             Call(PortMapperConstants.Unset, PortMapperConstants.PortMapperVersion3, mapping3, result);
         }
         catch (Exception e)
         {
-            Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Unset, "Unset_3", mapping3, e);
+            Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Unset, "Unset_3", mapping3, e);
             throw;
         }
-        Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Unset, "Unset_3", mapping3, result);
+        Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Unset, "Unset_3", mapping3, result);
         return result.Value;
     }
 
@@ -1776,17 +1791,17 @@ public class PortMapperClient : ClientStub
     public string GetAddress_3(Mapping3 mapping3)
     {
         GetAddress_3_Result result = new();
-        Settings?.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetAddress, "GetAddress_3", mapping3);
+        Settings.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetAddress, "GetAddress_3", mapping3);
         try
         {
             Call(PortMapperConstants.GetAddress, PortMapperConstants.PortMapperVersion3, mapping3, result);
         }
         catch (Exception e)
         {
-            Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetAddress, "GetAddress_3", mapping3, e);
+            Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetAddress, "GetAddress_3", mapping3, e);
             throw;
         }
-        Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetAddress, "GetAddress_3", mapping3, result);
+        Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetAddress, "GetAddress_3", mapping3, result);
         return result.Value;
     }
 
@@ -1794,34 +1809,34 @@ public class PortMapperClient : ClientStub
     {
         XdrVoid args = Void;
         MappingNodeHead3 result = new();
-        Settings?.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Dump, "Dump_3", args);
+        Settings.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Dump, "Dump_3", args);
         try
         {
             Call(PortMapperConstants.Dump, PortMapperConstants.PortMapperVersion3, args, result);
         }
         catch (Exception e)
         {
-            Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Dump, "Dump_3", args, e);
+            Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Dump, "Dump_3", args, e);
             throw;
         }
-        Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Dump, "Dump_3", args, result);
+        Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Dump, "Dump_3", args, result);
         return result;
     }
 
     public CallResult3 Call_3(CallArguments callArguments)
     {
         CallResult3 result = new();
-        Settings?.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Call, "Call_3", callArguments);
+        Settings.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Call, "Call_3", callArguments);
         try
         {
             Call(PortMapperConstants.Call, PortMapperConstants.PortMapperVersion3, callArguments, result);
         }
         catch (Exception e)
         {
-            Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Call, "Call_3", callArguments, e);
+            Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Call, "Call_3", callArguments, e);
             throw;
         }
-        Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Call, "Call_3", callArguments, result);
+        Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Call, "Call_3", callArguments, result);
         return result;
     }
 
@@ -1859,17 +1874,17 @@ public class PortMapperClient : ClientStub
     {
         XdrVoid args = Void;
         GetTime_3_Result result = new();
-        Settings?.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetTime, "GetTime_3", args);
+        Settings.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetTime, "GetTime_3", args);
         try
         {
             Call(PortMapperConstants.GetTime, PortMapperConstants.PortMapperVersion3, args, result);
         }
         catch (Exception e)
         {
-            Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetTime, "GetTime_3", args, e);
+            Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetTime, "GetTime_3", args, e);
             throw;
         }
-        Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetTime, "GetTime_3", args, result);
+        Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetTime, "GetTime_3", args, result);
         return result.Value;
     }
 
@@ -1910,17 +1925,17 @@ public class PortMapperClient : ClientStub
             UniversalAddress = universalAddress,
         };
         NetworkBuffer result = new();
-        Settings?.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress_3", args);
+        Settings.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress_3", args);
         try
         {
             Call(PortMapperConstants.UniversalAddressToTransportSpecificAddress, PortMapperConstants.PortMapperVersion3, args, result);
         }
         catch (Exception e)
         {
-            Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress_3", args, e);
+            Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress_3", args, e);
             throw;
         }
-        Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress_3", args, result);
+        Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress_3", args, result);
         return result;
     }
 
@@ -1957,17 +1972,17 @@ public class PortMapperClient : ClientStub
     public string TransportSpecificAddressToUniversalAddress_3(NetworkBuffer networkBuffer)
     {
         TransportSpecificAddressToUniversalAddress_3_Result result = new();
-        Settings?.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress_3", networkBuffer);
+        Settings.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress_3", networkBuffer);
         try
         {
             Call(PortMapperConstants.TransportSpecificAddressToUniversalAddress, PortMapperConstants.PortMapperVersion3, networkBuffer, result);
         }
         catch (Exception e)
         {
-            Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress_3", networkBuffer, e);
+            Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress_3", networkBuffer, e);
             throw;
         }
-        Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress_3", networkBuffer, result);
+        Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress_3", networkBuffer, result);
         return result.Value;
     }
 
@@ -2004,17 +2019,17 @@ public class PortMapperClient : ClientStub
     public bool Set_4(Mapping3 mapping3)
     {
         Set_4_Result result = new();
-        Settings?.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Set, "Set_4", mapping3);
+        Settings.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Set, "Set_4", mapping3);
         try
         {
             Call(PortMapperConstants.Set, PortMapperConstants.PortMapperVersion4, mapping3, result);
         }
         catch (Exception e)
         {
-            Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Set, "Set_4", mapping3, e);
+            Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Set, "Set_4", mapping3, e);
             throw;
         }
-        Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Set, "Set_4", mapping3, result);
+        Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Set, "Set_4", mapping3, result);
         return result.Value;
     }
 
@@ -2051,17 +2066,17 @@ public class PortMapperClient : ClientStub
     public bool Unset_4(Mapping3 mapping3)
     {
         Unset_4_Result result = new();
-        Settings?.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Unset, "Unset_4", mapping3);
+        Settings.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Unset, "Unset_4", mapping3);
         try
         {
             Call(PortMapperConstants.Unset, PortMapperConstants.PortMapperVersion4, mapping3, result);
         }
         catch (Exception e)
         {
-            Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Unset, "Unset_4", mapping3, e);
+            Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Unset, "Unset_4", mapping3, e);
             throw;
         }
-        Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Unset, "Unset_4", mapping3, result);
+        Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Unset, "Unset_4", mapping3, result);
         return result.Value;
     }
 
@@ -2098,17 +2113,17 @@ public class PortMapperClient : ClientStub
     public string GetAddress_4(Mapping3 mapping3)
     {
         GetAddress_4_Result result = new();
-        Settings?.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddress, "GetAddress_4", mapping3);
+        Settings.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddress, "GetAddress_4", mapping3);
         try
         {
             Call(PortMapperConstants.GetAddress, PortMapperConstants.PortMapperVersion4, mapping3, result);
         }
         catch (Exception e)
         {
-            Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddress, "GetAddress_4", mapping3, e);
+            Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddress, "GetAddress_4", mapping3, e);
             throw;
         }
-        Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddress, "GetAddress_4", mapping3, result);
+        Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddress, "GetAddress_4", mapping3, result);
         return result.Value;
     }
 
@@ -2116,34 +2131,34 @@ public class PortMapperClient : ClientStub
     {
         XdrVoid args = Void;
         MappingNodeHead3 result = new();
-        Settings?.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Dump, "Dump_4", args);
+        Settings.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Dump, "Dump_4", args);
         try
         {
             Call(PortMapperConstants.Dump, PortMapperConstants.PortMapperVersion4, args, result);
         }
         catch (Exception e)
         {
-            Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Dump, "Dump_4", args, e);
+            Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Dump, "Dump_4", args, e);
             throw;
         }
-        Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Dump, "Dump_4", args, result);
+        Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Dump, "Dump_4", args, result);
         return result;
     }
 
     public CallResult3 Broadcast_4(CallArguments callArguments)
     {
         CallResult3 result = new();
-        Settings?.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Broadcast, "Broadcast_4", callArguments);
+        Settings.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Broadcast, "Broadcast_4", callArguments);
         try
         {
             Call(PortMapperConstants.Broadcast, PortMapperConstants.PortMapperVersion4, callArguments, result);
         }
         catch (Exception e)
         {
-            Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Broadcast, "Broadcast_4", callArguments, e);
+            Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Broadcast, "Broadcast_4", callArguments, e);
             throw;
         }
-        Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Broadcast, "Broadcast_4", callArguments, result);
+        Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Broadcast, "Broadcast_4", callArguments, result);
         return result;
     }
 
@@ -2181,17 +2196,17 @@ public class PortMapperClient : ClientStub
     {
         XdrVoid args = Void;
         GetTime_4_Result result = new();
-        Settings?.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetTime, "GetTime_4", args);
+        Settings.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetTime, "GetTime_4", args);
         try
         {
             Call(PortMapperConstants.GetTime, PortMapperConstants.PortMapperVersion4, args, result);
         }
         catch (Exception e)
         {
-            Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetTime, "GetTime_4", args, e);
+            Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetTime, "GetTime_4", args, e);
             throw;
         }
-        Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetTime, "GetTime_4", args, result);
+        Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetTime, "GetTime_4", args, result);
         return result.Value;
     }
 
@@ -2232,17 +2247,17 @@ public class PortMapperClient : ClientStub
             UniversalAddress = universalAddress,
         };
         NetworkBuffer result = new();
-        Settings?.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress_4", args);
+        Settings.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress_4", args);
         try
         {
             Call(PortMapperConstants.UniversalAddressToTransportSpecificAddress, PortMapperConstants.PortMapperVersion4, args, result);
         }
         catch (Exception e)
         {
-            Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress_4", args, e);
+            Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress_4", args, e);
             throw;
         }
-        Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress_4", args, result);
+        Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress_4", args, result);
         return result;
     }
 
@@ -2279,17 +2294,17 @@ public class PortMapperClient : ClientStub
     public string TransportSpecificAddressToUniversalAddress_4(NetworkBuffer networkBuffer)
     {
         TransportSpecificAddressToUniversalAddress_4_Result result = new();
-        Settings?.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress_4", networkBuffer);
+        Settings.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress_4", networkBuffer);
         try
         {
             Call(PortMapperConstants.TransportSpecificAddressToUniversalAddress, PortMapperConstants.PortMapperVersion4, networkBuffer, result);
         }
         catch (Exception e)
         {
-            Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress_4", networkBuffer, e);
+            Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress_4", networkBuffer, e);
             throw;
         }
-        Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress_4", networkBuffer, result);
+        Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress_4", networkBuffer, result);
         return result.Value;
     }
 
@@ -2326,51 +2341,51 @@ public class PortMapperClient : ClientStub
     public string GetVersionAddress_4(Mapping3 mapping3)
     {
         GetVersionAddress_4_Result result = new();
-        Settings?.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetVersionAddress, "GetVersionAddress_4", mapping3);
+        Settings.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetVersionAddress, "GetVersionAddress_4", mapping3);
         try
         {
             Call(PortMapperConstants.GetVersionAddress, PortMapperConstants.PortMapperVersion4, mapping3, result);
         }
         catch (Exception e)
         {
-            Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetVersionAddress, "GetVersionAddress_4", mapping3, e);
+            Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetVersionAddress, "GetVersionAddress_4", mapping3, e);
             throw;
         }
-        Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetVersionAddress, "GetVersionAddress_4", mapping3, result);
+        Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetVersionAddress, "GetVersionAddress_4", mapping3, result);
         return result.Value;
     }
 
     public CallResult3 IndirectCall_4(CallArguments callArguments)
     {
         CallResult3 result = new();
-        Settings?.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.IndirectCall, "IndirectCall_4", callArguments);
+        Settings.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.IndirectCall, "IndirectCall_4", callArguments);
         try
         {
             Call(PortMapperConstants.IndirectCall, PortMapperConstants.PortMapperVersion4, callArguments, result);
         }
         catch (Exception e)
         {
-            Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.IndirectCall, "IndirectCall_4", callArguments, e);
+            Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.IndirectCall, "IndirectCall_4", callArguments, e);
             throw;
         }
-        Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.IndirectCall, "IndirectCall_4", callArguments, result);
+        Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.IndirectCall, "IndirectCall_4", callArguments, result);
         return result;
     }
 
     public EntryNodeHead GetAddressList_4(Mapping3 mapping3)
     {
         EntryNodeHead result = new();
-        Settings?.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddressList, "GetAddressList_4", mapping3);
+        Settings.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddressList, "GetAddressList_4", mapping3);
         try
         {
             Call(PortMapperConstants.GetAddressList, PortMapperConstants.PortMapperVersion4, mapping3, result);
         }
         catch (Exception e)
         {
-            Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddressList, "GetAddressList_4", mapping3, e);
+            Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddressList, "GetAddressList_4", mapping3, e);
             throw;
         }
-        Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddressList, "GetAddressList_4", mapping3, result);
+        Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddressList, "GetAddressList_4", mapping3, result);
         return result;
     }
 
@@ -2378,17 +2393,17 @@ public class PortMapperClient : ClientStub
     {
         XdrVoid args = Void;
         StatisticsByVersion result = new();
-        Settings?.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetStatistics, "GetStatistics_4", args);
+        Settings.Logger?.BeginCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetStatistics, "GetStatistics_4", args);
         try
         {
             Call(PortMapperConstants.GetStatistics, PortMapperConstants.PortMapperVersion4, args, result);
         }
         catch (Exception e)
         {
-            Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetStatistics, "GetStatistics_4", args, e);
+            Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetStatistics, "GetStatistics_4", args, e);
             throw;
         }
-        Settings?.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetStatistics, "GetStatistics_4", args, result);
+        Settings.Logger?.EndCall(RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetStatistics, "GetStatistics_4", args, result);
         return result;
     }
 }
@@ -2917,17 +2932,17 @@ public abstract class PortMapperServerStub : ServerStub
                 {
                     XdrVoid args = Void;
                     call.RetrieveCall(args);
-                    Settings?.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Ping, "Ping_2", args);
+                    Settings.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Ping, "Ping_2", args);
                     XdrVoid result = Void;
                     try
                     {
                         Ping_2(call.RpcEndPoint);
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Ping, "Ping_2", args, result);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Ping, "Ping_2", args, result);
                         call.Reply(result);
                     }
                     catch (Exception e) when (!(e is RpcException))
                     {
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Ping, "Ping_2", args, e);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Ping, "Ping_2", args, e);
                         call.SystemError();
                         return;
                     }
@@ -2937,17 +2952,17 @@ public abstract class PortMapperServerStub : ServerStub
                 {
                     Mapping2 mapping2 = new();
                     call.RetrieveCall(mapping2);
-                    Settings?.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Set, "Set_2", mapping2);
+                    Settings.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Set, "Set_2", mapping2);
                     Set_2_Result result = new();
                     try
                     {
                         result.Value = Set_2(call.RpcEndPoint, mapping2);
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Set, "Set_2", mapping2, result);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Set, "Set_2", mapping2, result);
                         call.Reply(result);
                     }
                     catch (Exception e) when (!(e is RpcException))
                     {
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Set, "Set_2", mapping2, e);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Set, "Set_2", mapping2, e);
                         call.SystemError();
                         return;
                     }
@@ -2957,17 +2972,17 @@ public abstract class PortMapperServerStub : ServerStub
                 {
                     Mapping2 mapping2 = new();
                     call.RetrieveCall(mapping2);
-                    Settings?.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Unset, "Unset_2", mapping2);
+                    Settings.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Unset, "Unset_2", mapping2);
                     Unset_2_Result result = new();
                     try
                     {
                         result.Value = Unset_2(call.RpcEndPoint, mapping2);
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Unset, "Unset_2", mapping2, result);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Unset, "Unset_2", mapping2, result);
                         call.Reply(result);
                     }
                     catch (Exception e) when (!(e is RpcException))
                     {
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Unset, "Unset_2", mapping2, e);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Unset, "Unset_2", mapping2, e);
                         call.SystemError();
                         return;
                     }
@@ -2977,17 +2992,17 @@ public abstract class PortMapperServerStub : ServerStub
                 {
                     Mapping2 mapping2 = new();
                     call.RetrieveCall(mapping2);
-                    Settings?.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.GetPort, "GetPort_2", mapping2);
+                    Settings.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.GetPort, "GetPort_2", mapping2);
                     GetPort_2_Result result = new();
                     try
                     {
                         result.Value = GetPort_2(call.RpcEndPoint, mapping2);
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.GetPort, "GetPort_2", mapping2, result);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.GetPort, "GetPort_2", mapping2, result);
                         call.Reply(result);
                     }
                     catch (Exception e) when (!(e is RpcException))
                     {
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.GetPort, "GetPort_2", mapping2, e);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.GetPort, "GetPort_2", mapping2, e);
                         call.SystemError();
                         return;
                     }
@@ -2997,16 +3012,16 @@ public abstract class PortMapperServerStub : ServerStub
                 {
                     XdrVoid args = Void;
                     call.RetrieveCall(args);
-                    Settings?.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Dump, "Dump_2", args);
+                    Settings.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Dump, "Dump_2", args);
                     try
                     {
                         MappingNodeHead2 result = Dump_2(call.RpcEndPoint);
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Dump, "Dump_2", args, result);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Dump, "Dump_2", args, result);
                         call.Reply(result);
                     }
                     catch (Exception e) when (!(e is RpcException))
                     {
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Dump, "Dump_2", args, e);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Dump, "Dump_2", args, e);
                         call.SystemError();
                         return;
                     }
@@ -3016,23 +3031,23 @@ public abstract class PortMapperServerStub : ServerStub
                 {
                     CallArguments callArguments = new();
                     call.RetrieveCall(callArguments);
-                    Settings?.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Call, "Call_2", callArguments);
+                    Settings.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Call, "Call_2", callArguments);
                     try
                     {
                         CallResult2 result = Call_2(call.RpcEndPoint, callArguments);
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Call, "Call_2", callArguments, result);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Call, "Call_2", callArguments, result);
                         call.Reply(result);
                     }
                     catch (Exception e) when (!(e is RpcException))
                     {
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Call, "Call_2", callArguments, e);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion2, PortMapperConstants.Call, "Call_2", callArguments, e);
                         call.SystemError();
                         return;
                     }
                     break;
                 }
                 default:
-                    Settings?.Logger?.Error($"Procedure unavailable (Version: {call.Version}, Procedure: {call.Procedure}).");
+                    Settings.Logger?.Error($"Procedure unavailable (Version: {call.Version}, Procedure: {call.Procedure}).");
                     call.ProcedureUnavailable();
                     break;
             }
@@ -3045,17 +3060,17 @@ public abstract class PortMapperServerStub : ServerStub
                 {
                     Mapping3 mapping3 = new();
                     call.RetrieveCall(mapping3);
-                    Settings?.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Set, "Set_3", mapping3);
+                    Settings.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Set, "Set_3", mapping3);
                     Set_3_Result result = new();
                     try
                     {
                         result.Value = Set_3(call.RpcEndPoint, mapping3);
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Set, "Set_3", mapping3, result);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Set, "Set_3", mapping3, result);
                         call.Reply(result);
                     }
                     catch (Exception e) when (!(e is RpcException))
                     {
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Set, "Set_3", mapping3, e);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Set, "Set_3", mapping3, e);
                         call.SystemError();
                         return;
                     }
@@ -3065,17 +3080,17 @@ public abstract class PortMapperServerStub : ServerStub
                 {
                     Mapping3 mapping3 = new();
                     call.RetrieveCall(mapping3);
-                    Settings?.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Unset, "Unset_3", mapping3);
+                    Settings.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Unset, "Unset_3", mapping3);
                     Unset_3_Result result = new();
                     try
                     {
                         result.Value = Unset_3(call.RpcEndPoint, mapping3);
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Unset, "Unset_3", mapping3, result);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Unset, "Unset_3", mapping3, result);
                         call.Reply(result);
                     }
                     catch (Exception e) when (!(e is RpcException))
                     {
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Unset, "Unset_3", mapping3, e);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Unset, "Unset_3", mapping3, e);
                         call.SystemError();
                         return;
                     }
@@ -3085,17 +3100,17 @@ public abstract class PortMapperServerStub : ServerStub
                 {
                     Mapping3 mapping3 = new();
                     call.RetrieveCall(mapping3);
-                    Settings?.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetAddress, "GetAddress_3", mapping3);
+                    Settings.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetAddress, "GetAddress_3", mapping3);
                     GetAddress_3_Result result = new();
                     try
                     {
                         result.Value = GetAddress_3(call.RpcEndPoint, mapping3);
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetAddress, "GetAddress_3", mapping3, result);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetAddress, "GetAddress_3", mapping3, result);
                         call.Reply(result);
                     }
                     catch (Exception e) when (!(e is RpcException))
                     {
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetAddress, "GetAddress_3", mapping3, e);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetAddress, "GetAddress_3", mapping3, e);
                         call.SystemError();
                         return;
                     }
@@ -3105,16 +3120,16 @@ public abstract class PortMapperServerStub : ServerStub
                 {
                     XdrVoid args = Void;
                     call.RetrieveCall(args);
-                    Settings?.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Dump, "Dump_3", args);
+                    Settings.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Dump, "Dump_3", args);
                     try
                     {
                         MappingNodeHead3 result = Dump_3(call.RpcEndPoint);
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Dump, "Dump_3", args, result);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Dump, "Dump_3", args, result);
                         call.Reply(result);
                     }
                     catch (Exception e) when (!(e is RpcException))
                     {
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Dump, "Dump_3", args, e);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Dump, "Dump_3", args, e);
                         call.SystemError();
                         return;
                     }
@@ -3124,16 +3139,16 @@ public abstract class PortMapperServerStub : ServerStub
                 {
                     CallArguments callArguments = new();
                     call.RetrieveCall(callArguments);
-                    Settings?.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Call, "Call_3", callArguments);
+                    Settings.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Call, "Call_3", callArguments);
                     try
                     {
                         CallResult3 result = Call_3(call.RpcEndPoint, callArguments);
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Call, "Call_3", callArguments, result);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Call, "Call_3", callArguments, result);
                         call.Reply(result);
                     }
                     catch (Exception e) when (!(e is RpcException))
                     {
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Call, "Call_3", callArguments, e);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.Call, "Call_3", callArguments, e);
                         call.SystemError();
                         return;
                     }
@@ -3143,17 +3158,17 @@ public abstract class PortMapperServerStub : ServerStub
                 {
                     XdrVoid args = Void;
                     call.RetrieveCall(args);
-                    Settings?.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetTime, "GetTime_3", args);
+                    Settings.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetTime, "GetTime_3", args);
                     GetTime_3_Result result = new();
                     try
                     {
                         result.Value = GetTime_3(call.RpcEndPoint);
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetTime, "GetTime_3", args, result);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetTime, "GetTime_3", args, result);
                         call.Reply(result);
                     }
                     catch (Exception e) when (!(e is RpcException))
                     {
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetTime, "GetTime_3", args, e);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.GetTime, "GetTime_3", args, e);
                         call.SystemError();
                         return;
                     }
@@ -3163,16 +3178,16 @@ public abstract class PortMapperServerStub : ServerStub
                 {
                     UniversalAddressToTransportSpecificAddress_3_Arguments args = new();
                     call.RetrieveCall(args);
-                    Settings?.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress_3", args);
+                    Settings.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress_3", args);
                     try
                     {
                         NetworkBuffer result = UniversalAddressToTransportSpecificAddress_3(call.RpcEndPoint, args.UniversalAddress);
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress_3", args, result);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress_3", args, result);
                         call.Reply(result);
                     }
                     catch (Exception e) when (!(e is RpcException))
                     {
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress_3", args, e);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress_3", args, e);
                         call.SystemError();
                         return;
                     }
@@ -3182,24 +3197,24 @@ public abstract class PortMapperServerStub : ServerStub
                 {
                     NetworkBuffer networkBuffer = new();
                     call.RetrieveCall(networkBuffer);
-                    Settings?.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress_3", networkBuffer);
+                    Settings.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress_3", networkBuffer);
                     TransportSpecificAddressToUniversalAddress_3_Result result = new();
                     try
                     {
                         result.Value = TransportSpecificAddressToUniversalAddress_3(call.RpcEndPoint, networkBuffer);
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress_3", networkBuffer, result);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress_3", networkBuffer, result);
                         call.Reply(result);
                     }
                     catch (Exception e) when (!(e is RpcException))
                     {
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress_3", networkBuffer, e);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion3, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress_3", networkBuffer, e);
                         call.SystemError();
                         return;
                     }
                     break;
                 }
                 default:
-                    Settings?.Logger?.Error($"Procedure unavailable (Version: {call.Version}, Procedure: {call.Procedure}).");
+                    Settings.Logger?.Error($"Procedure unavailable (Version: {call.Version}, Procedure: {call.Procedure}).");
                     call.ProcedureUnavailable();
                     break;
             }
@@ -3212,17 +3227,17 @@ public abstract class PortMapperServerStub : ServerStub
                 {
                     Mapping3 mapping3 = new();
                     call.RetrieveCall(mapping3);
-                    Settings?.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Set, "Set_4", mapping3);
+                    Settings.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Set, "Set_4", mapping3);
                     Set_4_Result result = new();
                     try
                     {
                         result.Value = Set_4(call.RpcEndPoint, mapping3);
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Set, "Set_4", mapping3, result);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Set, "Set_4", mapping3, result);
                         call.Reply(result);
                     }
                     catch (Exception e) when (!(e is RpcException))
                     {
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Set, "Set_4", mapping3, e);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Set, "Set_4", mapping3, e);
                         call.SystemError();
                         return;
                     }
@@ -3232,17 +3247,17 @@ public abstract class PortMapperServerStub : ServerStub
                 {
                     Mapping3 mapping3 = new();
                     call.RetrieveCall(mapping3);
-                    Settings?.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Unset, "Unset_4", mapping3);
+                    Settings.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Unset, "Unset_4", mapping3);
                     Unset_4_Result result = new();
                     try
                     {
                         result.Value = Unset_4(call.RpcEndPoint, mapping3);
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Unset, "Unset_4", mapping3, result);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Unset, "Unset_4", mapping3, result);
                         call.Reply(result);
                     }
                     catch (Exception e) when (!(e is RpcException))
                     {
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Unset, "Unset_4", mapping3, e);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Unset, "Unset_4", mapping3, e);
                         call.SystemError();
                         return;
                     }
@@ -3252,17 +3267,17 @@ public abstract class PortMapperServerStub : ServerStub
                 {
                     Mapping3 mapping3 = new();
                     call.RetrieveCall(mapping3);
-                    Settings?.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddress, "GetAddress_4", mapping3);
+                    Settings.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddress, "GetAddress_4", mapping3);
                     GetAddress_4_Result result = new();
                     try
                     {
                         result.Value = GetAddress_4(call.RpcEndPoint, mapping3);
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddress, "GetAddress_4", mapping3, result);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddress, "GetAddress_4", mapping3, result);
                         call.Reply(result);
                     }
                     catch (Exception e) when (!(e is RpcException))
                     {
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddress, "GetAddress_4", mapping3, e);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddress, "GetAddress_4", mapping3, e);
                         call.SystemError();
                         return;
                     }
@@ -3272,16 +3287,16 @@ public abstract class PortMapperServerStub : ServerStub
                 {
                     XdrVoid args = Void;
                     call.RetrieveCall(args);
-                    Settings?.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Dump, "Dump_4", args);
+                    Settings.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Dump, "Dump_4", args);
                     try
                     {
                         MappingNodeHead3 result = Dump_4(call.RpcEndPoint);
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Dump, "Dump_4", args, result);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Dump, "Dump_4", args, result);
                         call.Reply(result);
                     }
                     catch (Exception e) when (!(e is RpcException))
                     {
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Dump, "Dump_4", args, e);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Dump, "Dump_4", args, e);
                         call.SystemError();
                         return;
                     }
@@ -3291,16 +3306,16 @@ public abstract class PortMapperServerStub : ServerStub
                 {
                     CallArguments callArguments = new();
                     call.RetrieveCall(callArguments);
-                    Settings?.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Broadcast, "Broadcast_4", callArguments);
+                    Settings.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Broadcast, "Broadcast_4", callArguments);
                     try
                     {
                         CallResult3 result = Broadcast_4(call.RpcEndPoint, callArguments);
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Broadcast, "Broadcast_4", callArguments, result);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Broadcast, "Broadcast_4", callArguments, result);
                         call.Reply(result);
                     }
                     catch (Exception e) when (!(e is RpcException))
                     {
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Broadcast, "Broadcast_4", callArguments, e);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.Broadcast, "Broadcast_4", callArguments, e);
                         call.SystemError();
                         return;
                     }
@@ -3310,17 +3325,17 @@ public abstract class PortMapperServerStub : ServerStub
                 {
                     XdrVoid args = Void;
                     call.RetrieveCall(args);
-                    Settings?.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetTime, "GetTime_4", args);
+                    Settings.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetTime, "GetTime_4", args);
                     GetTime_4_Result result = new();
                     try
                     {
                         result.Value = GetTime_4(call.RpcEndPoint);
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetTime, "GetTime_4", args, result);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetTime, "GetTime_4", args, result);
                         call.Reply(result);
                     }
                     catch (Exception e) when (!(e is RpcException))
                     {
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetTime, "GetTime_4", args, e);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetTime, "GetTime_4", args, e);
                         call.SystemError();
                         return;
                     }
@@ -3330,16 +3345,16 @@ public abstract class PortMapperServerStub : ServerStub
                 {
                     UniversalAddressToTransportSpecificAddress_4_Arguments args = new();
                     call.RetrieveCall(args);
-                    Settings?.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress_4", args);
+                    Settings.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress_4", args);
                     try
                     {
                         NetworkBuffer result = UniversalAddressToTransportSpecificAddress_4(call.RpcEndPoint, args.UniversalAddress);
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress_4", args, result);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress_4", args, result);
                         call.Reply(result);
                     }
                     catch (Exception e) when (!(e is RpcException))
                     {
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress_4", args, e);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.UniversalAddressToTransportSpecificAddress, "UniversalAddressToTransportSpecificAddress_4", args, e);
                         call.SystemError();
                         return;
                     }
@@ -3349,17 +3364,17 @@ public abstract class PortMapperServerStub : ServerStub
                 {
                     NetworkBuffer networkBuffer = new();
                     call.RetrieveCall(networkBuffer);
-                    Settings?.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress_4", networkBuffer);
+                    Settings.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress_4", networkBuffer);
                     TransportSpecificAddressToUniversalAddress_4_Result result = new();
                     try
                     {
                         result.Value = TransportSpecificAddressToUniversalAddress_4(call.RpcEndPoint, networkBuffer);
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress_4", networkBuffer, result);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress_4", networkBuffer, result);
                         call.Reply(result);
                     }
                     catch (Exception e) when (!(e is RpcException))
                     {
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress_4", networkBuffer, e);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.TransportSpecificAddressToUniversalAddress, "TransportSpecificAddressToUniversalAddress_4", networkBuffer, e);
                         call.SystemError();
                         return;
                     }
@@ -3369,17 +3384,17 @@ public abstract class PortMapperServerStub : ServerStub
                 {
                     Mapping3 mapping3 = new();
                     call.RetrieveCall(mapping3);
-                    Settings?.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetVersionAddress, "GetVersionAddress_4", mapping3);
+                    Settings.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetVersionAddress, "GetVersionAddress_4", mapping3);
                     GetVersionAddress_4_Result result = new();
                     try
                     {
                         result.Value = GetVersionAddress_4(call.RpcEndPoint, mapping3);
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetVersionAddress, "GetVersionAddress_4", mapping3, result);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetVersionAddress, "GetVersionAddress_4", mapping3, result);
                         call.Reply(result);
                     }
                     catch (Exception e) when (!(e is RpcException))
                     {
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetVersionAddress, "GetVersionAddress_4", mapping3, e);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetVersionAddress, "GetVersionAddress_4", mapping3, e);
                         call.SystemError();
                         return;
                     }
@@ -3389,16 +3404,16 @@ public abstract class PortMapperServerStub : ServerStub
                 {
                     CallArguments callArguments = new();
                     call.RetrieveCall(callArguments);
-                    Settings?.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.IndirectCall, "IndirectCall_4", callArguments);
+                    Settings.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.IndirectCall, "IndirectCall_4", callArguments);
                     try
                     {
                         CallResult3 result = IndirectCall_4(call.RpcEndPoint, callArguments);
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.IndirectCall, "IndirectCall_4", callArguments, result);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.IndirectCall, "IndirectCall_4", callArguments, result);
                         call.Reply(result);
                     }
                     catch (Exception e) when (!(e is RpcException))
                     {
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.IndirectCall, "IndirectCall_4", callArguments, e);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.IndirectCall, "IndirectCall_4", callArguments, e);
                         call.SystemError();
                         return;
                     }
@@ -3408,16 +3423,16 @@ public abstract class PortMapperServerStub : ServerStub
                 {
                     Mapping3 mapping3 = new();
                     call.RetrieveCall(mapping3);
-                    Settings?.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddressList, "GetAddressList_4", mapping3);
+                    Settings.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddressList, "GetAddressList_4", mapping3);
                     try
                     {
                         EntryNodeHead result = GetAddressList_4(call.RpcEndPoint, mapping3);
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddressList, "GetAddressList_4", mapping3, result);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddressList, "GetAddressList_4", mapping3, result);
                         call.Reply(result);
                     }
                     catch (Exception e) when (!(e is RpcException))
                     {
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddressList, "GetAddressList_4", mapping3, e);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetAddressList, "GetAddressList_4", mapping3, e);
                         call.SystemError();
                         return;
                     }
@@ -3427,30 +3442,30 @@ public abstract class PortMapperServerStub : ServerStub
                 {
                     XdrVoid args = Void;
                     call.RetrieveCall(args);
-                    Settings?.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetStatistics, "GetStatistics_4", args);
+                    Settings.Logger?.BeginCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetStatistics, "GetStatistics_4", args);
                     try
                     {
                         StatisticsByVersion result = GetStatistics_4(call.RpcEndPoint);
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetStatistics, "GetStatistics_4", args, result);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetStatistics, "GetStatistics_4", args, result);
                         call.Reply(result);
                     }
                     catch (Exception e) when (!(e is RpcException))
                     {
-                        Settings?.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetStatistics, "GetStatistics_4", args, e);
+                        Settings.Logger?.EndCall(call.RpcEndPoint, PortMapperConstants.PortMapperVersion4, PortMapperConstants.GetStatistics, "GetStatistics_4", args, e);
                         call.SystemError();
                         return;
                     }
                     break;
                 }
                 default:
-                    Settings?.Logger?.Error($"Procedure unavailable (Version: {call.Version}, Procedure: {call.Procedure}).");
+                    Settings.Logger?.Error($"Procedure unavailable (Version: {call.Version}, Procedure: {call.Procedure}).");
                     call.ProcedureUnavailable();
                     break;
             }
         }
         else
         {
-            Settings?.Logger?.Error($"Program mismatch (Version: {call.Version}).");
+            Settings.Logger?.Error($"Program mismatch (Version: {call.Version}).");
             call.ProgramMismatch();
         }
     }

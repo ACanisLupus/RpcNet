@@ -5,49 +5,48 @@ namespace RpcNet;
 using System.Net;
 using RpcNet.Internal;
 
-public abstract class ClientStub : IDisposable
+public abstract class ClientStub(INetworkClient networkClient, RpcEndPoint rpcEndPoint, ClientSettings settings) : IDisposable
 {
-    protected readonly XdrVoid Void = new();
-    protected readonly ClientSettings? Settings;
+    private readonly SemaphoreSlim _lockCall = new(1, 1);
 
-    private readonly INetworkClient _networkClient;
-
-    protected ClientStub(Protocol protocol, IPAddress ipAddress, int port, int program, int version, ClientSettings? clientSettings = null)
-    {
-        ArgumentNullException.ThrowIfNull(ipAddress);
-
-        Settings = clientSettings ?? new ClientSettings();
-        RpcEndPoint = new RpcEndPoint(new IPEndPoint(ipAddress, port), protocol);
-
-        _networkClient = protocol switch
-        {
-            Protocol.Tcp => new RpcTcpClient(ipAddress, port, program, version, Settings),
-            Protocol.Udp => new RpcUdpClient(ipAddress, port, program, version, Settings),
-            _ => throw new ArgumentOutOfRangeException(nameof(protocol))
-        };
-    }
-
-    protected RpcEndPoint RpcEndPoint { get; }
+    protected RpcEndPoint RpcEndPoint { get; } = rpcEndPoint;
+    protected ClientSettings Settings { get; private set; } = settings;
+    protected XdrVoid Void { get; } = new();
 
     public TimeSpan ReceiveTimeout
     {
-        get => _networkClient.ReceiveTimeout;
-        set => _networkClient.ReceiveTimeout = value;
+        get => networkClient.ReceiveTimeout;
+        set => networkClient.ReceiveTimeout = value;
     }
 
     public TimeSpan SendTimeout
     {
-        get => _networkClient.SendTimeout;
-        set => _networkClient.SendTimeout = value;
+        get => networkClient.SendTimeout;
+        set => networkClient.SendTimeout = value;
     }
+
+    protected static INetworkClient Connect(Protocol protocol, IPAddress ipAddress, int port, int programNumber, int versionNumber, ClientSettings clientSettings)
+    {
+        return protocol switch
+        {
+            Protocol.Tcp => RpcTcpClient.Connect(ipAddress, port, programNumber, versionNumber, clientSettings),
+            Protocol.Udp => RpcUdpClient.Connect(ipAddress, port, programNumber, versionNumber, clientSettings),
+            _ => throw new ArgumentOutOfRangeException(nameof(protocol))
+        };
+    }
+
+    public void Dispose() => networkClient.Dispose();
 
     protected void Call(int procedure, int version, IXdrDataType argument, IXdrDataType result)
     {
-        lock (_networkClient)
+        _lockCall.Wait();
+        try
         {
-            _networkClient.Call(procedure, version, argument, result);
+            networkClient.Call(procedure, version, argument, result);
+        }
+        finally
+        {
+            _lockCall.Release();
         }
     }
-
-    public void Dispose() => _networkClient.Dispose();
 }

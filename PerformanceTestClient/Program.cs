@@ -71,7 +71,7 @@ static int CallServer(IPAddress ipAddress, string protocol)
 static int CallTcpServer(IPAddress ipAddress)
 {
     int result = 0;
-    using TestServiceClient testTcpClient = new(Protocol.Tcp, ipAddress, Port);
+    using TestServiceClient testTcpClient = TestServiceClient.Connect(Protocol.Tcp, ipAddress, Port);
     for (int i = 0; i < CountCalls; i++)
     {
         result += testTcpClient.Echo_1(i);
@@ -83,7 +83,7 @@ static int CallTcpServer(IPAddress ipAddress)
 static int CallUdpServer(IPAddress ipAddress)
 {
     int result = 0;
-    using TestServiceClient testUdpClient = new(Protocol.Udp, ipAddress, Port);
+    using TestServiceClient testUdpClient = TestServiceClient.Connect(Protocol.Udp, ipAddress, Port);
     for (int i = 0; i < CountCalls; i++)
     {
         result += testUdpClient.Echo_1(i);
