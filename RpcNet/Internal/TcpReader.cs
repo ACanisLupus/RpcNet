@@ -7,14 +7,14 @@ using System.Net.Sockets;
 
 internal sealed class TcpReader(Socket socket) : INetworkReader
 {
+    private const int FragmentLengthMask = 0x7fffffff;
+    private const int LastFragmentFlag = unchecked((int)0x80000000);
     private const int NetworkBufferSize = 65536;
     private const int TcpHeaderLength = 4;
-    private const int LastFragmentFlag = unchecked((int)0x80000000);
-    private const int FragmentLengthMask = 0x7fffffff;
 
     private readonly MemoryStream _buffer = new();
-    private readonly byte[] _networkBuffer = new byte[NetworkBufferSize];
     private readonly byte[] _headerBuffer = new byte[TcpHeaderLength];
+    private readonly byte[] _networkBuffer = new byte[NetworkBufferSize];
 
     private int _networkReadPos;
     private int _networkWritePos;

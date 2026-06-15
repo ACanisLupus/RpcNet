@@ -7,8 +7,8 @@ using System.Net.Sockets;
 
 internal sealed class TcpWriter(Socket socket) : INetworkWriter
 {
-    private const int TcpHeaderLength = 4;
     private const int LastFragmentFlag = unchecked((int)0x80000000);
+    private const int TcpHeaderLength = 4;
 
     private readonly MemoryStream _buffer = new();
 

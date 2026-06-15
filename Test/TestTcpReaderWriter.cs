@@ -9,7 +9,8 @@ using RpcNet;
 using RpcNet.Internal;
 
 [TestFixture]
-internal sealed class TestTcpReaderWriter
+[TestFixtureSource(typeof(Utilities), nameof(Utilities.GetIpAddresses))]
+internal sealed class TestTcpReaderWriter(IPAddress ipAddress)
 {
     private TcpReader? _reader;
     private TcpClient? _readerTcpClient;
@@ -25,8 +26,6 @@ internal sealed class TestTcpReaderWriter
     public async ValueTask SetUp()
     {
         CancellationToken ct = TestContext.CurrentContext.CancellationToken;
-
-        IPAddress ipAddress = IPAddress.Loopback;
 
         TcpListener listener = new(ipAddress, 0);
         listener.Start();
@@ -112,7 +111,7 @@ internal sealed class TestTcpReaderWriter
         TimeSpan timeout = TimeSpan.FromMilliseconds(200);
         Reader.Timeout = timeout;
 
-        // The connection stays open but no data is sent, so the asynchronous reception must be aborted by the
+        // The connection stays open but no data is sent, so the asynchronous reception must be cancelled by the
         // configured timeout instead of blocking forever (Socket.ReceiveTimeout does not apply to ReceiveAsync).
         RpcException? e = Assert.ThrowsAsync<RpcException>(async () => await Reader.BeginReadingAsync(ct));
         Assert.That(e?.Message, Is.EqualTo($"The operation did not complete within the configured timeout of {timeout}."));
@@ -130,7 +129,7 @@ internal sealed class TestTcpReaderWriter
             0x00, 0x00, 0x00, 0x04, // fragment 1 header: length 4, not last
             0x00, 0x00, 0x00, 0x2a, // fragment 1 payload: 42
             0x80, 0x00, 0x00, 0x04, // fragment 2 header: length 4, last
-            0x00, 0x00, 0x00, 0x63  // fragment 2 payload: 99
+            0x00, 0x00, 0x00, 0x63 // fragment 2 payload: 99
         ];
 
         await WriterTcpClient.GetStream().WriteAsync(data, ct);

@@ -9,10 +9,9 @@ using RpcNet.PortMapper;
 using TestService;
 
 [TestFixture]
-internal sealed class TestRpc
+[TestFixtureSource(typeof(Utilities), nameof(Utilities.GetProtocolAndAddressCases))]
+internal sealed class TestRpc(Protocol protocol, IPAddress ipAddress)
 {
-    private readonly IPAddress _ipAddress = IPAddress.Loopback;
-
     private PortMapperServer? _portMapperServer;
     private TestServer? _testServer;
 
@@ -28,7 +27,7 @@ internal sealed class TestRpc
             Logger = new TestLogger("Port Mapper")
         };
 
-        _portMapperServer = new PortMapperServer(Protocol.Tcp, _ipAddress, 0, portMapperSettings);
+        _portMapperServer = new PortMapperServer(protocol, ipAddress, 0, portMapperSettings);
         await _portMapperServer.StartAsync(ct);
 
         ServerSettings serverSettings = new()
@@ -36,7 +35,7 @@ internal sealed class TestRpc
             PortMapperPort = _portMapperServer.TcpPort
         };
 
-        _testServer = new TestServer(Protocol.Tcp | Protocol.Udp, _ipAddress, 0, serverSettings);
+        _testServer = new TestServer(protocol, ipAddress, 0, serverSettings);
         await _testServer.StartAsync(ct);
     }
 
@@ -55,9 +54,7 @@ internal sealed class TestRpc
     }
 
     [Test]
-    [TestCase(Protocol.Tcp)]
-    [TestCase(Protocol.Udp)]
-    public async ValueTask OneClient(Protocol protocol)
+    public async ValueTask OneClient()
     {
         CancellationToken ct = TestContext.CurrentContext.CancellationToken;
 
@@ -66,7 +63,7 @@ internal sealed class TestRpc
             PortMapperPort = PortMapperServer.TcpPort
         };
 
-        using TestServiceClient client = await TestServiceClient.ConnectAsync(protocol, _ipAddress, 0, clientSettings, ct);
+        using TestServiceClient client = await TestServiceClient.ConnectAsync(protocol, ipAddress, 0, clientSettings, ct);
         SimpleStruct result = await client.SimpleStructSimpleStruct_2Async(
             new SimpleStruct
             {

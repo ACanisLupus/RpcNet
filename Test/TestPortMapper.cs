@@ -8,10 +8,9 @@ using RpcNet;
 using RpcNet.PortMapper;
 
 [TestFixture]
-internal sealed class TestPortMapper
+[TestFixtureSource(typeof(Utilities), nameof(Utilities.GetProtocolAndAddressCases))]
+internal sealed class TestPortMapper(Protocol protocol, IPAddress ipAddress)
 {
-    private readonly IPAddress _ipAddress = IPAddress.Loopback;
-
     private int _portMapperPort;
     private PortMapperServer? _server;
 
@@ -21,7 +20,7 @@ internal sealed class TestPortMapper
         CancellationToken ct = TestContext.CurrentContext.CancellationToken;
 
         _portMapperPort = 0;
-        _server = new PortMapperServer(Protocol.Tcp | Protocol.Udp, _ipAddress, _portMapperPort);
+        _server = new PortMapperServer(protocol, ipAddress, _portMapperPort);
         await _server.StartAsync(ct);
         _portMapperPort = _server.TcpPort;
     }
@@ -40,17 +39,17 @@ internal sealed class TestPortMapper
     [TestCase(4714, 4715, ProtocolKind.Udp, 4716)]
     [TestCase(4717, 4718, ProtocolKind.Tcp, 4719)]
     [TestCase(4720, 4721, ProtocolKind.Udp, 4721)]
-    public async ValueTask TestSetAndGet(int port, int program, ProtocolKind protocol, int version)
+    public async ValueTask TestSetAndGet(int port, int program, ProtocolKind protocolKind, int version)
     {
         CancellationToken ct = TestContext.CurrentContext.CancellationToken;
 
-        using PortMapperClient client = await PortMapperClient.ConnectAsync(Protocol.Tcp, _ipAddress, _portMapperPort, cancellationToken: ct);
+        using PortMapperClient client = await PortMapperClient.ConnectAsync(protocol, ipAddress, _portMapperPort, cancellationToken: ct);
         _ = await client.Set_2Async(
             new Mapping2
             {
                 Port = port,
                 ProgramNumber = program,
-                Protocol = protocol,
+                Protocol = protocolKind,
                 VersionNumber = version
             },
             ct);
@@ -58,7 +57,7 @@ internal sealed class TestPortMapper
         int receivedPort = await client.GetPort_2Async(
             new Mapping2
             {
-                Protocol = protocol,
+                Protocol = protocolKind,
                 ProgramNumber = program,
                 VersionNumber = version
             },
@@ -74,7 +73,7 @@ internal sealed class TestPortMapper
     {
         CancellationToken ct = TestContext.CurrentContext.CancellationToken;
 
-        using PortMapperClient client = await PortMapperClient.ConnectAsync(Protocol.Tcp, _ipAddress, _portMapperPort, cancellationToken: ct);
+        using PortMapperClient client = await PortMapperClient.ConnectAsync(protocol, ipAddress, _portMapperPort, cancellationToken: ct);
         _ = await client.Set_2Async(
             new Mapping2
             {

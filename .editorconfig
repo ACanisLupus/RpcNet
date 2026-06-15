@@ -3,7 +3,10 @@ root = true
 
 [*]
 
-dotnet_diagnostic.IDE0058.severity = none
+dotnet_diagnostic.ide0058.severity = none
+
+# ReSharper properties
+resharper_xml_insert_final_newline = true
 
 # C# files
 [*.cs]

@@ -9,7 +9,8 @@ using RpcNet;
 using RpcNet.Internal;
 
 [TestFixture]
-internal sealed class TestUdpReaderWriter
+[TestFixtureSource(typeof(Utilities), nameof(Utilities.GetIpAddresses))]
+internal sealed class TestUdpReaderWriter(IPAddress ipAddress)
 {
     private UdpClient? _client;
     private UdpClient? _server;
@@ -22,15 +23,13 @@ internal sealed class TestUdpReaderWriter
     [SetUp]
     public void SetUp()
     {
-        IPAddress iPAddress = IPAddress.Loopback;
-
-        _server = new UdpClient(0, iPAddress.AddressFamily);
+        _server = new UdpClient(0, ipAddress.AddressFamily);
 
         IPEndPoint? localIpEndPoint = _server.Client.LocalEndPoint as IPEndPoint;
         int port = localIpEndPoint?.Port ?? throw new InvalidOperationException("Could not find local end point.");
-        RemoteIpEndPoint = new IPEndPoint(iPAddress, port);
+        RemoteIpEndPoint = new IPEndPoint(ipAddress, port);
 
-        _client = new UdpClient(iPAddress.AddressFamily);
+        _client = new UdpClient(ipAddress.AddressFamily);
 
         Reader = new UdpReader(_server.Client);
         Writer = new UdpWriter(_client.Client);
@@ -125,7 +124,7 @@ internal sealed class TestUdpReaderWriter
     }
 
     [Test]
-    public async ValueTask AbortReading()
+    public async ValueTask CancelReading()
     {
         CancellationToken ct = TestContext.CurrentContext.CancellationToken;
 
@@ -144,7 +143,7 @@ internal sealed class TestUdpReaderWriter
         TimeSpan timeout = TimeSpan.FromMilliseconds(200);
         Reader.Timeout = timeout;
 
-        // No data is ever sent, so the asynchronous reception must be aborted by the configured timeout
+        // No data is ever sent, so the asynchronous reception must be cancelled by the configured timeout
         // instead of blocking forever (Socket.ReceiveTimeout does not apply to ReceiveFromAsync).
         RpcException? e = Assert.ThrowsAsync<RpcException>(async () => await Reader.BeginReadingAsync(ct));
         Assert.That(e?.Message, Is.EqualTo($"The operation did not complete within the configured timeout of {timeout}."));

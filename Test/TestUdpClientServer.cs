@@ -3,6 +3,7 @@
 namespace Test;
 
 using System.Net;
+using System.Threading.Channels;
 using NUnit.Framework;
 using RpcNet;
 using RpcNet.Internal;
@@ -12,17 +13,16 @@ using TestService;
 internal sealed class TestUdpClientServer
 {
     [Test]
-    public async ValueTask SendAndReceiveData()
+    [TestCaseSource(typeof(Utilities), nameof(Utilities.GetIpAddresses))]
+    public async ValueTask SendAndReceiveData(IPAddress ipAddress)
     {
         CancellationToken ct = TestContext.CurrentContext.CancellationToken;
-
-        IPAddress ipAddress = IPAddress.Loopback;
 
         const int Program = 12;
         const int Version = 13;
         const int Procedure = 14;
 
-        Channel<ReceivedRpcCall> receivedCallChannel = new();
+        Channel<ReceivedRpcCall> receivedCallChannel = Channel.CreateUnbounded<ReceivedRpcCall>();
 
         ServerSettings serverSettings = new()
         {
@@ -47,25 +47,22 @@ internal sealed class TestUdpClientServer
 
         await client.CallAsync(Procedure, Version, argument, result, ct);
 
-        Assert.That(receivedCallChannel.TryReceive(TimeSpan.FromSeconds(10), out ReceivedRpcCall? receivedCall));
-        Assert.That(receivedCall, Is.Not.Null);
-        Assert.That(receivedCall!.Procedure, Is.EqualTo(Procedure));
+        ReceivedRpcCall receivedCall = await receivedCallChannel.Reader.ReadAsync(ct);
+        Assert.That(receivedCall.Procedure, Is.EqualTo(Procedure));
         Assert.That(receivedCall.Version, Is.EqualTo(Version));
         Assert.That(receivedCall.RpcEndPoint, Is.Not.Null);
 
         Assert.That(argument.Value, Is.EqualTo(result.Value));
         return;
 
-        ValueTask Dispatcher(ReceivedRpcCall call, CancellationToken cancellationToken)
+        async ValueTask Dispatcher(ReceivedRpcCall call, CancellationToken cancellationToken)
         {
             // To assert it on the main thread
-            receivedCallChannel.Send(call);
+            await receivedCallChannel.Writer.WriteAsync(call, cancellationToken);
 
             SimpleStruct pingStruct = new();
             call.RetrieveCall(pingStruct);
             call.Reply(pingStruct);
-
-            return ValueTask.CompletedTask;
         }
     }
 }

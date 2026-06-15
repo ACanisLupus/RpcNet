@@ -56,7 +56,7 @@ internal sealed class RpcTcpServer : IAsyncDisposable
         _stopAccepting = true;
         try
         {
-            // Necessary for Linux. Dispose doesn't abort synchronous calls
+            // Necessary for Linux. Dispose doesn't cancel synchronous calls
             _socket.Shutdown(SocketShutdown.Both);
         }
         catch

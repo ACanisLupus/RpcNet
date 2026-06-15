@@ -12,8 +12,7 @@ internal class StubNetwork(int maxReadLength, int maxReserveLength) : INetworkRe
     public int WriteIndex { get; private set; }
     private int ReadIndex { get; set; }
 
-    public EndPoint BeginReading() => new IPEndPoint(0, 0);
-    public ValueTask<EndPoint> BeginReadingAsync(CancellationToken cancellationToken) => ValueTask.FromResult(BeginReading());
+    public ValueTask<EndPoint> BeginReadingAsync(CancellationToken cancellationToken) => ValueTask.FromResult<EndPoint>(new IPEndPoint(0, 0));
 
     public void EndReading()
     {
