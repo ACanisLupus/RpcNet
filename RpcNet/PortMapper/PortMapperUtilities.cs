@@ -76,7 +76,8 @@ public static class PortMapperUtilities
         CancellationToken cancellationToken)
     {
         using PortMapperClient portMapperClient =
-            await PortMapperClient.ConnectAsync(Protocol.Tcp, ipAddress, portMapperPort, clientSettings, cancellationToken).ConfigureAwait(false);
+            await PortMapperClient.ConnectAsync(GetPortMapperProtocol(protocol), ipAddress, portMapperPort, clientSettings, cancellationToken)
+                .ConfigureAwait(false);
         return await portMapperClient.GetPort_2Async(
                 new Mapping2
                 {
@@ -99,7 +100,8 @@ public static class PortMapperUtilities
         CancellationToken cancellationToken)
     {
         using PortMapperClient portMapperClient =
-            await PortMapperClient.ConnectAsync(Protocol.Tcp, ipAddress, portMapperPort, clientSettings, cancellationToken).ConfigureAwait(false);
+            await PortMapperClient.ConnectAsync(GetPortMapperProtocol(protocol), ipAddress, portMapperPort, clientSettings, cancellationToken)
+                .ConfigureAwait(false);
         _ = await portMapperClient.Unset_2Async(
                 new Mapping2
                 {
@@ -120,4 +122,11 @@ public static class PortMapperUtilities
                 cancellationToken)
             .ConfigureAwait(false);
     }
+
+    private static Protocol GetPortMapperProtocol(ProtocolKind protocol) => protocol switch
+    {
+        ProtocolKind.Tcp => Protocol.Tcp,
+        ProtocolKind.Udp => Protocol.Udp,
+        _ => throw new ArgumentOutOfRangeException(nameof(protocol))
+    };
 }

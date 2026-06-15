@@ -17,7 +17,7 @@ internal sealed class TestErrorHandling(Protocol protocol, IPAddress ipAddress)
         CancellationToken ct = TestContext.CurrentContext.CancellationToken;
         await using TestServer testServer = await StartServerAsync(ct);
 
-        int port = protocol == Protocol.Tcp ? testServer.TcpPort : testServer.UdpPort;
+        int port = Utilities.GetPort(testServer, protocol);
 
         using TestService2Client client = await TestService2Client.ConnectAsync(protocol, ipAddress, port, cancellationToken: ct);
 
@@ -37,7 +37,7 @@ internal sealed class TestErrorHandling(Protocol protocol, IPAddress ipAddress)
         CancellationToken ct = TestContext.CurrentContext.CancellationToken;
         await using TestServer testServer = await StartServerAsync(ct);
 
-        int port = protocol == Protocol.Tcp ? testServer.TcpPort : testServer.UdpPort;
+        int port = Utilities.GetPort(testServer, protocol);
 
         using TestService2Client client = await TestService2Client.ConnectAsync(protocol, ipAddress, port, cancellationToken: ct);
 
@@ -57,7 +57,7 @@ internal sealed class TestErrorHandling(Protocol protocol, IPAddress ipAddress)
         CancellationToken ct = TestContext.CurrentContext.CancellationToken;
         await using TestServer testServer = await StartServerAsync(ct);
 
-        int port = protocol == Protocol.Tcp ? testServer.TcpPort : testServer.UdpPort;
+        int port = Utilities.GetPort(testServer, protocol);
 
         using TestService2Client client = await TestService2Client.ConnectAsync(protocol, ipAddress, port, cancellationToken: ct);
 

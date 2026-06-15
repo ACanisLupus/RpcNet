@@ -22,7 +22,7 @@ internal sealed class TestPortMapper(Protocol protocol, IPAddress ipAddress)
         _portMapperPort = 0;
         _server = new PortMapperServer(protocol, ipAddress, _portMapperPort);
         await _server.StartAsync(ct);
-        _portMapperPort = _server.TcpPort;
+        _portMapperPort = Utilities.GetPort(_server, protocol);
     }
 
     [TearDown]

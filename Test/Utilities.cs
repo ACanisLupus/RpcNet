@@ -35,4 +35,6 @@ internal static class Utilities
             yield return [Protocol.Udp, IPAddress.IPv6Loopback];
         }
     }
+
+    public static int GetPort(ServerStub server, Protocol protocol) => protocol == Protocol.Tcp ? server.TcpPort : server.UdpPort;
 }

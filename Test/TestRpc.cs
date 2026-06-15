@@ -32,7 +32,7 @@ internal sealed class TestRpc(Protocol protocol, IPAddress ipAddress)
 
         ServerSettings serverSettings = new()
         {
-            PortMapperPort = _portMapperServer.TcpPort
+            PortMapperPort = Utilities.GetPort(_portMapperServer, protocol)
         };
 
         _testServer = new TestServer(protocol, ipAddress, 0, serverSettings);
@@ -60,7 +60,7 @@ internal sealed class TestRpc(Protocol protocol, IPAddress ipAddress)
 
         ClientSettings clientSettings = new()
         {
-            PortMapperPort = PortMapperServer.TcpPort
+            PortMapperPort = Utilities.GetPort(PortMapperServer, protocol)
         };
 
         using TestServiceClient client = await TestServiceClient.ConnectAsync(protocol, ipAddress, 0, clientSettings, ct);
