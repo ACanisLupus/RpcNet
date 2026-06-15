@@ -9,10 +9,12 @@ internal sealed class TcpReader(Socket socket) : INetworkReader
 {
     private const int NetworkBufferSize = 65536;
     private const int TcpHeaderLength = 4;
+    private const int LastFragmentFlag = unchecked((int)0x80000000);
+    private const int FragmentLengthMask = 0x7fffffff;
 
     private readonly MemoryStream _buffer = new();
-    private readonly byte[] _headerBuffer = new byte[TcpHeaderLength];
     private readonly byte[] _networkBuffer = new byte[NetworkBufferSize];
+    private readonly byte[] _headerBuffer = new byte[TcpHeaderLength];
 
     private int _networkReadPos;
     private int _networkWritePos;
@@ -29,8 +31,8 @@ internal sealed class TcpReader(Socket socket) : INetworkReader
         {
             await ConsumeExactAsync(_headerBuffer, cancellationToken).ConfigureAwait(false);
             int headerValue = Utilities.ToInt32BigEndian(_headerBuffer);
-            lastFragment = headerValue < 0;
-            int fragmentLength = headerValue & 0x0fffffff;
+            lastFragment = (headerValue & LastFragmentFlag) != 0;
+            int fragmentLength = headerValue & FragmentLengthMask;
 
             if (((fragmentLength % 4) != 0) || (fragmentLength == 0))
             {
@@ -51,9 +53,13 @@ internal sealed class TcpReader(Socket socket) : INetworkReader
     public ReadOnlySpan<byte> Read(int length)
     {
         int available = (int)(_buffer.Length - _buffer.Position);
-        int toRead = Math.Min(available, length);
-        ReadOnlySpan<byte> span = _buffer.GetBuffer().AsSpan((int)_buffer.Position, toRead);
-        _buffer.Position += toRead;
+        if (length > available)
+        {
+            throw new RpcException("TCP buffer underflow.");
+        }
+
+        ReadOnlySpan<byte> span = _buffer.GetBuffer().AsSpan((int)_buffer.Position, length);
+        _buffer.Position += length;
         return span;
     }
 
@@ -81,21 +87,17 @@ internal sealed class TcpReader(Socket socket) : INetworkReader
 
     private async ValueTask FillNetworkBufferAsync(CancellationToken cancellationToken)
     {
-        int remaining = _networkWritePos - _networkReadPos;
-        if ((remaining > 0) && (_networkReadPos > 0))
-        {
-            _networkBuffer.AsSpan(_networkReadPos, remaining).CopyTo(_networkBuffer);
-        }
-
-        _networkWritePos = remaining;
+        // This is only called once the buffered data has been fully consumed, so the network buffer
+        // can always be refilled from the beginning.
         _networkReadPos = 0;
+        _networkWritePos = 0;
 
         int n;
         try
         {
             n = await Utilities.ExecuteWithTimeoutAsync(
                     Timeout,
-                    token => socket.ReceiveAsync(_networkBuffer.AsMemory(_networkWritePos), SocketFlags.None, token),
+                    token => socket.ReceiveAsync(_networkBuffer.AsMemory(), SocketFlags.None, token),
                     cancellationToken)
                 .ConfigureAwait(false);
         }

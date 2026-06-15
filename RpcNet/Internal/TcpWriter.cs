@@ -8,6 +8,7 @@ using System.Net.Sockets;
 internal sealed class TcpWriter(Socket socket) : INetworkWriter
 {
     private const int TcpHeaderLength = 4;
+    private const int LastFragmentFlag = unchecked((int)0x80000000);
 
     private readonly MemoryStream _buffer = new();
 
@@ -22,9 +23,9 @@ internal sealed class TcpWriter(Socket socket) : INetworkWriter
     public async ValueTask EndWritingAsync(EndPoint remoteEndPoint, CancellationToken cancellationToken)
     {
         int length = (int)_buffer.Length - TcpHeaderLength;
-        int lengthToDecode = length | unchecked((int)0x80000000);
+        int header = length | LastFragmentFlag;
 
-        Utilities.WriteBytesBigEndian(_buffer.GetBuffer().AsSpan(), lengthToDecode);
+        Utilities.WriteBytesBigEndian(_buffer.GetBuffer().AsSpan(), header);
 
         try
         {

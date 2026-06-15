@@ -60,5 +60,11 @@ internal sealed class XdrWriter(INetworkWriter networkWriter) : IXdrWriter
         WriteOpaque(_encoding.GetBytes(value));
     }
 
-    private static void FillWithZeros(Span<byte> buffer) => buffer.Clear();
+    private static void FillWithZeros(Span<byte> buffer)
+    {
+        for (int i = 0; i < buffer.Length; i++)
+        {
+            buffer[i] = 0;
+        }
+    }
 }
