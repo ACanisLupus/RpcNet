@@ -11,6 +11,7 @@ internal sealed class TcpReader(Socket socket) : INetworkReader
     private const int TcpHeaderLength = 4;
 
     private readonly MemoryStream _buffer = new();
+    private readonly byte[] _headerBuffer = new byte[TcpHeaderLength];
     private readonly byte[] _networkBuffer = new byte[NetworkBufferSize];
 
     private int _networkReadPos;
@@ -23,12 +24,11 @@ internal sealed class TcpReader(Socket socket) : INetworkReader
         _buffer.SetLength(0);
         _buffer.Position = 0;
 
-        byte[] headerBuf = new byte[TcpHeaderLength];
         bool lastFragment = false;
         while (!lastFragment)
         {
-            await ConsumeExactAsync(headerBuf, cancellationToken).ConfigureAwait(false);
-            int headerValue = Utilities.ToInt32BigEndian(headerBuf);
+            await ConsumeExactAsync(_headerBuffer, cancellationToken).ConfigureAwait(false);
+            int headerValue = Utilities.ToInt32BigEndian(_headerBuffer);
             lastFragment = headerValue < 0;
             int fragmentLength = headerValue & 0x0fffffff;
 
