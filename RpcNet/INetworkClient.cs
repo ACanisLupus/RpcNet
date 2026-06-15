@@ -7,5 +7,5 @@ public interface INetworkClient : IDisposable
     TimeSpan ReceiveTimeout { get; set; }
     TimeSpan SendTimeout { get; set; }
 
-    void Call(int procedure, int version, IXdrDataType argument, IXdrDataType result);
+    ValueTask CallAsync(int procedure, int version, IXdrDataType argument, IXdrDataType result, CancellationToken cancellationToken);
 }

@@ -11,11 +11,13 @@ using RpcNet.Internal;
 [TestFixture]
 internal sealed class TestUdpReaderWriter
 {
-    private UdpClient _client = null!;
-    private UdpReader _reader = null!;
-    private IPEndPoint _remoteIpEndPoint = null!;
-    private UdpClient _server = null!;
-    private UdpWriter _writer = null!;
+    private UdpClient? _client;
+    private UdpClient? _server;
+
+    private UdpReader Reader { get => field ?? throw new InvalidOperationException("UDP reader is not initialized."); set; }
+    private IPEndPoint RemoteIpEndPoint { get => field ?? throw new InvalidOperationException("Remote IP end point is not initialized."); set; }
+    private UdpClient Server => _server ?? throw new InvalidOperationException("UDP server is not initialized.");
+    private UdpWriter Writer { get => field ?? throw new InvalidOperationException("UDP writer is not initialized."); set; }
 
     [SetUp]
     public void SetUp()
@@ -26,86 +28,77 @@ internal sealed class TestUdpReaderWriter
 
         IPEndPoint? localIpEndPoint = _server.Client.LocalEndPoint as IPEndPoint;
         int port = localIpEndPoint?.Port ?? throw new InvalidOperationException("Could not find local end point.");
-        _remoteIpEndPoint = new IPEndPoint(iPAddress, port);
+        RemoteIpEndPoint = new IPEndPoint(iPAddress, port);
 
         _client = new UdpClient(iPAddress.AddressFamily);
 
-        _reader = new UdpReader(_server.Client, 100);
-        _writer = new UdpWriter(_client.Client, 100);
+        Reader = new UdpReader(_server.Client);
+        Writer = new UdpWriter(_client.Client);
     }
 
     [TearDown]
     public void TearDown()
     {
-        _server.Dispose();
-        _client.Dispose();
+        _server?.Dispose();
+        _client?.Dispose();
     }
 
     [Test]
-    public void SendAndReceiveData([Values(10, 100)] int length)
+    public async ValueTask SendAndReceiveData([Values(10, 100)] int length)
     {
-        _writer.BeginWriting();
-        Span<byte> writeSpan = _writer.Reserve(length);
+        CancellationToken ct = TestContext.CurrentContext.CancellationToken;
+
+        Writer.BeginWriting();
+        Span<byte> writeSpan = Writer.Reserve(length);
         Assert.That(writeSpan.Length, Is.EqualTo(length));
         for (int i = 0; i < length; i++)
         {
             writeSpan[i] = (byte)i;
         }
 
-        Assert.DoesNotThrow(() => _writer.EndWriting(_remoteIpEndPoint));
+        byte[] writtenData = writeSpan.ToArray();
 
-        IPEndPoint remoteIdEndPoint = (IPEndPoint)_reader.BeginReading();
+        Assert.DoesNotThrowAsync(async () => await Writer.EndWritingAsync(RemoteIpEndPoint, ct));
 
-        Assert.That(remoteIdEndPoint.Address, Is.EqualTo(_remoteIpEndPoint.Address));
-        Assert.That(remoteIdEndPoint.Port, Is.Not.EqualTo(_remoteIpEndPoint.Port));
+        IPEndPoint remoteIdEndPoint = (IPEndPoint)await Reader.BeginReadingAsync(ct);
 
-        ReadOnlySpan<byte> readSpan = _reader.Read(length);
-        _reader.EndReading();
+        Assert.That(remoteIdEndPoint.Address, Is.EqualTo(RemoteIpEndPoint.Address));
+        Assert.That(remoteIdEndPoint.Port, Is.Not.EqualTo(RemoteIpEndPoint.Port));
+
+        ReadOnlySpan<byte> readSpan = Reader.Read(length);
+        Reader.EndReading();
         Assert.That(readSpan.Length, Is.EqualTo(length));
 
-        AssertEquals(readSpan, writeSpan);
+        AssertEquals(readSpan, writtenData);
     }
 
     [Test]
     public void SendCompleteAndReceiveFragmentedData([Values(2, 10, 100)] int length)
     {
-        _writer.BeginWriting();
-        Span<byte> writeSpan = _writer.Reserve(100);
+        CancellationToken ct = TestContext.CurrentContext.CancellationToken;
+
+        Writer.BeginWriting();
+        Span<byte> writeSpan = Writer.Reserve(100);
         Assert.That(writeSpan.Length, Is.EqualTo(100));
         for (int i = 0; i < length; i++)
         {
             writeSpan[i] = (byte)i;
         }
 
-        Assert.DoesNotThrow(() => _writer.EndWriting(_remoteIpEndPoint));
+        Assert.DoesNotThrowAsync(async () => await Writer.EndWritingAsync(RemoteIpEndPoint, ct));
 
-        Assert.DoesNotThrow(() => _reader.BeginReading());
+        Assert.DoesNotThrowAsync(async () => await Reader.BeginReadingAsync(ct));
 
         byte[] buffer = new byte[100];
         int index = 0;
         for (int i = 0; i < (100 / length); i++)
         {
-            _reader.Read(length).CopyTo(buffer.AsSpan(index, length));
+            Reader.Read(length).CopyTo(buffer.AsSpan(index, length));
             index += length;
         }
 
-        _reader.EndReading();
+        Reader.EndReading();
         AssertEquals(buffer.AsSpan(), writeSpan);
-    }
-
-    [Test]
-    [TestCase(101)]
-    [TestCase(50, 51)]
-    [TestCase(33, 33, 35)]
-    public void Overflow(params int[] arguments)
-    {
-        _writer.BeginWriting();
-        for (int i = 0; i < (arguments.Length - 1); i++)
-        {
-            _ = _writer.Reserve(arguments[i]);
-        }
-
-        _ = Assert.Throws<RpcException>(() => _ = _writer.Reserve(arguments[^1]));
     }
 
     [Test]
@@ -114,29 +107,33 @@ internal sealed class TestUdpReaderWriter
     [TestCase(3, 3, 5)]
     public void Underflow(params int[] arguments)
     {
-        _writer.BeginWriting();
-        _ = _writer.Reserve(10);
+        CancellationToken ct = TestContext.CurrentContext.CancellationToken;
 
-        Assert.DoesNotThrow(() => _writer.EndWriting(_remoteIpEndPoint));
+        Writer.BeginWriting();
+        _ = Writer.Reserve(10);
 
-        Assert.DoesNotThrow(() => _reader.BeginReading());
+        Assert.DoesNotThrowAsync(async () => await Writer.EndWritingAsync(RemoteIpEndPoint, ct));
+
+        Assert.DoesNotThrowAsync(async () => await Reader.BeginReadingAsync(ct));
 
         for (int i = 0; i < (arguments.Length - 1); i++)
         {
-            _ = _reader.Read(arguments[i]);
+            _ = Reader.Read(arguments[i]);
         }
 
-        _ = Assert.Throws<RpcException>(() => _reader.Read(arguments[^1]));
+        _ = Assert.Throws<RpcException>(() => Reader.Read(arguments[^1]));
     }
 
     [Test]
-    public void AbortReading()
+    public async ValueTask AbortReading()
     {
-        Task<EndPoint> task = Task.Run(_reader.BeginReading);
-        Thread.Sleep(100);
-        _server.Dispose();
-        RpcException? e = Assert.Throws<RpcException>(() => task.GetAwaiter().GetResult());
-        Assert.That(e?.Message, Is.EqualTo("Could not receive data from UDP socket. Socket error code: Interrupted."));
+        CancellationToken ct = TestContext.CurrentContext.CancellationToken;
+
+        ValueTask<EndPoint> task = await Task.Run(() => Reader.BeginReadingAsync(ct), ct);
+        await Task.Delay(100, ct).ConfigureAwait(false);
+        Server.Dispose();
+        RpcException? e = Assert.ThrowsAsync<RpcException>(async () => await task);
+        Assert.That(e?.Message, Is.EqualTo("Could not receive data from UDP socket. Socket error code: OperationAborted."));
     }
 
     private static void AssertEquals(ReadOnlySpan<byte> one, ReadOnlySpan<byte> two)

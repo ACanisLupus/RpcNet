@@ -5,7 +5,7 @@ namespace RpcNet;
 using System.Net;
 using RpcNet.Internal;
 
-public abstract class ServerStub : IDisposable
+public abstract class ServerStub : IAsyncDisposable
 {
     protected readonly ServerSettings Settings;
     protected readonly XdrVoid Void = new();
@@ -18,10 +18,7 @@ public abstract class ServerStub : IDisposable
 
     protected ServerStub(Protocol protocol, IPAddress ipAddress, int port, int program, int[] versions, ServerSettings? serverSettings = null)
     {
-        if (ipAddress is null)
-        {
-            throw new ArgumentNullException(nameof(ipAddress));
-        }
+        ArgumentNullException.ThrowIfNull(ipAddress);
 
         if (versions is null || (versions.Length == 0))
         {
@@ -30,10 +27,10 @@ public abstract class ServerStub : IDisposable
 
         Settings = serverSettings ?? new ServerSettings();
 
-        Action<ReceivedRpcCall> dispatchReceivedCall = DispatchReceivedCallWithLock;
+        Func<ReceivedRpcCall, CancellationToken, ValueTask> dispatchReceivedCall = DispatchReceivedCallWithLock;
         if (Settings.LockFreeDispatcher)
         {
-            dispatchReceivedCall = DispatchReceivedCall;
+            dispatchReceivedCall = DispatchReceivedCallAsync;
         }
 
         if (protocol.HasFlag(Protocol.Tcp))
@@ -50,40 +47,47 @@ public abstract class ServerStub : IDisposable
     public int TcpPort { get; private set; }
     public int UdpPort { get; private set; }
 
-    public void Start()
+    public async ValueTask DisposeAsync()
     {
-        TcpPort = _rpcTcpServer?.Start() ?? 0;
-        UdpPort = _rpcUdpServer?.Start() ?? 0;
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
+        await DisposeAsync(true).ConfigureAwait(false);
         GC.SuppressFinalize(this);
     }
 
-    protected abstract void DispatchReceivedCall(ReceivedRpcCall call);
+    public async ValueTask StartAsync(CancellationToken cancellationToken)
+    {
+        TcpPort = _rpcTcpServer is not null ? await _rpcTcpServer.StartAsync(cancellationToken).ConfigureAwait(false) : 0;
+        UdpPort = _rpcUdpServer is not null ? await _rpcUdpServer.StartAsync(cancellationToken).ConfigureAwait(false) : 0;
+    }
 
-    protected virtual void Dispose(bool disposing)
+    protected abstract ValueTask DispatchReceivedCallAsync(ReceivedRpcCall call, CancellationToken cancellationToken);
+
+    protected virtual async ValueTask DisposeAsync(bool disposing)
     {
         if (!_isDisposed)
         {
             if (disposing)
             {
-                _rpcUdpServer?.Dispose();
-                _rpcTcpServer?.Dispose();
+                if (_rpcUdpServer is not null)
+                {
+                    await _rpcUdpServer.DisposeAsync().ConfigureAwait(false);
+                }
+
+                if (_rpcTcpServer is not null)
+                {
+                    await _rpcTcpServer.DisposeAsync().ConfigureAwait(false);
+                }
             }
 
             _isDisposed = true;
         }
     }
 
-    private void DispatchReceivedCallWithLock(ReceivedRpcCall call)
+    private async ValueTask DispatchReceivedCallWithLock(ReceivedRpcCall call, CancellationToken cancellationToken)
     {
-        _lock.Wait();
+        await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            DispatchReceivedCall(call);
+            await DispatchReceivedCallAsync(call, cancellationToken).ConfigureAwait(false);
         }
         finally
         {

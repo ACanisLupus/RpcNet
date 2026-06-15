@@ -33,13 +33,27 @@ internal sealed class RpcUdpClient : INetworkClient
         set => Utilities.SetSendTimeout(_socket, value);
     }
 
-    public static RpcUdpClient Connect(IPAddress ipAddress, int port, int program, int version, ClientSettings clientSettings)
+    public static async ValueTask<RpcUdpClient> ConnectAsync(
+        IPAddress ipAddress,
+        int port,
+        int program,
+        int version,
+        ClientSettings clientSettings,
+        CancellationToken cancellationToken)
     {
         if (port == 0)
         {
             port = program == PortMapperConstants.PortMapperProgram
                 ? PortMapperConstants.PortMapperPort
-                : PortMapperUtilities.GetPort(ProtocolKind.Udp, ipAddress, clientSettings.PortMapperPort, program, version, clientSettings);
+                : await PortMapperUtilities.GetPortAsync(
+                        ProtocolKind.Udp,
+                        ipAddress,
+                        clientSettings.PortMapperPort,
+                        program,
+                        version,
+                        clientSettings,
+                        cancellationToken)
+                    .ConfigureAwait(false);
         }
 
         Socket socket = new(ipAddress.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
@@ -51,8 +65,8 @@ internal sealed class RpcUdpClient : INetworkClient
         return new RpcUdpClient(socket, ipAddress, port, program);
     }
 
-    public void Call(int procedure, int version, IXdrDataType argument, IXdrDataType result) =>
-        _call.SendCall(procedure, version, argument, result);
+    public ValueTask CallAsync(int procedure, int version, IXdrDataType argument, IXdrDataType result, CancellationToken cancellationToken) =>
+        _call.SendCallAsync(procedure, version, argument, result, cancellationToken);
 
     public void Dispose() => _socket.Dispose();
 }

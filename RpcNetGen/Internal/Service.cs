@@ -8,9 +8,9 @@ internal class Service
     private readonly string _clientVersionNumber;
     private readonly string _name;
     private readonly List<Procedure> _parsedProcedures = [];
+    private readonly Dictionary<string, List<Procedure>> _parsedProceduresPerVersionConstant = [];
     private readonly string _programNumberConstant;
     private readonly List<string> _versionConstants = [];
-    private readonly Dictionary<string, List<Procedure>> _parsedProceduresPerVersionConstant = [];
 
     public Service(Settings settings, RpcParser.ProgramContext program, string access, Content content)
     {
@@ -65,11 +65,13 @@ internal class Service
         writer.WriteLine(indent, $"{_access} class {_name}Client : ClientStub");
         writer.WriteLine(indent, "{");
         writer.WriteLine(indent + 1, $"private {_name}Client(INetworkClient networkClient, RpcEndPoint rpcEndPoint, ClientSettings clientSettings) :");
-        writer.WriteLine(indent + 2, $"base(networkClient, rpcEndPoint, clientSettings)");
+        writer.WriteLine(indent + 2, "base(networkClient, rpcEndPoint, clientSettings)");
         writer.WriteLine(indent + 1, "{");
         writer.WriteLine(indent + 1, "}");
         writer.WriteLine();
-        writer.WriteLine(indent + 1, $"public static {_name}Client Connect(Protocol protocol, IPAddress ipAddress, int port = 0, ClientSettings? clientSettings = default)");
+        writer.WriteLine(
+            indent + 1,
+            $"public static async ValueTask<{_name}Client> ConnectAsync(Protocol protocol, IPAddress ipAddress, int port = 0, ClientSettings? clientSettings = default, CancellationToken cancellationToken = default)");
         writer.WriteLine(indent + 1, "{");
         writer.WriteLine(indent + 2, "ArgumentNullException.ThrowIfNull(ipAddress);");
         writer.WriteLine(indent + 2, "if (clientSettings is null)");
@@ -79,7 +81,9 @@ internal class Service
         writer.WriteLine();
         writer.WriteLine(indent + 2, "RpcEndPoint rpcEndPoint = new(new IPEndPoint(ipAddress, port), protocol);");
         writer.WriteLine();
-        writer.WriteLine(indent + 2, $"INetworkClient networkClient = Connect(protocol, ipAddress, port, {_programNumberConstant}, {_clientVersionNumber}, clientSettings);");
+        writer.WriteLine(
+            indent + 2,
+            $"INetworkClient networkClient = await ConnectAsync(protocol, ipAddress, port, {_programNumberConstant}, {_clientVersionNumber}, clientSettings, cancellationToken).ConfigureAwait(false);");
         writer.WriteLine();
         writer.WriteLine(indent + 2, $"return new {_name}Client(networkClient, rpcEndPoint, clientSettings);");
         writer.WriteLine(indent + 1, "}");
@@ -118,7 +122,7 @@ internal class Service
 
         writer.WriteLine();
 
-        writer.WriteLine(indent + 1, "protected override void DispatchReceivedCall(ReceivedRpcCall call)");
+        writer.WriteLine(indent + 1, "protected override async ValueTask DispatchReceivedCallAsync(ReceivedRpcCall call, CancellationToken cancellationToken)");
         writer.WriteLine(indent + 1, "{");
         bool first = true;
         foreach (string versionConstant in _versionConstants)

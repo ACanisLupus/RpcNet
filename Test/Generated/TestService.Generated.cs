@@ -687,7 +687,7 @@ internal class TestServiceClient : ClientStub
     {
     }
 
-    public static TestServiceClient Connect(Protocol protocol, IPAddress ipAddress, int port = 0, ClientSettings? clientSettings = default)
+    public static async ValueTask<TestServiceClient> ConnectAsync(Protocol protocol, IPAddress ipAddress, int port = 0, ClientSettings? clientSettings = default, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(ipAddress);
         if (clientSettings is null)
@@ -697,19 +697,19 @@ internal class TestServiceClient : ClientStub
 
         RpcEndPoint rpcEndPoint = new(new IPEndPoint(ipAddress, port), protocol);
 
-        INetworkClient networkClient = Connect(protocol, ipAddress, port, TestServiceConstants.TestServiceProgram, TestServiceConstants.TestServiceVersion2, clientSettings);
+        INetworkClient networkClient = await ConnectAsync(protocol, ipAddress, port, TestServiceConstants.TestServiceProgram, TestServiceConstants.TestServiceVersion2, clientSettings, cancellationToken).ConfigureAwait(false);
 
         return new TestServiceClient(networkClient, rpcEndPoint, clientSettings);
     }
 
-    public void ThrowsException_1()
+    public async ValueTask ThrowsException_1Async(CancellationToken cancellationToken = default)
     {
         XdrVoid args = Void;
         XdrVoid result = Void;
         Settings.Logger?.BeginCall(RpcEndPoint, TestServiceConstants.TestServiceVersion, TestServiceConstants.ThrowsException, "ThrowsException_1", args);
         try
         {
-            Call(TestServiceConstants.ThrowsException, TestServiceConstants.TestServiceVersion, args, result);
+            await CallAsync(TestServiceConstants.ThrowsException, TestServiceConstants.TestServiceVersion, args, result, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception e)
         {
@@ -779,7 +779,7 @@ internal class TestServiceClient : ClientStub
         }
     }
 
-    public int Echo_1(int value)
+    public async ValueTask<int> Echo_1Async(int value, CancellationToken cancellationToken = default)
     {
         Echo_1_Arguments args = new()
         {
@@ -789,7 +789,7 @@ internal class TestServiceClient : ClientStub
         Settings.Logger?.BeginCall(RpcEndPoint, TestServiceConstants.TestServiceVersion, TestServiceConstants.Echo, "Echo_1", args);
         try
         {
-            Call(TestServiceConstants.Echo, TestServiceConstants.TestServiceVersion, args, result);
+            await CallAsync(TestServiceConstants.Echo, TestServiceConstants.TestServiceVersion, args, result, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception e)
         {
@@ -800,13 +800,13 @@ internal class TestServiceClient : ClientStub
         return result.Value;
     }
 
-    public SimpleStruct SimpleStructSimpleStruct_2(SimpleStruct value)
+    public async ValueTask<SimpleStruct> SimpleStructSimpleStruct_2Async(SimpleStruct value, CancellationToken cancellationToken = default)
     {
         SimpleStruct result = new();
         Settings.Logger?.BeginCall(RpcEndPoint, TestServiceConstants.TestServiceVersion2, TestServiceConstants.SimpleStructSimpleStruct, "SimpleStructSimpleStruct_2", value);
         try
         {
-            Call(TestServiceConstants.SimpleStructSimpleStruct, TestServiceConstants.TestServiceVersion2, value, result);
+            await CallAsync(TestServiceConstants.SimpleStructSimpleStruct, TestServiceConstants.TestServiceVersion2, value, result, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception e)
         {
@@ -885,11 +885,11 @@ internal abstract class TestServiceServerStub : ServerStub
         }
     }
 
-    public abstract void ThrowsException_1(RpcEndPoint rpcEndPoint);
-    public abstract int Echo_1(RpcEndPoint rpcEndPoint, int value);
-    public abstract SimpleStruct SimpleStructSimpleStruct_2(RpcEndPoint rpcEndPoint, SimpleStruct value);
+    public abstract ValueTask ThrowsException_1Async(RpcEndPoint rpcEndPoint, CancellationToken cancellationToken);
+    public abstract ValueTask<int> Echo_1Async(RpcEndPoint rpcEndPoint, int value, CancellationToken cancellationToken);
+    public abstract ValueTask<SimpleStruct> SimpleStructSimpleStruct_2Async(RpcEndPoint rpcEndPoint, SimpleStruct value, CancellationToken cancellationToken);
 
-    protected override void DispatchReceivedCall(ReceivedRpcCall call)
+    protected override async ValueTask DispatchReceivedCallAsync(ReceivedRpcCall call, CancellationToken cancellationToken)
     {
         if (call.Version == TestServiceConstants.TestServiceVersion)
         {
@@ -903,7 +903,7 @@ internal abstract class TestServiceServerStub : ServerStub
                     XdrVoid result = Void;
                     try
                     {
-                        ThrowsException_1(call.RpcEndPoint);
+                        await ThrowsException_1Async(call.RpcEndPoint, cancellationToken).ConfigureAwait(false);
                         Settings.Logger?.EndCall(call.RpcEndPoint, TestServiceConstants.TestServiceVersion, TestServiceConstants.ThrowsException, "ThrowsException_1", args, result);
                         call.Reply(result);
                     }
@@ -923,7 +923,7 @@ internal abstract class TestServiceServerStub : ServerStub
                     Echo_1_Result result = new();
                     try
                     {
-                        result.Value = Echo_1(call.RpcEndPoint, args.Value);
+                        result.Value = await Echo_1Async(call.RpcEndPoint, args.Value, cancellationToken).ConfigureAwait(false);
                         Settings.Logger?.EndCall(call.RpcEndPoint, TestServiceConstants.TestServiceVersion, TestServiceConstants.Echo, "Echo_1", args, result);
                         call.Reply(result);
                     }
@@ -952,7 +952,7 @@ internal abstract class TestServiceServerStub : ServerStub
                     Settings.Logger?.BeginCall(call.RpcEndPoint, TestServiceConstants.TestServiceVersion2, TestServiceConstants.SimpleStructSimpleStruct, "SimpleStructSimpleStruct_2", value);
                     try
                     {
-                        SimpleStruct result = SimpleStructSimpleStruct_2(call.RpcEndPoint, value);
+                        SimpleStruct result = await SimpleStructSimpleStruct_2Async(call.RpcEndPoint, value, cancellationToken).ConfigureAwait(false);
                         Settings.Logger?.EndCall(call.RpcEndPoint, TestServiceConstants.TestServiceVersion2, TestServiceConstants.SimpleStructSimpleStruct, "SimpleStructSimpleStruct_2", value, result);
                         call.Reply(result);
                     }

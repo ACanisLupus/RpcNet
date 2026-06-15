@@ -7,6 +7,6 @@ using System.Net;
 internal interface INetworkWriter
 {
     void BeginWriting();
-    void EndWriting(EndPoint remoteEndPoint);
+    ValueTask EndWritingAsync(EndPoint remoteEndPoint, CancellationToken cancellationToken);
     Span<byte> Reserve(int length);
 }

@@ -12,10 +12,6 @@ internal class Constant(string name, string value) : IEquatable<Constant>
 
     public string Name { get; } = name;
 
-    public void Dump(XdrFileWriter writer, int indent) => writer.WriteLine(indent, $"public const int {Name} = {_value};");
-
-    public override string ToString() => $"{{ Name = {Name}, Value = {_value} }}";
-
     public bool Equals(Constant other)
     {
         if (other is null)
@@ -30,6 +26,10 @@ internal class Constant(string name, string value) : IEquatable<Constant>
 
         return (_value == other._value) && (Name == other.Name);
     }
+
+    public void Dump(XdrFileWriter writer, int indent) => writer.WriteLine(indent, $"public const int {Name} = {_value};");
+
+    public override string ToString() => $"{{ Name = {Name}, Value = {_value} }}";
 
     public override bool Equals(object obj)
     {

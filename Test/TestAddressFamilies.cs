@@ -18,14 +18,21 @@ internal sealed class TestAddressFamilies
     private PortMapperServer PortMapperServer => _portMapperServer ?? throw new InvalidOperationException("Port mapper server is not initialized.");
 
     [TearDown]
-    public void TearDown()
+    public async ValueTask TearDownAsync()
     {
-        _testServer?.Dispose();
-        _portMapperServer?.Dispose();
+        if (_testServer != null)
+        {
+            await _testServer.DisposeAsync();
+        }
+
+        if (_portMapperServer != null)
+        {
+            await _portMapperServer.DisposeAsync();
+        }
     }
 
     [Test]
-    public void AllCombinations(
+    public async ValueTask AllCombinations(
         [Values("127.0.0.1", "0.0.0.0", "::1", "::")]
         string portMapperAddress,
         [Values("127.0.0.1", "0.0.0.0", "::1", "::")]
@@ -33,22 +40,24 @@ internal sealed class TestAddressFamilies
         [Values("127.0.0.1", "::1")] string clientAddress,
         [Values(Protocol.Tcp, Protocol.Udp)] Protocol protocol)
     {
+        CancellationToken ct = TestContext.CurrentContext.CancellationToken;
+
         IPAddress portMapperIpAddress = IPAddress.Parse(portMapperAddress);
         IPAddress serverIpAddress = IPAddress.Parse(serverAddress);
         IPAddress clientIpAddress = IPAddress.Parse(clientAddress);
 
         FilterNotWorkingTests(portMapperIpAddress, serverIpAddress, clientIpAddress, protocol);
 
-        SetUp(portMapperIpAddress, serverIpAddress);
+        await SetUpAsync(portMapperIpAddress, serverIpAddress, ct);
 
         ClientSettings clientSettings = new()
         {
             PortMapperPort = PortMapperServer.TcpPort
         };
 
-        using TestServiceClient client = TestServiceClient.Connect(protocol, clientIpAddress, 0, clientSettings);
+        using TestServiceClient client = await TestServiceClient.ConnectAsync(protocol, clientIpAddress, 0, clientSettings, ct);
 
-        int result = client.Echo_1(42);
+        int result = await client.Echo_1Async(42, ct);
         Assert.That(result, Is.EqualTo(42));
     }
 
@@ -86,10 +95,10 @@ internal sealed class TestAddressFamilies
     private static bool IsIpv4(IPAddress ipAddress) => ipAddress.AddressFamily == AddressFamily.InterNetwork;
     private static bool IsUdp(Protocol protocol) => protocol == Protocol.Udp;
 
-    private void SetUp(IPAddress portMapperIpAddress, IPAddress serverIpAddress)
+    private async ValueTask SetUpAsync(IPAddress portMapperIpAddress, IPAddress serverIpAddress, CancellationToken ct)
     {
         _portMapperServer = new PortMapperServer(Protocol.Tcp, portMapperIpAddress, 0);
-        _portMapperServer.Start();
+        await _portMapperServer.StartAsync(ct);
 
         ServerSettings serverSettings = new()
         {
@@ -97,6 +106,6 @@ internal sealed class TestAddressFamilies
         };
 
         _testServer = new TestServer(Protocol.Tcp | Protocol.Udp, serverIpAddress, 0, serverSettings);
-        _testServer.Start();
+        await _testServer.StartAsync(ct);
     }
 }

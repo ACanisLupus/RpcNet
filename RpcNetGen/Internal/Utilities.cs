@@ -6,6 +6,14 @@ using Antlr4.Runtime;
 
 internal static class Utilities
 {
+    public static void Check(this ParserRuleContext parserRuleContext)
+    {
+        if (parserRuleContext.exception is not null)
+        {
+            throw parserRuleContext.exception;
+        }
+    }
+
     extension(string str)
     {
         public string ToLowerFirstLetter()
@@ -26,14 +34,6 @@ internal static class Utilities
             }
 
             return str[..1].ToUpper() + str[1..];
-        }
-    }
-
-    public static void Check(this ParserRuleContext parserRuleContext)
-    {
-        if (parserRuleContext.exception is not null)
-        {
-            throw parserRuleContext.exception;
         }
     }
 }

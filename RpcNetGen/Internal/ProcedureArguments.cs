@@ -6,8 +6,9 @@ internal class ProcedureArguments
 {
     private readonly List<Declaration> _arguments = [];
     private readonly string _procedureName;
-    private string _structName;
+
     private bool _isSingleCustomType;
+    private string _structName;
     private Struct _tempParsedStructForClient;
     private Struct _tempParsedStructForServer;
 
@@ -94,10 +95,22 @@ internal class ProcedureArguments
     {
         if (IsSingleVoid)
         {
-            return "";
+            return "CancellationToken cancellationToken = default";
         }
 
-        return string.Join(", ", _arguments.Select(p => p.DataType.Declaration + p.QuestionMark + " " + p.NameAsVariable));
+        return string.Join(", ", _arguments.Select(p => p.DataType.Declaration + p.QuestionMark + " " + p.NameAsVariable)) +
+               ", CancellationToken cancellationToken = default";
+    }
+
+    public string GetArgumentsForClientInServer()
+    {
+        if (IsSingleVoid)
+        {
+            return "CancellationToken cancellationToken";
+        }
+
+        return string.Join(", ", _arguments.Select(p => p.DataType.Declaration + p.QuestionMark + " " + p.NameAsVariable)) +
+               ", CancellationToken cancellationToken";
     }
 
     public string GetArgumentsForServer()

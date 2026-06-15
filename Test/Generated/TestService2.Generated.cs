@@ -34,7 +34,7 @@ internal class TestService2Client : ClientStub
     {
     }
 
-    public static TestService2Client Connect(Protocol protocol, IPAddress ipAddress, int port = 0, ClientSettings? clientSettings = default)
+    public static async ValueTask<TestService2Client> ConnectAsync(Protocol protocol, IPAddress ipAddress, int port = 0, ClientSettings? clientSettings = default, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(ipAddress);
         if (clientSettings is null)
@@ -44,19 +44,19 @@ internal class TestService2Client : ClientStub
 
         RpcEndPoint rpcEndPoint = new(new IPEndPoint(ipAddress, port), protocol);
 
-        INetworkClient networkClient = Connect(protocol, ipAddress, port, TestService2Constants.TestServiceProgram2, TestService2Constants.NonExistingVersion, clientSettings);
+        INetworkClient networkClient = await ConnectAsync(protocol, ipAddress, port, TestService2Constants.TestServiceProgram2, TestService2Constants.NonExistingVersion, clientSettings, cancellationToken).ConfigureAwait(false);
 
         return new TestService2Client(networkClient, rpcEndPoint, clientSettings);
     }
 
-    public void ThrowsException_1()
+    public async ValueTask ThrowsException_1Async(CancellationToken cancellationToken = default)
     {
         XdrVoid args = Void;
         XdrVoid result = Void;
         Settings.Logger?.BeginCall(RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.ThrowsException, "ThrowsException_1", args);
         try
         {
-            Call(TestService2Constants.ThrowsException, TestService2Constants.TestServiceVersion, args, result);
+            await CallAsync(TestService2Constants.ThrowsException, TestService2Constants.TestServiceVersion, args, result, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception e)
         {
@@ -126,7 +126,7 @@ internal class TestService2Client : ClientStub
         }
     }
 
-    public int Echo_1(int value)
+    public async ValueTask<int> Echo_1Async(int value, CancellationToken cancellationToken = default)
     {
         Echo_1_Arguments args = new()
         {
@@ -136,7 +136,7 @@ internal class TestService2Client : ClientStub
         Settings.Logger?.BeginCall(RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.Echo, "Echo_1", args);
         try
         {
-            Call(TestService2Constants.Echo, TestService2Constants.TestServiceVersion, args, result);
+            await CallAsync(TestService2Constants.Echo, TestService2Constants.TestServiceVersion, args, result, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception e)
         {
@@ -193,7 +193,7 @@ internal class TestService2Client : ClientStub
         }
     }
 
-    public void NonExistingProcedure_1(byte[] someBytes)
+    public async ValueTask NonExistingProcedure_1Async(byte[] someBytes, CancellationToken cancellationToken = default)
     {
         NonExistingProcedure_1_Arguments args = new()
         {
@@ -203,7 +203,7 @@ internal class TestService2Client : ClientStub
         Settings.Logger?.BeginCall(RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.NonExistingProcedure, "NonExistingProcedure_1", args);
         try
         {
-            Call(TestService2Constants.NonExistingProcedure, TestService2Constants.TestServiceVersion, args, result);
+            await CallAsync(TestService2Constants.NonExistingProcedure, TestService2Constants.TestServiceVersion, args, result, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception e)
         {
@@ -259,7 +259,7 @@ internal class TestService2Client : ClientStub
         }
     }
 
-    public void NonExistingProcedure_3(byte[] someBytes)
+    public async ValueTask NonExistingProcedure_3Async(byte[] someBytes, CancellationToken cancellationToken = default)
     {
         NonExistingProcedure_3_Arguments args = new()
         {
@@ -269,7 +269,7 @@ internal class TestService2Client : ClientStub
         Settings.Logger?.BeginCall(RpcEndPoint, TestService2Constants.NonExistingVersion, TestService2Constants.NonExistingProcedure, "NonExistingProcedure_3", args);
         try
         {
-            Call(TestService2Constants.NonExistingProcedure, TestService2Constants.NonExistingVersion, args, result);
+            await CallAsync(TestService2Constants.NonExistingProcedure, TestService2Constants.NonExistingVersion, args, result, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception e)
         {
@@ -439,12 +439,12 @@ internal abstract class TestService2ServerStub : ServerStub
         }
     }
 
-    public abstract void ThrowsException_1(RpcEndPoint rpcEndPoint);
-    public abstract int Echo_1(RpcEndPoint rpcEndPoint, int value);
-    public abstract void NonExistingProcedure_1(RpcEndPoint rpcEndPoint, byte[] someBytes);
-    public abstract void NonExistingProcedure_3(RpcEndPoint rpcEndPoint, byte[] someBytes);
+    public abstract ValueTask ThrowsException_1Async(RpcEndPoint rpcEndPoint, CancellationToken cancellationToken);
+    public abstract ValueTask<int> Echo_1Async(RpcEndPoint rpcEndPoint, int value, CancellationToken cancellationToken);
+    public abstract ValueTask NonExistingProcedure_1Async(RpcEndPoint rpcEndPoint, byte[] someBytes, CancellationToken cancellationToken);
+    public abstract ValueTask NonExistingProcedure_3Async(RpcEndPoint rpcEndPoint, byte[] someBytes, CancellationToken cancellationToken);
 
-    protected override void DispatchReceivedCall(ReceivedRpcCall call)
+    protected override async ValueTask DispatchReceivedCallAsync(ReceivedRpcCall call, CancellationToken cancellationToken)
     {
         if (call.Version == TestService2Constants.TestServiceVersion)
         {
@@ -458,7 +458,7 @@ internal abstract class TestService2ServerStub : ServerStub
                     XdrVoid result = Void;
                     try
                     {
-                        ThrowsException_1(call.RpcEndPoint);
+                        await ThrowsException_1Async(call.RpcEndPoint, cancellationToken).ConfigureAwait(false);
                         Settings.Logger?.EndCall(call.RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.ThrowsException, "ThrowsException_1", args, result);
                         call.Reply(result);
                     }
@@ -478,7 +478,7 @@ internal abstract class TestService2ServerStub : ServerStub
                     Echo_1_Result result = new();
                     try
                     {
-                        result.Value = Echo_1(call.RpcEndPoint, args.Value);
+                        result.Value = await Echo_1Async(call.RpcEndPoint, args.Value, cancellationToken).ConfigureAwait(false);
                         Settings.Logger?.EndCall(call.RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.Echo, "Echo_1", args, result);
                         call.Reply(result);
                     }
@@ -498,7 +498,7 @@ internal abstract class TestService2ServerStub : ServerStub
                     XdrVoid result = Void;
                     try
                     {
-                        NonExistingProcedure_1(call.RpcEndPoint, args.SomeBytes);
+                        await NonExistingProcedure_1Async(call.RpcEndPoint, args.SomeBytes, cancellationToken).ConfigureAwait(false);
                         Settings.Logger?.EndCall(call.RpcEndPoint, TestService2Constants.TestServiceVersion, TestService2Constants.NonExistingProcedure, "NonExistingProcedure_1", args, result);
                         call.Reply(result);
                     }
@@ -528,7 +528,7 @@ internal abstract class TestService2ServerStub : ServerStub
                     XdrVoid result = Void;
                     try
                     {
-                        NonExistingProcedure_3(call.RpcEndPoint, args.SomeBytes);
+                        await NonExistingProcedure_3Async(call.RpcEndPoint, args.SomeBytes, cancellationToken).ConfigureAwait(false);
                         Settings.Logger?.EndCall(call.RpcEndPoint, TestService2Constants.NonExistingVersion, TestService2Constants.NonExistingProcedure, "NonExistingProcedure_3", args, result);
                         call.Reply(result);
                     }

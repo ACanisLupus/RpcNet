@@ -30,37 +30,21 @@ internal static class Utilities
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CalculateXdrPadding(int length) => (4 - (length & 3)) & 3;
 
-    public static IPAddress GetAlternateIpAddress(IPAddress ipAddress)
-    {
-        if (ipAddress.AddressFamily == AddressFamily.InterNetworkV6)
+    public static IPAddress GetAlternateIpAddress(IPAddress ipAddress) =>
+        ipAddress.AddressFamily switch
         {
-            // Try again with IPv4
-            return IPAddress.IsLoopback(ipAddress) ? IPAddress.Loopback : ipAddress.MapToIPv4();
-        }
+            AddressFamily.InterNetworkV6 => IPAddress.IsLoopback(ipAddress) ? IPAddress.Loopback : ipAddress.MapToIPv4(),
+            AddressFamily.InterNetwork => IPAddress.IsLoopback(ipAddress) ? IPAddress.IPv6Loopback : ipAddress.MapToIPv6(),
+            _ => throw new InvalidOperationException($"The following address family is unsupported: {ipAddress.AddressFamily}.")
+        };
 
-        if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
+    public static IPAddress GetLoopbackAddress(AddressFamily addressFamily) =>
+        addressFamily switch
         {
-            // Try again with IPv6
-            return IPAddress.IsLoopback(ipAddress) ? IPAddress.IPv6Loopback : ipAddress.MapToIPv6();
-        }
-
-        throw new InvalidOperationException($"The following address family is unsupported: {ipAddress.AddressFamily}.");
-    }
-
-    public static IPAddress GetLoopbackAddress(AddressFamily addressFamily)
-    {
-        if (addressFamily == AddressFamily.InterNetworkV6)
-        {
-            return IPAddress.IPv6Loopback;
-        }
-
-        if (addressFamily == AddressFamily.InterNetwork)
-        {
-            return IPAddress.Loopback;
-        }
-
-        throw new InvalidOperationException($"The following address family is unsupported: {addressFamily}.");
-    }
+            AddressFamily.InterNetworkV6 => IPAddress.IPv6Loopback,
+            AddressFamily.InterNetwork => IPAddress.Loopback,
+            _ => throw new InvalidOperationException($"The following address family is unsupported: {addressFamily}.")
+        };
 
     public static TimeSpan GetReceiveTimeout(Socket socket)
     {

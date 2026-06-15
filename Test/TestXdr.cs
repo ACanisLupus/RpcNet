@@ -3,32 +3,20 @@
 namespace Test;
 
 using NUnit.Framework;
-using RpcNet;
 using RpcNet.Internal;
 
 [TestFixture]
 internal sealed class TestXdr
 {
-    private readonly IXdrReader _reader;
+    private readonly XdrReader _reader;
     private readonly StubNetwork _stubNetwork;
-    private readonly IXdrWriter _writer;
+    private readonly XdrWriter _writer;
 
     public TestXdr()
     {
         _stubNetwork = new StubNetwork(65536, 65536);
         _reader = new XdrReader(_stubNetwork);
         _writer = new XdrWriter(_stubNetwork);
-    }
-
-    public static byte[] GenerateByteTestData(int length)
-    {
-        byte[] value = new byte[length];
-        for (int i = 0; i < length; i++)
-        {
-            value[i] = (byte)i;
-        }
-
-        return value;
     }
 
     [SetUp]
@@ -254,5 +242,16 @@ internal sealed class TestXdr
 
         Assert.That(_stubNetwork.WriteIndex, Is.EqualTo(expectedWriteIndex));
         Assert.That(_reader.ReadString(), Is.EqualTo(value ?? string.Empty));
+    }
+
+    public static byte[] GenerateByteTestData(int length)
+    {
+        byte[] value = new byte[length];
+        for (int i = 0; i < length; i++)
+        {
+            value[i] = (byte)i;
+        }
+
+        return value;
     }
 }

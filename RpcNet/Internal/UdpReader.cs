@@ -7,37 +7,31 @@ using System.Net.Sockets;
 
 internal sealed class UdpReader : INetworkReader
 {
-    private readonly byte[] _buffer;
+    private readonly MemoryStream _buffer = new();
     private readonly Socket _socket;
 
-    private int _readIndex;
     private EndPoint _remoteEndPoint;
-    private int _totalLength;
 
-    public UdpReader(Socket socket) : this(socket, 65536)
+    public UdpReader(Socket socket)
     {
-    }
-
-    public UdpReader(Socket socket, int bufferSize)
-    {
-        if ((bufferSize < sizeof(int)) || ((bufferSize % 4) != 0))
-        {
-            throw new ArgumentOutOfRangeException(nameof(bufferSize));
-        }
-
         _socket = socket;
         IPAddress iPAddress = socket.AddressFamily == AddressFamily.InterNetworkV6 ? IPAddress.IPv6Loopback : IPAddress.Loopback;
         _remoteEndPoint = new IPEndPoint(iPAddress, 0);
-
-        _buffer = new byte[bufferSize];
     }
 
-    public EndPoint BeginReading()
+    public async ValueTask<EndPoint> BeginReadingAsync(CancellationToken cancellationToken)
     {
-        _readIndex = 0;
         try
         {
-            _totalLength = _socket.ReceiveFrom(_buffer, ref _remoteEndPoint);
+            byte[] temp = new byte[65536];
+            SocketReceiveFromResult result = await _socket
+                .ReceiveFromAsync(temp, SocketFlags.None, _remoteEndPoint, cancellationToken)
+                .ConfigureAwait(false);
+            int received = result.ReceivedBytes;
+            _remoteEndPoint = result.RemoteEndPoint;
+            _buffer.SetLength(received);
+            _buffer.Position = 0;
+            temp.AsSpan(0, received).CopyTo(_buffer.GetBuffer());
             return _remoteEndPoint;
         }
         catch (SocketException e)
@@ -46,24 +40,18 @@ internal sealed class UdpReader : INetworkReader
         }
     }
 
-    public void EndReading()
-    {
-        // Just read to the end. Obviously, this is an unknown procedure
-        if (_readIndex != _totalLength)
-        {
-            _ = Read(_totalLength - _readIndex);
-        }
-    }
+    public void EndReading() => _buffer.Position = _buffer.Length;
 
     public ReadOnlySpan<byte> Read(int length)
     {
-        if ((_readIndex + length) > _totalLength)
+        int available = (int)(_buffer.Length - _buffer.Position);
+        if (length > available)
         {
             throw new RpcException("UDP buffer underflow.");
         }
 
-        Span<byte> span = _buffer.AsSpan(_readIndex, length);
-        _readIndex += length;
+        ReadOnlySpan<byte> span = _buffer.GetBuffer().AsSpan((int)_buffer.Position, length);
+        _buffer.Position += length;
         return span;
     }
 }

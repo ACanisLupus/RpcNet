@@ -15,12 +15,15 @@ internal sealed class TestTcpReaderWriter
     private TcpWriter? _writer;
     private TcpClient? _writerTcpClient;
 
-    private TcpClient ReaderTcpClient => _readerTcpClient ?? throw new InvalidOperationException("Reader TPC client is not initialized.");
+    private TcpReader Reader => _reader ?? throw new InvalidOperationException("TCP reader is not initialized.");
+    private TcpWriter Writer => _writer ?? throw new InvalidOperationException("TCP writer is not initialized.");
     private TcpClient WriterTcpClient => _writerTcpClient ?? throw new InvalidOperationException("Writer TPC client is not initialized.");
 
     [SetUp]
-    public void SetUp()
+    public async ValueTask SetUp()
     {
+        CancellationToken ct = TestContext.CurrentContext.CancellationToken;
+
         IPAddress ipAddress = IPAddress.Loopback;
 
         TcpListener listener = new(ipAddress, 0);
@@ -29,9 +32,9 @@ internal sealed class TestTcpReaderWriter
         IPEndPoint? localIpEndPoint = listener.Server.LocalEndPoint as IPEndPoint;
         int port = localIpEndPoint?.Port ?? throw new InvalidOperationException("Could not find local end point.");
         _readerTcpClient = new TcpClient();
-        Task<TcpClient> task = Task.Run(listener.AcceptTcpClient);
-        _readerTcpClient.Connect(ipAddress, port);
-        _writerTcpClient = task.GetAwaiter().GetResult();
+        Task<TcpClient> task = Task.Run(async () => await listener.AcceptTcpClientAsync(ct), ct);
+        await _readerTcpClient.ConnectAsync(ipAddress, port, ct);
+        _writerTcpClient = await task;
         _reader = new TcpReader(_readerTcpClient.Client);
         _writer = new TcpWriter(_writerTcpClient.Client);
 
@@ -46,69 +49,56 @@ internal sealed class TestTcpReaderWriter
     }
 
     [Test]
-    [TestCase(32, 32)]
-    [TestCase(32, 8)]
-    [TestCase(8, 32)]
-    [TestCase(8, 8)]
-    [TestCase(12, 8)]
-    [TestCase(8, 12)]
-    public void ReadAndWriteMultipleFragments(int maxReadLength, int maxReserveLength)
+    public void ReadAndWriteMultipleFragments()
     {
-        _reader = new TcpReader(ReaderTcpClient.Client, maxReadLength);
-        _writer = new TcpWriter(WriterTcpClient.Client, maxReserveLength);
+        CancellationToken ct = TestContext.CurrentContext.CancellationToken;
 
-        XdrReader xdrReader = new(_reader);
-        XdrWriter xdrWriter = new(_writer);
+        XdrReader xdrReader = new(Reader);
+        XdrWriter xdrWriter = new(Writer);
 
         byte[] value = TestXdr.GenerateByteTestData(17);
 
-        _writer.BeginWriting();
+        Writer.BeginWriting();
         xdrWriter.WriteOpaque(value);
         xdrWriter.Write(42);
 
-        Assert.DoesNotThrow(() => _writer.EndWriting(new IPEndPoint(0, 0)));
+        Assert.DoesNotThrowAsync(async () => await Writer.EndWritingAsync(new IPEndPoint(0, 0), ct));
 
-        Assert.DoesNotThrow(() => _reader.BeginReading());
+        Assert.DoesNotThrowAsync(async () => await Reader.BeginReadingAsync(ct));
 
         Assert.That(xdrReader.ReadOpaque(), Is.EqualTo(value));
         Assert.That(xdrReader.ReadInt32(), Is.EqualTo(42));
-        _reader.EndReading();
+        Reader.EndReading();
     }
 
     [Test]
-    [TestCase(32, 32)]
-    [TestCase(32, 8)]
-    [TestCase(8, 32)]
-    [TestCase(8, 8)]
-    [TestCase(12, 8)]
-    [TestCase(8, 12)]
-    public void ReadAndWriteMultipleFragmentsThreaded(int maxReadLength, int maxReserveLength)
+    public async ValueTask ReadAndWriteMultipleFragmentsThreaded()
     {
-        _reader = new TcpReader(ReaderTcpClient.Client, maxReadLength);
-        _writer = new TcpWriter(WriterTcpClient.Client, maxReserveLength);
+        CancellationToken ct = TestContext.CurrentContext.CancellationToken;
 
         WriterTcpClient.Client.SendBufferSize = 1;
 
-        XdrReader xdrReader = new(_reader);
-        XdrWriter xdrWriter = new(_writer);
+        XdrReader xdrReader = new(Reader);
+        XdrWriter xdrWriter = new(Writer);
 
         byte[] value = TestXdr.GenerateByteTestData(17);
 
         Task task = Task.Run(
             () =>
             {
-                Assert.DoesNotThrow(() => _reader.BeginReading());
+                Assert.DoesNotThrowAsync(async () => await Reader.BeginReadingAsync(ct));
 
                 Assert.That(xdrReader.ReadOpaque(), Is.EqualTo(value));
                 Assert.That(xdrReader.ReadInt32(), Is.EqualTo(42));
-                _reader.EndReading();
-            });
+                Reader.EndReading();
+            },
+            ct);
 
-        _writer.BeginWriting();
+        Writer.BeginWriting();
         xdrWriter.WriteOpaque(value);
         xdrWriter.Write(42);
-        _writer.EndWriting(new IPEndPoint(0, 0));
+        Assert.DoesNotThrowAsync(async () => await Writer.EndWritingAsync(new IPEndPoint(0, 0), ct));
 
-        task.Wait();
+        await task;
     }
 }

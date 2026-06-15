@@ -9,10 +9,6 @@ public abstract class ClientStub(INetworkClient networkClient, RpcEndPoint rpcEn
 {
     private readonly SemaphoreSlim _lockCall = new(1, 1);
 
-    protected RpcEndPoint RpcEndPoint { get; } = rpcEndPoint;
-    protected ClientSettings Settings { get; private set; } = settings;
-    protected XdrVoid Void { get; } = new();
-
     public TimeSpan ReceiveTimeout
     {
         get => networkClient.ReceiveTimeout;
@@ -25,24 +21,37 @@ public abstract class ClientStub(INetworkClient networkClient, RpcEndPoint rpcEn
         set => networkClient.SendTimeout = value;
     }
 
-    protected static INetworkClient Connect(Protocol protocol, IPAddress ipAddress, int port, int programNumber, int versionNumber, ClientSettings clientSettings)
+    protected RpcEndPoint RpcEndPoint { get; } = rpcEndPoint;
+    protected ClientSettings Settings { get; private set; } = settings;
+    protected XdrVoid Void { get; } = new();
+
+    public void Dispose() => networkClient.Dispose();
+
+    protected static async ValueTask<INetworkClient> ConnectAsync(
+        Protocol protocol,
+        IPAddress ipAddress,
+        int port,
+        int programNumber,
+        int versionNumber,
+        ClientSettings clientSettings,
+        CancellationToken cancellationToken)
     {
         return protocol switch
         {
-            Protocol.Tcp => RpcTcpClient.Connect(ipAddress, port, programNumber, versionNumber, clientSettings),
-            Protocol.Udp => RpcUdpClient.Connect(ipAddress, port, programNumber, versionNumber, clientSettings),
+            Protocol.Tcp => await RpcTcpClient.ConnectAsync(ipAddress, port, programNumber, versionNumber, clientSettings, cancellationToken)
+                .ConfigureAwait(false),
+            Protocol.Udp => await RpcUdpClient.ConnectAsync(ipAddress, port, programNumber, versionNumber, clientSettings, cancellationToken)
+                .ConfigureAwait(false),
             _ => throw new ArgumentOutOfRangeException(nameof(protocol))
         };
     }
 
-    public void Dispose() => networkClient.Dispose();
-
-    protected void Call(int procedure, int version, IXdrDataType argument, IXdrDataType result)
+    protected async ValueTask CallAsync(int procedure, int version, IXdrDataType argument, IXdrDataType result, CancellationToken cancellationToken)
     {
-        _lockCall.Wait();
+        await _lockCall.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            networkClient.Call(procedure, version, argument, result);
+            await networkClient.CallAsync(procedure, version, argument, result, cancellationToken).ConfigureAwait(false);
         }
         finally
         {

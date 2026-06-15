@@ -6,18 +6,18 @@ using System.Net;
 using System.Net.Sockets;
 using RpcNet.PortMapper;
 
-internal sealed class RpcTcpServer : IDisposable
+internal sealed class RpcTcpServer : IAsyncDisposable
 {
     private readonly Dictionary<Socket, RpcTcpConnection> _connections = [];
     private readonly IPAddress _ipAddress;
     private readonly SemaphoreSlim _lockConnections = new(1, 1);
     private readonly int _program;
-    private readonly Action<ReceivedRpcCall> _receivedCallDispatcher;
+    private readonly Func<ReceivedRpcCall, CancellationToken, ValueTask> _receivedCallDispatcher;
+    private readonly ServerSettings _serverSettings;
     private readonly Socket _socket;
     private readonly int[] _versions;
-    private readonly ServerSettings _serverSettings;
 
-    private Thread? _acceptingThread;
+    private Task? _acceptingTask;
     private bool _isDisposed;
     private int _port;
     private volatile bool _stopAccepting;
@@ -27,7 +27,7 @@ internal sealed class RpcTcpServer : IDisposable
         int port,
         int program,
         int[] versions,
-        Action<ReceivedRpcCall> receivedCallDispatcher,
+        Func<ReceivedRpcCall, CancellationToken, ValueTask> receivedCallDispatcher,
         ServerSettings serverSettings)
     {
         _serverSettings = serverSettings;
@@ -51,11 +51,56 @@ internal sealed class RpcTcpServer : IDisposable
         }
     }
 
-    public int Start()
+    public async ValueTask DisposeAsync()
+    {
+        _stopAccepting = true;
+        try
+        {
+            // Necessary for Linux. Dispose doesn't abort synchronous calls
+            _socket.Shutdown(SocketShutdown.Both);
+        }
+        catch
+        {
+            // Ignored
+        }
+
+        _socket.Dispose();
+
+        await _lockConnections.WaitAsync();
+        try
+        {
+            foreach (RpcTcpConnection connection in _connections.Values)
+            {
+                connection.Dispose();
+            }
+
+            _connections.Clear();
+        }
+        finally
+        {
+            _lockConnections.Release();
+        }
+
+        if (_acceptingTask is not null)
+        {
+            try
+            {
+                await _acceptingTask.ConfigureAwait(false);
+            }
+            catch (Exception e)
+            {
+                _serverSettings.Logger?.Error($"The following error occurred while waiting for the accepting task to finish: {e}");
+            }
+        }
+
+        _isDisposed = true;
+    }
+
+    public async Task<int> StartAsync(CancellationToken cancellationToken)
     {
         ObjectDisposedException.ThrowIf(_isDisposed, nameof(RpcTcpServer));
 
-        if (_acceptingThread is not null)
+        if (_acceptingTask is not null)
         {
             return _port;
         }
@@ -82,7 +127,7 @@ internal sealed class RpcTcpServer : IDisposable
 
         if ((_program != PortMapperConstants.PortMapperProgram) && (_serverSettings.PortMapperPort != 0))
         {
-            _lockConnections.Wait();
+            await _lockConnections.WaitAsync(cancellationToken);
             try
             {
                 ClientSettings clientSettings = new()
@@ -93,7 +138,15 @@ internal sealed class RpcTcpServer : IDisposable
                 };
                 foreach (int version in _versions)
                 {
-                    PortMapperUtilities.UnsetAndSetPort(_ipAddress.AddressFamily, ProtocolKind.Tcp, _serverSettings.PortMapperPort, _port, _program, version, clientSettings);
+                    await PortMapperUtilities.UnsetAndSetPortAsync(
+                        _ipAddress.AddressFamily,
+                        ProtocolKind.Tcp,
+                        _serverSettings.PortMapperPort,
+                        _port,
+                        _program,
+                        version,
+                        clientSettings,
+                        cancellationToken);
                 }
             }
             finally
@@ -104,50 +157,11 @@ internal sealed class RpcTcpServer : IDisposable
 
         _serverSettings.Logger?.Info($"TCP Server listening on {localEndPoint}...");
 
-        _acceptingThread = new Thread(Accepting)
-        {
-            IsBackground = true,
-            Name = $"RpcNet TCP Server Thread for {localEndPoint}"
-        };
-        _acceptingThread.Start();
+        _acceptingTask = Task.Run(() => AcceptingAsync(cancellationToken), cancellationToken);
         return _port;
     }
 
-    public void Dispose()
-    {
-        _stopAccepting = true;
-        try
-        {
-            // Necessary for Linux. Dispose doesn't abort synchronous calls
-            _socket.Shutdown(SocketShutdown.Both);
-        }
-        catch
-        {
-            // Ignored
-        }
-
-        _socket.Dispose();
-
-        _lockConnections.Wait();
-        try
-        {
-            foreach (RpcTcpConnection connection in _connections.Values)
-            {
-                connection.Dispose();
-            }
-
-            _connections.Clear();
-        }
-        finally
-        {
-            _lockConnections.Release();
-        }
-
-        Interlocked.Exchange(ref _acceptingThread, null)?.Join();
-        _isDisposed = true;
-    }
-
-    private void Accepting()
+    private async Task AcceptingAsync(CancellationToken cancellationToken)
     {
         List<Socket> sockets = [];
         while (!_stopAccepting)
@@ -155,15 +169,12 @@ internal sealed class RpcTcpServer : IDisposable
             try
             {
                 sockets.Clear();
-                _lockConnections.Wait();
+                await _lockConnections.WaitAsync(cancellationToken);
                 try
                 {
                     // + 1 for the server
                     sockets.Capacity = _connections.Count + 1;
-                    foreach (Socket socket in _connections.Keys)
-                    {
-                        sockets.Add(socket);
-                    }
+                    sockets.AddRange(_connections.Keys);
                 }
                 finally
                 {
@@ -174,14 +185,14 @@ internal sealed class RpcTcpServer : IDisposable
 
                 Socket.Select(sockets, null, null, 1000000);
 
-                _lockConnections.Wait();
+                await _lockConnections.WaitAsync(cancellationToken);
                 try
                 {
                     for (int i = sockets.Count - 1; i >= 0; i--)
                     {
                         if (sockets[i] == _socket)
                         {
-                            Socket acceptedSocket = _socket.Accept();
+                            Socket acceptedSocket = await _socket.AcceptAsync(cancellationToken).ConfigureAwait(false);
                             RpcTcpConnection connection = new(acceptedSocket, _program, _versions, _receivedCallDispatcher, _serverSettings.Logger);
 
                             _connections.Add(acceptedSocket, connection);
@@ -189,7 +200,7 @@ internal sealed class RpcTcpServer : IDisposable
                         else
                         {
                             RpcTcpConnection connection = _connections[sockets[i]];
-                            if (!connection.Handle())
+                            if (!await connection.HandleAsync(cancellationToken).ConfigureAwait(false))
                             {
                                 connection.Dispose();
                                 _ = _connections.Remove(sockets[i]);

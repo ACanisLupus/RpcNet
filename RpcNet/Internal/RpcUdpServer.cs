@@ -6,20 +6,20 @@ using System.Net;
 using System.Net.Sockets;
 using RpcNet.PortMapper;
 
-internal sealed class RpcUdpServer : IDisposable
+internal sealed class RpcUdpServer : IAsyncDisposable
 {
     private readonly IPAddress _ipAddress;
     private readonly int _program;
-    private readonly Action<ReceivedRpcCall> _receivedCallDispatcher;
+    private readonly Func<ReceivedRpcCall, CancellationToken, ValueTask> _receivedCallDispatcher;
+    private readonly ServerSettings _serverSettings;
     private readonly Socket _socket;
     private readonly int[] _versions;
-    private readonly ServerSettings _serverSettings;
 
     private bool _isDisposed;
     private int _port;
-    private Thread? _receivingThread;
     private UdpReader? _reader;
     private ReceivedRpcCall? _receivedCall;
+    private Task? _receivingTask;
     private volatile bool _stopReceiving;
     private UdpWriter? _writer;
 
@@ -28,7 +28,7 @@ internal sealed class RpcUdpServer : IDisposable
         int port,
         int program,
         int[] versions,
-        Action<ReceivedRpcCall> receivedCallDispatcher,
+        Func<ReceivedRpcCall, CancellationToken, ValueTask> receivedCallDispatcher,
         ServerSettings serverSettings)
     {
         _serverSettings = serverSettings;
@@ -53,11 +53,44 @@ internal sealed class RpcUdpServer : IDisposable
         }
     }
 
-    public int Start()
+    private UdpReader Reader => _reader ?? throw new InvalidOperationException("UDP reader is not initialized.");
+    private UdpWriter Writer => _writer ?? throw new InvalidOperationException("UDP writer is not initialized.");
+
+    public async ValueTask DisposeAsync()
+    {
+        _stopReceiving = true;
+        try
+        {
+            // Necessary for Linux. Dispose doesn't abort synchronous calls
+            _socket.Shutdown(SocketShutdown.Both);
+        }
+        catch
+        {
+            // Ignored
+        }
+
+        _socket.Dispose();
+
+        if (_receivingTask is not null)
+        {
+            try
+            {
+                await _receivingTask.ConfigureAwait(false);
+            }
+            catch (Exception e)
+            {
+                _serverSettings.Logger?.Error($"The following error occurred while waiting for the receiving task to finish: {e}");
+            }
+        }
+
+        _isDisposed = true;
+    }
+
+    public async Task<int> StartAsync(CancellationToken cancellationToken)
     {
         ObjectDisposedException.ThrowIf(_isDisposed, nameof(RpcUdpServer));
 
-        if (_receivingThread is not null)
+        if (_receivingTask is not null)
         {
             return _port;
         }
@@ -95,58 +128,37 @@ internal sealed class RpcUdpServer : IDisposable
             };
             foreach (int version in _versions)
             {
-                PortMapperUtilities.UnsetAndSetPort(
-                    _ipAddress.AddressFamily,
-                    ProtocolKind.Udp,
-                    _serverSettings.PortMapperPort,
-                    _port,
-                    _program,
-                    version,
-                    clientSettings);
+                await PortMapperUtilities.UnsetAndSetPortAsync(
+                        _ipAddress.AddressFamily,
+                        ProtocolKind.Udp,
+                        _serverSettings.PortMapperPort,
+                        _port,
+                        _program,
+                        version,
+                        clientSettings,
+                        cancellationToken)
+                    .ConfigureAwait(false);
             }
         }
 
         _serverSettings.Logger?.Info($"UDP Server listening on {localEndPoint}...");
 
-        _receivingThread = new Thread(HandlingUdpCalls)
-        {
-            IsBackground = true,
-            Name = $"RpcNet UDP Server Thread for Port {_port}"
-        };
-        _receivingThread.Start();
+        _receivingTask = Task.Run(() => HandlingUdpCallsAsync(cancellationToken), cancellationToken);
         return _port;
     }
 
-    public void Dispose()
-    {
-        _stopReceiving = true;
-        try
-        {
-            // Necessary for Linux. Dispose doesn't abort synchronous calls
-            _socket.Shutdown(SocketShutdown.Both);
-        }
-        catch
-        {
-            // Ignored
-        }
-
-        _socket.Dispose();
-        Interlocked.Exchange(ref _receivingThread, null)?.Join();
-        _isDisposed = true;
-    }
-
-    private void HandlingUdpCalls()
+    private async Task HandlingUdpCallsAsync(CancellationToken cancellationToken)
     {
         while (!_stopReceiving)
         {
             try
             {
-                EndPoint remoteEndPoint = _reader!.BeginReading();
+                EndPoint remoteEndPoint = await _reader!.BeginReadingAsync(cancellationToken).ConfigureAwait(false);
 
-                _writer!.BeginWriting();
-                _receivedCall!.HandleCall(new RpcEndPoint(remoteEndPoint, Protocol.Udp));
-                _reader!.EndReading();
-                _writer!.EndWriting(remoteEndPoint);
+                Writer.BeginWriting();
+                await _receivedCall!.HandleCallAsync(new RpcEndPoint(remoteEndPoint, Protocol.Udp), cancellationToken).ConfigureAwait(false);
+                Reader.EndReading();
+                await Writer.EndWritingAsync(remoteEndPoint, cancellationToken).ConfigureAwait(false);
             }
             catch (RpcException e)
             {

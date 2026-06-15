@@ -5,8 +5,8 @@ namespace RpcNetGen.Internal;
 internal class Procedure
 {
     private readonly string _argumentConstant;
-    private readonly ProcedureResult _procedureResult;
     private readonly ProcedureArguments _procedureArguments;
+    private readonly ProcedureResult _procedureResult;
     private readonly string _versionConstant;
 
     public Procedure(Settings settings, string version, string versionConstant, RpcParser.ProcedureContext procedureContext, Content content)
@@ -35,7 +35,15 @@ internal class Procedure
         _procedureResult.DumpStructForClient(writer, indent);
 
         writer.WriteLine();
-        writer.WriteLine(indent, $"public {_procedureResult.Declaration} {FullName}({_procedureArguments.GetArgumentsForClient()})");
+        if (_procedureResult.IsVoid)
+        {
+            writer.WriteLine(indent, $"public async ValueTask {FullName}Async({_procedureArguments.GetArgumentsForClient()})");
+        }
+        else
+        {
+            writer.WriteLine(indent, $"public async ValueTask<{_procedureResult.Declaration}> {FullName}Async({_procedureArguments.GetArgumentsForClient()})");
+        }
+
         writer.WriteLine(indent, "{");
         _procedureArguments.DumpClientArgumentsCreation(writer, indent + 1);
         _procedureResult.DumpClientResultCreation(writer, indent + 1);
@@ -44,7 +52,9 @@ internal class Procedure
             $"Settings.Logger?.BeginCall(RpcEndPoint, {_versionConstant}, {_argumentConstant}, \"{FullName}\", {_procedureArguments.VariableName});");
         writer.WriteLine(indent + 1, "try");
         writer.WriteLine(indent + 1, "{");
-        writer.WriteLine(indent + 2, $"Call({_argumentConstant}, {_versionConstant}, {_procedureArguments.VariableName}, {ProcedureResult.VariableName});");
+        writer.WriteLine(
+            indent + 2,
+            $"await CallAsync({_argumentConstant}, {_versionConstant}, {_procedureArguments.VariableName}, {ProcedureResult.VariableName}, cancellationToken).ConfigureAwait(false);");
         writer.WriteLine(indent + 1, "}");
         writer.WriteLine(indent + 1, "catch (Exception e)");
         writer.WriteLine(indent + 1, "{");
@@ -62,10 +72,17 @@ internal class Procedure
 
     public void DumpAbstractFunctionForServer(XdrFileWriter writer, int indent)
     {
-        string arguments = _procedureArguments.GetArgumentsForClient();
+        string arguments = _procedureArguments.GetArgumentsForClientInServer();
         arguments = string.IsNullOrWhiteSpace(arguments) ? "RpcEndPoint rpcEndPoint" : "RpcEndPoint rpcEndPoint, " + arguments;
 
-        writer.WriteLine(indent, $"public abstract {_procedureResult.Declaration} {FullName}({arguments});");
+        if (_procedureResult.IsVoid)
+        {
+            writer.WriteLine(indent, $"public abstract ValueTask {FullName}Async({arguments});");
+        }
+        else
+        {
+            writer.WriteLine(indent, $"public abstract ValueTask<{_procedureResult.Declaration}> {FullName}Async({arguments});");
+        }
     }
 
     public void DumpStructsForServer(XdrFileWriter writer, int indent)
@@ -93,7 +110,7 @@ internal class Procedure
 
         writer.WriteLine(indent + 1, "try");
         writer.WriteLine(indent + 1, "{");
-        writer.WriteLine(indent + 2, $"{result}{FullName}(call.RpcEndPoint{arguments});");
+        writer.WriteLine(indent + 2, $"{result}await {FullName}Async(call.RpcEndPoint{arguments}, cancellationToken).ConfigureAwait(false);");
         writer.WriteLine(
             indent + 2,
             $"Settings.Logger?.EndCall(call.RpcEndPoint, {_versionConstant}, {_argumentConstant}, \"{FullName}\", {_procedureArguments.VariableName}, {ProcedureResult.VariableName});");

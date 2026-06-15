@@ -12,8 +12,10 @@ using TestService;
 internal sealed class TestUdpClientServer
 {
     [Test]
-    public void SendAndReceiveData()
+    public async ValueTask SendAndReceiveData()
     {
+        CancellationToken ct = TestContext.CurrentContext.CancellationToken;
+
         IPAddress ipAddress = IPAddress.Loopback;
 
         const int Program = 12;
@@ -27,23 +29,23 @@ internal sealed class TestUdpClientServer
             PortMapperPort = 0 // Don't register at port mapper
         };
 
-        using RpcUdpServer server = new(
+        await using RpcUdpServer server = new(
             ipAddress,
             0,
             Program,
             [Version],
             Dispatcher,
             serverSettings);
-        int port = server.Start();
+        int port = await server.StartAsync(ct);
 
-        using RpcUdpClient client = RpcUdpClient.Connect(ipAddress, port, Program, Version, ClientSettings.Default);
+        using RpcUdpClient client = await RpcUdpClient.ConnectAsync(ipAddress, port, Program, Version, ClientSettings.Default, ct);
         SimpleStruct argument = new()
         {
             Value = 42
         };
         SimpleStruct result = new();
 
-        client.Call(Procedure, Version, argument, result);
+        await client.CallAsync(Procedure, Version, argument, result, ct);
 
         Assert.That(receivedCallChannel.TryReceive(TimeSpan.FromSeconds(10), out ReceivedRpcCall? receivedCall));
         Assert.That(receivedCall, Is.Not.Null);
@@ -54,7 +56,7 @@ internal sealed class TestUdpClientServer
         Assert.That(argument.Value, Is.EqualTo(result.Value));
         return;
 
-        void Dispatcher(ReceivedRpcCall call)
+        ValueTask Dispatcher(ReceivedRpcCall call, CancellationToken cancellationToken)
         {
             // To assert it on the main thread
             receivedCallChannel.Send(call);
@@ -62,6 +64,8 @@ internal sealed class TestUdpClientServer
             SimpleStruct pingStruct = new();
             call.RetrieveCall(pingStruct);
             call.Reply(pingStruct);
+
+            return ValueTask.CompletedTask;
         }
     }
 }

@@ -8,9 +8,9 @@ using static RpcParser;
 
 internal class Content
 {
+    private readonly string _access;
     private readonly HashSet<string> _knownElements = [];
     private readonly string _namespaceName;
-    private readonly string _access;
     private readonly Dictionary<string, Constant> _parsedConstants = [];
     private readonly Dictionary<string, Enumeration> _parsedEnums = [];
     private readonly List<Service> _parsedServices = [];
@@ -85,55 +85,6 @@ internal class Content
 
     public string Name { get; }
 
-    private void Add(Constant parsedConstant)
-    {
-        string name = parsedConstant.Name;
-        if (!_knownElements.Add(name))
-        {
-            throw new ParserException($"'{name}' is already used.");
-        }
-
-        _parsedConstants[name] = parsedConstant;
-    }
-
-    private void Add(Enumeration parsedEnum)
-    {
-        string name = parsedEnum.Name;
-        if (!_knownElements.Add(name))
-        {
-            throw new ParserException($"'{name}' is already used.");
-        }
-
-        _parsedEnums[name] = parsedEnum;
-    }
-
-    private void Add(Struct parsedStruct)
-    {
-        string name = parsedStruct.Name;
-        if (!_knownElements.Add(name))
-        {
-            throw new ParserException($"'{name}' is already used.");
-        }
-
-        _parsedStructs[name] = parsedStruct;
-    }
-
-    private void Add(Union parsedUnion)
-    {
-        string name = parsedUnion.Name;
-        if (!_knownElements.Add(name))
-        {
-            throw new ParserException($"'{name}' is already used.");
-        }
-
-        _parsedUnions[name] = parsedUnion;
-    }
-
-    public bool IsEnum(string identifier) => _parsedEnums.ContainsKey(identifier);
-
-    public bool IsCustomType(string identifier) =>
-        _parsedStructs.ContainsKey(identifier) || _parsedUnions.ContainsKey(identifier);
-
     public static string GetValue(ValueContext valueContext)
     {
         if (valueContext is null)
@@ -180,6 +131,11 @@ internal class Content
 
         throw new ParserException("Could not parse constant.");
     }
+
+    public bool IsEnum(string identifier) => _parsedEnums.ContainsKey(identifier);
+
+    public bool IsCustomType(string identifier) =>
+        _parsedStructs.ContainsKey(identifier) || _parsedUnions.ContainsKey(identifier);
 
     public string AddConstant(string name, string value)
     {
@@ -260,5 +216,49 @@ internal class Content
     {
         Version version = Assembly.GetCallingAssembly().GetName().Version;
         return version?.ToString() ?? "1.0.0.0";
+    }
+
+    private void Add(Constant parsedConstant)
+    {
+        string name = parsedConstant.Name;
+        if (!_knownElements.Add(name))
+        {
+            throw new ParserException($"'{name}' is already used.");
+        }
+
+        _parsedConstants[name] = parsedConstant;
+    }
+
+    private void Add(Enumeration parsedEnum)
+    {
+        string name = parsedEnum.Name;
+        if (!_knownElements.Add(name))
+        {
+            throw new ParserException($"'{name}' is already used.");
+        }
+
+        _parsedEnums[name] = parsedEnum;
+    }
+
+    private void Add(Struct parsedStruct)
+    {
+        string name = parsedStruct.Name;
+        if (!_knownElements.Add(name))
+        {
+            throw new ParserException($"'{name}' is already used.");
+        }
+
+        _parsedStructs[name] = parsedStruct;
+    }
+
+    private void Add(Union parsedUnion)
+    {
+        string name = parsedUnion.Name;
+        if (!_knownElements.Add(name))
+        {
+            throw new ParserException($"'{name}' is already used.");
+        }
+
+        _parsedUnions[name] = parsedUnion;
     }
 }

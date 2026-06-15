@@ -10,22 +10,22 @@ const int CountCalls = 10000;
 const int Port = 2223;
 IPAddress ipAddress = IPAddress.Loopback;
 
-if (args.Length == 0)
+switch (args.Length)
 {
-    Console.WriteLine($"usage: {Environment.ProcessPath} <TCP|UDP>");
-    return 1;
-}
-
-if (args.Length == 1)
-{
-    string protocol = args[0];
-    StartActualClients(protocol);
-    return 0;
-}
-else
-{
-    string protocol = args[0];
-    return CallServer(ipAddress, protocol);
+    case 0:
+        Console.WriteLine($"usage: {Environment.ProcessPath} <TCP|UDP>");
+        return 1;
+    case 1:
+        {
+            string protocol = args[0];
+            StartActualClients(protocol);
+            return 0;
+        }
+    default:
+        {
+            string protocol = args[0];
+            return await CallServer(ipAddress, protocol).ConfigureAwait(false);
+        }
 }
 
 static void StartActualClients(string protocol)
@@ -58,35 +58,35 @@ static void StartActualClients(string protocol)
     Console.WriteLine($"Running {CountProcesses} clients calling {CountCalls} times took {stopwatch.Elapsed}.");
 }
 
-static int CallServer(IPAddress ipAddress, string protocol)
+static async ValueTask<int> CallServer(IPAddress ipAddress, string protocol)
 {
     if (protocol.Equals("TCP", StringComparison.OrdinalIgnoreCase))
     {
-        return CallTcpServer(ipAddress);
+        return await CallTcpServer(ipAddress).ConfigureAwait(false);
     }
 
-    return CallUdpServer(ipAddress);
+    return await CallUdpServer(ipAddress).ConfigureAwait(false);
 }
 
-static int CallTcpServer(IPAddress ipAddress)
+static async ValueTask<int> CallTcpServer(IPAddress ipAddress)
 {
     int result = 0;
-    using TestServiceClient testTcpClient = TestServiceClient.Connect(Protocol.Tcp, ipAddress, Port);
+    using TestServiceClient testTcpClient = await TestServiceClient.ConnectAsync(Protocol.Tcp, ipAddress, Port).ConfigureAwait(false);
     for (int i = 0; i < CountCalls; i++)
     {
-        result += testTcpClient.Echo_1(i);
+        result += await testTcpClient.Echo_1Async(i).ConfigureAwait(false);
     }
 
     return result;
 }
 
-static int CallUdpServer(IPAddress ipAddress)
+static async ValueTask<int> CallUdpServer(IPAddress ipAddress)
 {
     int result = 0;
-    using TestServiceClient testUdpClient = TestServiceClient.Connect(Protocol.Udp, ipAddress, Port);
+    using TestServiceClient testUdpClient = await TestServiceClient.ConnectAsync(Protocol.Udp, ipAddress, Port).ConfigureAwait(false);
     for (int i = 0; i < CountCalls; i++)
     {
-        result += testUdpClient.Echo_1(i);
+        result += await testUdpClient.Echo_1Async(i).ConfigureAwait(false);
     }
 
     return result;

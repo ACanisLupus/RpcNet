@@ -28,18 +28,19 @@ internal sealed class RpcCall(int program, EndPoint remoteEndPoint, INetworkRead
             }
         }
     };
+
     private readonly IXdrReader _xdrReader = new XdrReader(networkReader);
     private readonly IXdrWriter _xdrWriter = new XdrWriter(networkWriter);
 
     private uint _nextXid = (uint)new Random().Next();
 
-    public void SendCall(int procedure, int version, IXdrDataType argument, IXdrDataType result)
+    public async ValueTask SendCallAsync(int procedure, int version, IXdrDataType argument, IXdrDataType result, CancellationToken cancellationToken)
     {
-        SendMessage(procedure, version, argument);
-        ReceiveReply(result);
+        await SendMessageAsync(procedure, version, argument, cancellationToken).ConfigureAwait(false);
+        await ReceiveReplyAsync(result, cancellationToken).ConfigureAwait(false);
     }
 
-    private void SendMessage(int procedure, int version, IXdrDataType argument)
+    private async ValueTask SendMessageAsync(int procedure, int version, IXdrDataType argument, CancellationToken cancellationToken)
     {
         networkWriter.BeginWriting();
 
@@ -49,13 +50,13 @@ internal sealed class RpcCall(int program, EndPoint remoteEndPoint, INetworkRead
         _rpcMessage.WriteTo(_xdrWriter);
         argument.WriteTo(_xdrWriter);
 
-        networkWriter.EndWriting(remoteEndPoint);
-
-        _ = networkReader.BeginReading();
+        await networkWriter.EndWritingAsync(remoteEndPoint, cancellationToken).ConfigureAwait(false);
     }
 
-    private void ReceiveReply(IXdrDataType result)
+    private async ValueTask ReceiveReplyAsync(IXdrDataType result, CancellationToken cancellationToken)
     {
+        _ = await networkReader.BeginReadingAsync(cancellationToken).ConfigureAwait(false);
+
         RpcMessage reply = new();
         reply.ReadFrom(_xdrReader);
 

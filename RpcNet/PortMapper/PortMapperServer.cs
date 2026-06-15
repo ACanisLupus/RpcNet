@@ -51,13 +51,11 @@ public sealed class PortMapperServer : PortMapperServerStub
         }
     }
 
-    public override void Ping_2(RpcEndPoint rpcEndPoint)
-    {
-    }
+    public override ValueTask Ping_2Async(RpcEndPoint rpcEndPoint, CancellationToken cancellationToken) => ValueTask.CompletedTask;
 
-    public override bool Set_2(RpcEndPoint rpcEndPoint, Mapping2 mapping)
+    public override async ValueTask<bool> Set_2Async(RpcEndPoint rpcEndPoint, Mapping2 mapping, CancellationToken cancellationToken)
     {
-        _lock.Wait();
+        await _lock.WaitAsync(cancellationToken);
         try
         {
             if (_mappings2.Any(m => IsProgramAndVersionAndProtocolEqual(m, mapping)))
@@ -74,9 +72,9 @@ public sealed class PortMapperServer : PortMapperServerStub
         }
     }
 
-    public override bool Unset_2(RpcEndPoint rpcEndPoint, Mapping2 mapping)
+    public override async ValueTask<bool> Unset_2Async(RpcEndPoint rpcEndPoint, Mapping2 mapping, CancellationToken cancellationToken)
     {
-        _lock.Wait();
+        await _lock.WaitAsync(cancellationToken);
         try
         {
             Equal2 equal = IsProgramAndVersionAndProtocolEqual;
@@ -93,9 +91,9 @@ public sealed class PortMapperServer : PortMapperServerStub
         }
     }
 
-    public override int GetPort_2(RpcEndPoint rpcEndPoint, Mapping2 mapping2)
+    public override async ValueTask<int> GetPort_2Async(RpcEndPoint rpcEndPoint, Mapping2 mapping2, CancellationToken cancellationToken)
     {
-        _lock.Wait();
+        await _lock.WaitAsync(cancellationToken);
         try
         {
             Mapping2? found2 = _mappings2.FirstOrDefault(m => IsProgramAndVersionAndProtocolEqual(m, mapping2));
@@ -119,9 +117,9 @@ public sealed class PortMapperServer : PortMapperServerStub
         }
     }
 
-    public override MappingNodeHead2 Dump_2(RpcEndPoint rpcEndPoint)
+    public override async ValueTask<MappingNodeHead2> Dump_2Async(RpcEndPoint rpcEndPoint, CancellationToken cancellationToken)
     {
-        _lock.Wait();
+        await _lock.WaitAsync(cancellationToken);
         try
         {
             MappingNodeHead2 mappingNodeNullable = new();
@@ -157,11 +155,12 @@ public sealed class PortMapperServer : PortMapperServerStub
         }
     }
 
-    public override CallResult2 Call_2(RpcEndPoint rpcEndPoint, CallArguments callArguments) => _callResult;
+    public override ValueTask<CallResult2> Call_2Async(RpcEndPoint rpcEndPoint, CallArguments callArguments, CancellationToken cancellationToken) =>
+        ValueTask.FromResult(_callResult);
 
-    public override bool Set_3(RpcEndPoint rpcEndPoint, Mapping3 mapping3)
+    public override async ValueTask<bool> Set_3Async(RpcEndPoint rpcEndPoint, Mapping3 mapping3, CancellationToken cancellationToken)
     {
-        _lock.Wait();
+        await _lock.WaitAsync(cancellationToken);
         try
         {
             if (_mappings3.Any(m => IsProgramAndVersionAndProtocolEqual(m, mapping3)))
@@ -178,9 +177,9 @@ public sealed class PortMapperServer : PortMapperServerStub
         }
     }
 
-    public override bool Unset_3(RpcEndPoint rpcEndPoint, Mapping3 mapping3)
+    public override async ValueTask<bool> Unset_3Async(RpcEndPoint rpcEndPoint, Mapping3 mapping3, CancellationToken cancellationToken)
     {
-        _lock.Wait();
+        await _lock.WaitAsync(cancellationToken);
         try
         {
             Equal3 equal = IsProgramAndVersionAndProtocolEqual;
@@ -193,9 +192,9 @@ public sealed class PortMapperServer : PortMapperServerStub
         }
     }
 
-    public override string GetAddress_3(RpcEndPoint rpcEndPoint, Mapping3 mapping3)
+    public override async ValueTask<string> GetAddress_3Async(RpcEndPoint rpcEndPoint, Mapping3 mapping3, CancellationToken cancellationToken)
     {
-        _lock.Wait();
+        await _lock.WaitAsync(cancellationToken);
         try
         {
             Mapping3? found3 = _mappings3.FirstOrDefault(m => IsProgramAndVersionAndProtocolEqual(m, mapping3));
@@ -219,23 +218,62 @@ public sealed class PortMapperServer : PortMapperServerStub
         }
     }
 
-    public override MappingNodeHead3 Dump_3(RpcEndPoint rpcEndPoint) => throw new NotImplementedException();
-    public override CallResult3 Call_3(RpcEndPoint rpcEndPoint, CallArguments callArguments) => throw new NotImplementedException();
-    public override uint GetTime_3(RpcEndPoint rpcEndPoint) => throw new NotImplementedException();
-    public override NetworkBuffer UniversalAddressToTransportSpecificAddress_3(RpcEndPoint rpcEndPoint, string universalAddress) => throw new NotImplementedException();
-    public override string TransportSpecificAddressToUniversalAddress_3(RpcEndPoint rpcEndPoint, NetworkBuffer networkBuffer) => throw new NotImplementedException();
-    public override bool Set_4(RpcEndPoint rpcEndPoint, Mapping3 mapping3) => Set_3(rpcEndPoint, mapping3);
-    public override bool Unset_4(RpcEndPoint rpcEndPoint, Mapping3 mapping3) => Unset_3(rpcEndPoint, mapping3);
-    public override string GetAddress_4(RpcEndPoint rpcEndPoint, Mapping3 mapping3) => GetAddress_3(rpcEndPoint, mapping3);
-    public override MappingNodeHead3 Dump_4(RpcEndPoint rpcEndPoint) => throw new NotImplementedException();
-    public override CallResult3 Broadcast_4(RpcEndPoint rpcEndPoint, CallArguments callArguments) => throw new NotImplementedException();
-    public override uint GetTime_4(RpcEndPoint rpcEndPoint) => throw new NotImplementedException();
-    public override NetworkBuffer UniversalAddressToTransportSpecificAddress_4(RpcEndPoint rpcEndPoint, string universalAddress) => throw new NotImplementedException();
-    public override string TransportSpecificAddressToUniversalAddress_4(RpcEndPoint rpcEndPoint, NetworkBuffer networkBuffer) => throw new NotImplementedException();
-    public override string GetVersionAddress_4(RpcEndPoint rpcEndPoint, Mapping3 mapping3) => throw new NotImplementedException();
-    public override CallResult3 IndirectCall_4(RpcEndPoint rpcEndPoint, CallArguments callArguments) => throw new NotImplementedException();
-    public override EntryNodeHead GetAddressList_4(RpcEndPoint rpcEndPoint, Mapping3 mapping3) => throw new NotImplementedException();
-    public override StatisticsByVersion GetStatistics_4(RpcEndPoint rpcEndPoint) => throw new NotImplementedException();
+    public override ValueTask<MappingNodeHead3> Dump_3Async(RpcEndPoint rpcEndPoint, CancellationToken cancellationToken) =>
+        throw new NotImplementedException();
+
+    public override ValueTask<CallResult3> Call_3Async(RpcEndPoint rpcEndPoint, CallArguments callArguments, CancellationToken cancellationToken) =>
+        throw new NotImplementedException();
+
+    public override ValueTask<uint> GetTime_3Async(RpcEndPoint rpcEndPoint, CancellationToken cancellationToken) => throw new NotImplementedException();
+
+    public override ValueTask<NetworkBuffer> UniversalAddressToTransportSpecificAddress_3Async(
+        RpcEndPoint rpcEndPoint,
+        string universalAddress,
+        CancellationToken cancellationToken) => throw new NotImplementedException();
+
+    public override ValueTask<string> TransportSpecificAddressToUniversalAddress_3Async(
+        RpcEndPoint rpcEndPoint,
+        NetworkBuffer networkBuffer,
+        CancellationToken cancellationToken) => throw new NotImplementedException();
+
+    public override ValueTask<bool> Set_4Async(RpcEndPoint rpcEndPoint, Mapping3 mapping3, CancellationToken cancellationToken) =>
+        Set_3Async(rpcEndPoint, mapping3, cancellationToken);
+
+    public override ValueTask<bool> Unset_4Async(RpcEndPoint rpcEndPoint, Mapping3 mapping3, CancellationToken cancellationToken) =>
+        Unset_3Async(rpcEndPoint, mapping3, cancellationToken);
+
+    public override ValueTask<string> GetAddress_4Async(RpcEndPoint rpcEndPoint, Mapping3 mapping3, CancellationToken cancellationToken) =>
+        GetAddress_3Async(rpcEndPoint, mapping3, cancellationToken);
+
+    public override ValueTask<MappingNodeHead3> Dump_4Async(RpcEndPoint rpcEndPoint, CancellationToken cancellationToken) =>
+        throw new NotImplementedException();
+
+    public override ValueTask<CallResult3> Broadcast_4Async(RpcEndPoint rpcEndPoint, CallArguments callArguments, CancellationToken cancellationToken) =>
+        throw new NotImplementedException();
+
+    public override ValueTask<uint> GetTime_4Async(RpcEndPoint rpcEndPoint, CancellationToken cancellationToken) => throw new NotImplementedException();
+
+    public override ValueTask<NetworkBuffer> UniversalAddressToTransportSpecificAddress_4Async(
+        RpcEndPoint rpcEndPoint,
+        string universalAddress,
+        CancellationToken cancellationToken) => throw new NotImplementedException();
+
+    public override ValueTask<string> TransportSpecificAddressToUniversalAddress_4Async(
+        RpcEndPoint rpcEndPoint,
+        NetworkBuffer networkBuffer,
+        CancellationToken cancellationToken) => throw new NotImplementedException();
+
+    public override ValueTask<string> GetVersionAddress_4Async(RpcEndPoint rpcEndPoint, Mapping3 mapping3, CancellationToken cancellationToken) =>
+        throw new NotImplementedException();
+
+    public override ValueTask<CallResult3> IndirectCall_4Async(RpcEndPoint rpcEndPoint, CallArguments callArguments, CancellationToken cancellationToken) =>
+        throw new NotImplementedException();
+
+    public override ValueTask<EntryNodeHead> GetAddressList_4Async(RpcEndPoint rpcEndPoint, Mapping3 mapping3, CancellationToken cancellationToken) =>
+        throw new NotImplementedException();
+
+    public override ValueTask<StatisticsByVersion> GetStatistics_4Async(RpcEndPoint rpcEndPoint, CancellationToken cancellationToken) =>
+        throw new NotImplementedException();
 
     private static bool IsProgramAndVersionEqual(Mapping2 firstMapping, Mapping2 secondMapping) =>
         (firstMapping.ProgramNumber == secondMapping.ProgramNumber) && (firstMapping.VersionNumber == secondMapping.VersionNumber);
@@ -267,20 +305,13 @@ public sealed class PortMapperServer : PortMapperServerStub
             UniversalAddress = ConvertPortToUniversalAddress(mapping2.Port)
         };
 
-    private static ProtocolKind ConvertStringToProtocolKind(string protocol)
-    {
-        if (protocol.Equals("tcp", StringComparison.InvariantCultureIgnoreCase))
+    private static ProtocolKind ConvertStringToProtocolKind(string protocol) =>
+        protocol.ToLowerInvariant() switch
         {
-            return ProtocolKind.Tcp;
-        }
-
-        if (protocol.Equals("udp", StringComparison.InvariantCultureIgnoreCase))
-        {
-            return ProtocolKind.Udp;
-        }
-
-        return ProtocolKind.Unknown;
-    }
+            "tcp" => ProtocolKind.Tcp,
+            "udp" => ProtocolKind.Udp,
+            _ => ProtocolKind.Unknown
+        };
 
     private static string ConvertProtocolToString(ProtocolKind protocolKind) =>
         protocolKind switch

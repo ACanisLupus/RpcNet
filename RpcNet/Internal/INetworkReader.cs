@@ -6,7 +6,7 @@ using System.Net;
 
 internal interface INetworkReader
 {
-    EndPoint BeginReading();
+    ValueTask<EndPoint> BeginReadingAsync(CancellationToken cancellationToken);
     void EndReading();
     ReadOnlySpan<byte> Read(int length);
 }
