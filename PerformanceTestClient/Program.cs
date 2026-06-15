@@ -17,18 +17,29 @@ switch (args.Length)
         return 1;
     case 1:
         {
-            string protocol = args[0];
+            if (!Enum.TryParse(args[0], true, out Protocol protocol))
+            {
+                Console.WriteLine($"Invalid protocol: {args[0]}");
+                return 1;
+            }
+
             StartActualClients(protocol);
             return 0;
         }
     default:
         {
-            string protocol = args[0];
-            return await CallServer(ipAddress, protocol).ConfigureAwait(false);
+            if (!Enum.TryParse(args[0], true, out Protocol protocol))
+            {
+                Console.WriteLine($"Invalid protocol: {args[0]}");
+                return 1;
+            }
+
+            await CallServer(ipAddress, protocol).ConfigureAwait(false);
+            return 0;
         }
 }
 
-static void StartActualClients(string protocol)
+static void StartActualClients(Protocol protocol)
 {
     Stopwatch stopwatch = Stopwatch.StartNew();
 
@@ -42,7 +53,7 @@ static void StartActualClients(string protocol)
                 CreateNoWindow = true,
                 UseShellExecute = false,
                 FileName = Environment.ProcessPath!,
-                Arguments = protocol + " " + i
+                Arguments = $"{protocol} {i}"
             }
         };
         _ = process.Start();
@@ -52,42 +63,26 @@ static void StartActualClients(string protocol)
     for (int i = 0; i < CountProcesses; i++)
     {
         processes[i].WaitForExit();
+        if (processes[i].ExitCode != 0)
+        {
+            Console.WriteLine($"Process {i} exited with code {processes[i].ExitCode}");
+        }
     }
 
     stopwatch.Stop();
     Console.WriteLine($"Running {CountProcesses} clients calling {CountCalls} times took {stopwatch.Elapsed}.");
 }
 
-static async ValueTask<int> CallServer(IPAddress ipAddress, string protocol)
+static async ValueTask CallServer(IPAddress ipAddress, Protocol protocol)
 {
-    if (protocol.Equals("TCP", StringComparison.OrdinalIgnoreCase))
-    {
-        return await CallTcpServer(ipAddress).ConfigureAwait(false);
-    }
+    using TestServiceClient testTcpClient = await TestServiceClient.ConnectAsync(protocol, ipAddress, Port).ConfigureAwait(false);
 
-    return await CallUdpServer(ipAddress).ConfigureAwait(false);
-}
-
-static async ValueTask<int> CallTcpServer(IPAddress ipAddress)
-{
-    int result = 0;
-    using TestServiceClient testTcpClient = await TestServiceClient.ConnectAsync(Protocol.Tcp, ipAddress, Port).ConfigureAwait(false);
     for (int i = 0; i < CountCalls; i++)
     {
-        result += await testTcpClient.Echo_1Async(i).ConfigureAwait(false);
+        int result = await testTcpClient.Echo_1Async(i).ConfigureAwait(false);
+        if (result != i)
+        {
+            throw new InvalidOperationException($"Unexpected result: {result}");
+        }
     }
-
-    return result;
-}
-
-static async ValueTask<int> CallUdpServer(IPAddress ipAddress)
-{
-    int result = 0;
-    using TestServiceClient testUdpClient = await TestServiceClient.ConnectAsync(Protocol.Udp, ipAddress, Port).ConfigureAwait(false);
-    for (int i = 0; i < CountCalls; i++)
-    {
-        result += await testUdpClient.Echo_1Async(i).ConfigureAwait(false);
-    }
-
-    return result;
 }
