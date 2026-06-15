@@ -46,51 +46,28 @@ internal static class Utilities
             _ => throw new InvalidOperationException($"The following address family is unsupported: {addressFamily}.")
         };
 
-    public static TimeSpan GetReceiveTimeout(Socket socket)
+    public static async ValueTask<TResult> ExecuteWithTimeoutAsync<TResult>(
+        TimeSpan timeout,
+        Func<CancellationToken, ValueTask<TResult>> operation,
+        CancellationToken cancellationToken)
     {
-        try
+        // Socket.ReceiveTimeout/SendTimeout only affect synchronous socket calls and are ignored by the
+        // asynchronous socket APIs used throughout RpcNet. Enforce the timeout with a linked cancellation
+        // token instead. A non-positive timeout (e.g. Timeout.InfiniteTimeSpan) means "wait indefinitely".
+        if (timeout <= TimeSpan.Zero)
         {
-            return TimeSpan.FromMilliseconds(socket.ReceiveTimeout);
+            return await operation(cancellationToken).ConfigureAwait(false);
         }
-        catch (SocketException e)
-        {
-            throw new RpcException($"Could not get receive timeout. Socket error code: {e.SocketErrorCode}.");
-        }
-    }
 
-    public static void SetReceiveTimeout(Socket socket, TimeSpan timeout)
-    {
+        using CancellationTokenSource timeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeoutSource.CancelAfter(timeout);
         try
         {
-            socket.ReceiveTimeout = (int)timeout.TotalMilliseconds;
+            return await operation(timeoutSource.Token).ConfigureAwait(false);
         }
-        catch (SocketException e)
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
-            throw new RpcException($"Could not set receive timeout to {timeout}. Socket error code: {e.SocketErrorCode}.");
-        }
-    }
-
-    public static TimeSpan GetSendTimeout(Socket socket)
-    {
-        try
-        {
-            return TimeSpan.FromMilliseconds(socket.SendTimeout);
-        }
-        catch (SocketException e)
-        {
-            throw new RpcException($"Could not get send timeout. Socket error code: {e.SocketErrorCode}.");
-        }
-    }
-
-    public static void SetSendTimeout(Socket socket, TimeSpan timeout)
-    {
-        try
-        {
-            socket.SendTimeout = (int)timeout.TotalMilliseconds;
-        }
-        catch (SocketException e)
-        {
-            throw new RpcException($"Could not set send timeout to {timeout}. Socket error code: {e.SocketErrorCode}.");
+            throw new RpcException($"The operation did not complete within the configured timeout of {timeout}.");
         }
     }
 

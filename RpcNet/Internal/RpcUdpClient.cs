@@ -9,28 +9,30 @@ using RpcNet.PortMapper;
 internal sealed class RpcUdpClient : INetworkClient
 {
     private readonly RpcCall _call;
+    private readonly UdpReader _reader;
     private readonly Socket _socket;
+    private readonly UdpWriter _writer;
 
     public RpcUdpClient(Socket socket, IPAddress ipAddress, int port, int program)
     {
         _socket = socket;
 
         IPEndPoint remoteEndPoint = new(ipAddress, port);
-        UdpReader reader = new(socket);
-        UdpWriter writer = new(socket);
-        _call = new RpcCall(program, remoteEndPoint, reader, writer);
+        _reader = new UdpReader(socket);
+        _writer = new UdpWriter(socket);
+        _call = new RpcCall(program, remoteEndPoint, _reader, _writer);
     }
 
     public TimeSpan ReceiveTimeout
     {
-        get => Utilities.GetReceiveTimeout(_socket);
-        set => Utilities.SetReceiveTimeout(_socket, value);
+        get => _reader.Timeout;
+        set => _reader.Timeout = value;
     }
 
     public TimeSpan SendTimeout
     {
-        get => Utilities.GetSendTimeout(_socket);
-        set => Utilities.SetSendTimeout(_socket, value);
+        get => _writer.Timeout;
+        set => _writer.Timeout = value;
     }
 
     public static async ValueTask<RpcUdpClient> ConnectAsync(
@@ -59,10 +61,11 @@ internal sealed class RpcUdpClient : INetworkClient
         Socket socket = new(ipAddress.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
         Utilities.FixUdpSocket(socket);
 
-        Utilities.SetReceiveTimeout(socket, clientSettings.ReceiveTimeout);
-        Utilities.SetSendTimeout(socket, clientSettings.SendTimeout);
-
-        return new RpcUdpClient(socket, ipAddress, port, program);
+        return new RpcUdpClient(socket, ipAddress, port, program)
+        {
+            ReceiveTimeout = clientSettings.ReceiveTimeout,
+            SendTimeout = clientSettings.SendTimeout
+        };
     }
 
     public ValueTask CallAsync(int procedure, int version, IXdrDataType argument, IXdrDataType result, CancellationToken cancellationToken) =>

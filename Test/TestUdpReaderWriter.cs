@@ -136,6 +136,46 @@ internal sealed class TestUdpReaderWriter
         Assert.That(e?.Message, Is.EqualTo("Could not receive data from UDP socket. Socket error code: OperationAborted."));
     }
 
+    [Test]
+    public void ReadingTimesOutWhenNoDataIsReceived()
+    {
+        CancellationToken ct = TestContext.CurrentContext.CancellationToken;
+
+        TimeSpan timeout = TimeSpan.FromMilliseconds(200);
+        Reader.Timeout = timeout;
+
+        // No data is ever sent, so the asynchronous reception must be aborted by the configured timeout
+        // instead of blocking forever (Socket.ReceiveTimeout does not apply to ReceiveFromAsync).
+        RpcException? e = Assert.ThrowsAsync<RpcException>(async () => await Reader.BeginReadingAsync(ct));
+        Assert.That(e?.Message, Is.EqualTo($"The operation did not complete within the configured timeout of {timeout}."));
+    }
+
+    [Test]
+    public async ValueTask ReadingDoesNotTimeOutWhenDataIsReceivedInTime()
+    {
+        CancellationToken ct = TestContext.CurrentContext.CancellationToken;
+
+        Reader.Timeout = TimeSpan.FromSeconds(30);
+
+        Writer.BeginWriting();
+        Span<byte> writeSpan = Writer.Reserve(8);
+        for (int i = 0; i < writeSpan.Length; i++)
+        {
+            writeSpan[i] = (byte)i;
+        }
+
+        byte[] writtenData = writeSpan.ToArray();
+
+        Assert.DoesNotThrowAsync(async () => await Writer.EndWritingAsync(RemoteIpEndPoint, ct));
+
+        _ = await Reader.BeginReadingAsync(ct);
+
+        ReadOnlySpan<byte> readSpan = Reader.Read(writtenData.Length);
+        Reader.EndReading();
+
+        AssertEquals(readSpan, writtenData);
+    }
+
     private static void AssertEquals(ReadOnlySpan<byte> one, ReadOnlySpan<byte> two)
     {
         Assert.That(one.Length, Is.EqualTo(two.Length));

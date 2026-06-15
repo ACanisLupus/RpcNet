@@ -5,6 +5,7 @@ namespace Test;
 using System.Net;
 using System.Net.Sockets;
 using NUnit.Framework;
+using RpcNet;
 using RpcNet.Internal;
 
 [TestFixture]
@@ -100,5 +101,19 @@ internal sealed class TestTcpReaderWriter
         Assert.DoesNotThrowAsync(async () => await Writer.EndWritingAsync(new IPEndPoint(0, 0), ct));
 
         await task;
+    }
+
+    [Test]
+    public void ReadingTimesOutWhenNoDataIsReceived()
+    {
+        CancellationToken ct = TestContext.CurrentContext.CancellationToken;
+
+        TimeSpan timeout = TimeSpan.FromMilliseconds(200);
+        Reader.Timeout = timeout;
+
+        // The connection stays open but no data is sent, so the asynchronous reception must be aborted by the
+        // configured timeout instead of blocking forever (Socket.ReceiveTimeout does not apply to ReceiveAsync).
+        RpcException? e = Assert.ThrowsAsync<RpcException>(async () => await Reader.BeginReadingAsync(ct));
+        Assert.That(e?.Message, Is.EqualTo($"The operation did not complete within the configured timeout of {timeout}."));
     }
 }

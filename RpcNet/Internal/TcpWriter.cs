@@ -11,6 +11,8 @@ internal sealed class TcpWriter(Socket socket) : INetworkWriter
 
     private readonly MemoryStream _buffer = new();
 
+    public TimeSpan Timeout { get; set; }
+
     public void BeginWriting()
     {
         _buffer.SetLength(TcpHeaderLength);
@@ -26,7 +28,11 @@ internal sealed class TcpWriter(Socket socket) : INetworkWriter
 
         try
         {
-            _ = await socket.SendAsync(_buffer.GetBuffer().AsMemory(0, (int)_buffer.Length), SocketFlags.None, cancellationToken).ConfigureAwait(false);
+            _ = await Utilities.ExecuteWithTimeoutAsync(
+                    Timeout,
+                    token => socket.SendAsync(_buffer.GetBuffer().AsMemory(0, (int)_buffer.Length), SocketFlags.None, token),
+                    cancellationToken)
+                .ConfigureAwait(false);
         }
         catch (SocketException e)
         {

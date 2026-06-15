@@ -9,6 +9,8 @@ internal sealed class UdpWriter(Socket socket) : INetworkWriter
 {
     private readonly MemoryStream _buffer = new();
 
+    public TimeSpan Timeout { get; set; }
+
     public void BeginWriting()
     {
         _buffer.SetLength(0);
@@ -19,7 +21,10 @@ internal sealed class UdpWriter(Socket socket) : INetworkWriter
     {
         try
         {
-            _ = await socket.SendToAsync(_buffer.GetBuffer().AsMemory(0, (int)_buffer.Length), SocketFlags.None, remoteEndPoint, cancellationToken)
+            _ = await Utilities.ExecuteWithTimeoutAsync(
+                    Timeout,
+                    token => socket.SendToAsync(_buffer.GetBuffer().AsMemory(0, (int)_buffer.Length), SocketFlags.None, remoteEndPoint, token),
+                    cancellationToken)
                 .ConfigureAwait(false);
         }
         catch (SocketException e)

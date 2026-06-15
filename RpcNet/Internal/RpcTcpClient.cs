@@ -9,28 +9,30 @@ using RpcNet.PortMapper;
 internal sealed class RpcTcpClient : INetworkClient
 {
     private readonly RpcCall _call;
+    private readonly TcpReader _reader;
     private readonly Socket _socket;
+    private readonly TcpWriter _writer;
 
     private RpcTcpClient(Socket socket, IPAddress ipAddress, int port, int program)
     {
         _socket = socket;
 
         IPEndPoint remoteEndPoint = new(ipAddress, port);
-        TcpReader tcpReader = new(_socket);
-        TcpWriter tcpWriter = new(_socket);
-        _call = new RpcCall(program, remoteEndPoint, tcpReader, tcpWriter);
+        _reader = new TcpReader(_socket);
+        _writer = new TcpWriter(_socket);
+        _call = new RpcCall(program, remoteEndPoint, _reader, _writer);
     }
 
     public TimeSpan ReceiveTimeout
     {
-        get => Utilities.GetReceiveTimeout(_socket);
-        set => Utilities.SetReceiveTimeout(_socket, value);
+        get => _reader.Timeout;
+        set => _reader.Timeout = value;
     }
 
     public TimeSpan SendTimeout
     {
-        get => Utilities.GetSendTimeout(_socket);
-        set => Utilities.SetSendTimeout(_socket, value);
+        get => _writer.Timeout;
+        set => _writer.Timeout = value;
     }
 
     public static async ValueTask<RpcTcpClient> ConnectAsync(
@@ -58,9 +60,6 @@ internal sealed class RpcTcpClient : INetworkClient
 
         Socket socket = new(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
-        Utilities.SetReceiveTimeout(socket, clientSettings.ReceiveTimeout);
-        Utilities.SetSendTimeout(socket, clientSettings.SendTimeout);
-
         try
         {
             await EstablishConnectionAsync(socket, ipAddress, port, cancellationToken).ConfigureAwait(false);
@@ -70,7 +69,11 @@ internal sealed class RpcTcpClient : INetworkClient
             await EstablishConnectionAsync(socket, Utilities.GetAlternateIpAddress(ipAddress), port, cancellationToken).ConfigureAwait(false);
         }
 
-        return new RpcTcpClient(socket, ipAddress, port, program);
+        return new RpcTcpClient(socket, ipAddress, port, program)
+        {
+            ReceiveTimeout = clientSettings.ReceiveTimeout,
+            SendTimeout = clientSettings.SendTimeout
+        };
     }
 
     public ValueTask CallAsync(int procedure, int version, IXdrDataType argument, IXdrDataType result, CancellationToken cancellationToken) =>

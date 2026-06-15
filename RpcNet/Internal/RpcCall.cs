@@ -32,7 +32,7 @@ internal sealed class RpcCall(int program, EndPoint remoteEndPoint, INetworkRead
     private readonly IXdrReader _xdrReader = new XdrReader(networkReader);
     private readonly IXdrWriter _xdrWriter = new XdrWriter(networkWriter);
 
-    private uint _nextXid = (uint)new Random().Next();
+    private uint _nextXid = (uint)Random.Shared.Next();
 
     public async ValueTask SendCallAsync(int procedure, int version, IXdrDataType argument, IXdrDataType result, CancellationToken cancellationToken)
     {

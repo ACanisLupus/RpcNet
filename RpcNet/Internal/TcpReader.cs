@@ -16,6 +16,8 @@ internal sealed class TcpReader(Socket socket) : INetworkReader
     private int _networkReadPos;
     private int _networkWritePos;
 
+    public TimeSpan Timeout { get; set; }
+
     public async ValueTask<EndPoint> BeginReadingAsync(CancellationToken cancellationToken)
     {
         _buffer.SetLength(0);
@@ -91,7 +93,11 @@ internal sealed class TcpReader(Socket socket) : INetworkReader
         int n;
         try
         {
-            n = await socket.ReceiveAsync(_networkBuffer.AsMemory(_networkWritePos), SocketFlags.None, cancellationToken).ConfigureAwait(false);
+            n = await Utilities.ExecuteWithTimeoutAsync(
+                    Timeout,
+                    token => socket.ReceiveAsync(_networkBuffer.AsMemory(_networkWritePos), SocketFlags.None, token),
+                    cancellationToken)
+                .ConfigureAwait(false);
         }
         catch (SocketException e)
         {
