@@ -58,7 +58,10 @@ internal sealed class RpcTcpClient : INetworkClient
                     .ConfigureAwait(false);
         }
 
-        Socket socket = new(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+        Socket socket = new(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp)
+        {
+            NoDelay = true
+        };
 
         try
         {

@@ -23,7 +23,13 @@ internal sealed class XdrReader(INetworkReader networkReader) : IXdrReader
 
     public byte[] ReadOpaque()
     {
-        byte[] array = new byte[ReadInt32()];
+        int length = ReadInt32();
+        if (length == 0)
+        {
+            return [];
+        }
+
+        byte[] array = new byte[length];
         ReadFixedLengthOpaque(array);
         return array;
     }

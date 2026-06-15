@@ -8,7 +8,7 @@ using RpcNet.PortMapper;
 
 internal sealed class RpcTcpServer : IAsyncDisposable
 {
-    private readonly Dictionary<Socket, RpcTcpConnection> _connections = [];
+    private readonly Dictionary<RpcTcpConnection, Task> _connections = [];
     private readonly IPAddress _ipAddress;
     private readonly SemaphoreSlim _lockConnections = new(1, 1);
     private readonly int _program;
@@ -66,14 +66,16 @@ internal sealed class RpcTcpServer : IAsyncDisposable
 
         _socket.Dispose();
 
+        Task[] connectionTasks;
         await _lockConnections.WaitAsync();
         try
         {
-            foreach (RpcTcpConnection connection in _connections.Values)
+            foreach (RpcTcpConnection connection in _connections.Keys)
             {
                 connection.Dispose();
             }
 
+            connectionTasks = [.. _connections.Values];
             _connections.Clear();
         }
         finally
@@ -90,6 +92,18 @@ internal sealed class RpcTcpServer : IAsyncDisposable
             catch (Exception e)
             {
                 _serverSettings.Logger?.Error($"The following error occurred while waiting for the accepting task to finish: {e}");
+            }
+        }
+
+        foreach (Task connectionTask in connectionTasks)
+        {
+            try
+            {
+                await connectionTask.ConfigureAwait(false);
+            }
+            catch (Exception e)
+            {
+                _serverSettings.Logger?.Error($"The following error occurred while waiting for a connection task to finish: {e}");
             }
         }
 
@@ -163,50 +177,25 @@ internal sealed class RpcTcpServer : IAsyncDisposable
 
     private async Task AcceptingAsync(CancellationToken cancellationToken)
     {
-        List<Socket> sockets = [];
         while (!_stopAccepting)
         {
             try
             {
-                sockets.Clear();
-                await _lockConnections.WaitAsync(cancellationToken);
-                try
-                {
-                    // + 1 for the server
-                    sockets.Capacity = _connections.Count + 1;
-                    sockets.AddRange(_connections.Keys);
-                }
-                finally
-                {
-                    _lockConnections.Release();
-                }
-
-                sockets.Add(_socket);
-
-                Socket.Select(sockets, null, null, 1000000);
+                Socket acceptedSocket = await _socket.AcceptAsync(cancellationToken).ConfigureAwait(false);
+                acceptedSocket.NoDelay = true;
+                RpcTcpConnection connection = new(acceptedSocket, _program, _versions, _receivedCallDispatcher, _serverSettings.Logger);
 
                 await _lockConnections.WaitAsync(cancellationToken);
                 try
                 {
-                    for (int i = sockets.Count - 1; i >= 0; i--)
+                    if (_stopAccepting)
                     {
-                        if (sockets[i] == _socket)
-                        {
-                            Socket acceptedSocket = await _socket.AcceptAsync(cancellationToken).ConfigureAwait(false);
-                            RpcTcpConnection connection = new(acceptedSocket, _program, _versions, _receivedCallDispatcher, _serverSettings.Logger);
-
-                            _connections.Add(acceptedSocket, connection);
-                        }
-                        else
-                        {
-                            RpcTcpConnection connection = _connections[sockets[i]];
-                            if (!await connection.HandleAsync(cancellationToken).ConfigureAwait(false))
-                            {
-                                connection.Dispose();
-                                _ = _connections.Remove(sockets[i]);
-                            }
-                        }
+                        connection.Dispose();
+                        break;
                     }
+
+                    // Handle each client on its own task so that clients are served in parallel.
+                    _connections.Add(connection, Task.Run(() => HandleConnectionAsync(connection, cancellationToken), cancellationToken));
                 }
                 finally
                 {
@@ -227,6 +216,37 @@ internal sealed class RpcTcpServer : IAsyncDisposable
                     _serverSettings.Logger?.Error($"The following error occurred while accepting TCP clients: {e}");
                 }
             }
+        }
+    }
+
+    private async Task HandleConnectionAsync(RpcTcpConnection connection, CancellationToken cancellationToken)
+    {
+        try
+        {
+            while (!_stopAccepting && await connection.HandleAsync(cancellationToken).ConfigureAwait(false))
+            {
+            }
+        }
+        catch (Exception e)
+        {
+            if (!_stopAccepting)
+            {
+                _serverSettings.Logger?.Error($"The following error occurred while handling a TCP client: {e}");
+            }
+        }
+        finally
+        {
+            await _lockConnections.WaitAsync(cancellationToken);
+            try
+            {
+                _ = _connections.Remove(connection);
+            }
+            finally
+            {
+                _lockConnections.Release();
+            }
+
+            connection.Dispose();
         }
     }
 }

@@ -13,5 +13,7 @@ public sealed class ServerSettings
     public int PortMapperPort { get; init; } = PortMapperConstants.PortMapperPort;
     public TimeSpan SendTimeout { get; init; } = Utilities.DefaultServerSendTimeout;
     public TimeSpan ReceiveTimeout { get; init; } = Utilities.DefaultServerReceiveTimeout;
-    public bool LockFreeDispatcher { get; init; }
+
+    // Number of UDP datagrams that can be received and processed in parallel on the shared socket.
+    public int UdpConcurrency { get; init; } = Environment.ProcessorCount;
 }

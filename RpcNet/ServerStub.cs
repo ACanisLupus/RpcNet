@@ -10,7 +10,6 @@ public abstract class ServerStub : IAsyncDisposable
     protected readonly ServerSettings Settings;
     protected readonly XdrVoid Void = new();
 
-    private readonly SemaphoreSlim _lock = new(1, 1);
     private readonly RpcTcpServer? _rpcTcpServer;
     private readonly RpcUdpServer? _rpcUdpServer;
 
@@ -27,20 +26,14 @@ public abstract class ServerStub : IAsyncDisposable
 
         Settings = serverSettings ?? new ServerSettings();
 
-        Func<ReceivedRpcCall, CancellationToken, ValueTask> dispatchReceivedCall = DispatchReceivedCallWithLock;
-        if (Settings.LockFreeDispatcher)
-        {
-            dispatchReceivedCall = DispatchReceivedCallAsync;
-        }
-
         if (protocol.HasFlag(Protocol.Tcp))
         {
-            _rpcTcpServer = new RpcTcpServer(ipAddress, port, program, versions, dispatchReceivedCall, Settings);
+            _rpcTcpServer = new RpcTcpServer(ipAddress, port, program, versions, DispatchReceivedCallAsync, Settings);
         }
 
         if (protocol.HasFlag(Protocol.Udp))
         {
-            _rpcUdpServer = new RpcUdpServer(ipAddress, port, program, versions, dispatchReceivedCall, Settings);
+            _rpcUdpServer = new RpcUdpServer(ipAddress, port, program, versions, DispatchReceivedCallAsync, Settings);
         }
     }
 
@@ -79,19 +72,6 @@ public abstract class ServerStub : IAsyncDisposable
             }
 
             _isDisposed = true;
-        }
-    }
-
-    private async ValueTask DispatchReceivedCallWithLock(ReceivedRpcCall call, CancellationToken cancellationToken)
-    {
-        await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
-        {
-            await DispatchReceivedCallAsync(call, cancellationToken).ConfigureAwait(false);
-        }
-        finally
-        {
-            _lock.Release();
         }
     }
 }

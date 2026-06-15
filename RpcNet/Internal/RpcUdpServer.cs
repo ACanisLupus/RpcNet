@@ -17,11 +17,8 @@ internal sealed class RpcUdpServer : IAsyncDisposable
 
     private bool _isDisposed;
     private int _port;
-    private UdpReader? _reader;
-    private ReceivedRpcCall? _receivedCall;
-    private Task? _receivingTask;
+    private Task[]? _receivingTasks;
     private volatile bool _stopReceiving;
-    private UdpWriter? _writer;
 
     public RpcUdpServer(
         IPAddress ipAddress,
@@ -53,9 +50,6 @@ internal sealed class RpcUdpServer : IAsyncDisposable
         }
     }
 
-    private UdpReader Reader => _reader ?? throw new InvalidOperationException("UDP reader is not initialized.");
-    private UdpWriter Writer => _writer ?? throw new InvalidOperationException("UDP writer is not initialized.");
-
     public async ValueTask DisposeAsync()
     {
         _stopReceiving = true;
@@ -71,15 +65,18 @@ internal sealed class RpcUdpServer : IAsyncDisposable
 
         _socket.Dispose();
 
-        if (_receivingTask is not null)
+        if (_receivingTasks is not null)
         {
-            try
+            foreach (Task receivingTask in _receivingTasks)
             {
-                await _receivingTask.ConfigureAwait(false);
-            }
-            catch (Exception e)
-            {
-                _serverSettings.Logger?.Error($"The following error occurred while waiting for the receiving task to finish: {e}");
+                try
+                {
+                    await receivingTask.ConfigureAwait(false);
+                }
+                catch (Exception e)
+                {
+                    _serverSettings.Logger?.Error($"The following error occurred while waiting for a receiving task to finish: {e}");
+                }
             }
         }
 
@@ -90,7 +87,7 @@ internal sealed class RpcUdpServer : IAsyncDisposable
     {
         ObjectDisposedException.ThrowIf(_isDisposed, nameof(RpcUdpServer));
 
-        if (_receivingTask is not null)
+        if (_receivingTasks is not null)
         {
             return _port;
         }
@@ -108,10 +105,6 @@ internal sealed class RpcUdpServer : IAsyncDisposable
         {
             throw new InvalidOperationException("Could not find local endpoint for server socket.");
         }
-
-        _reader = new UdpReader(_socket);
-        _writer = new UdpWriter(_socket);
-        _receivedCall = new ReceivedRpcCall(_program, _versions, _reader, _writer, _receivedCallDispatcher);
 
         if (_port == 0)
         {
@@ -143,22 +136,34 @@ internal sealed class RpcUdpServer : IAsyncDisposable
 
         _serverSettings.Logger?.Info($"UDP Server listening on {localEndPoint}...");
 
-        _receivingTask = Task.Run(() => HandlingUdpCallsAsync(cancellationToken), cancellationToken);
+        int concurrency = Math.Max(1, _serverSettings.UdpConcurrency);
+        _receivingTasks = new Task[concurrency];
+        for (int i = 0; i < concurrency; i++)
+        {
+            _receivingTasks[i] = Task.Run(() => HandlingUdpCallsAsync(cancellationToken), cancellationToken);
+        }
+
         return _port;
     }
 
     private async Task HandlingUdpCallsAsync(CancellationToken cancellationToken)
     {
+        // Each receive loop owns its reader, writer and call state so that multiple UDP
+        // datagrams can be received and processed in parallel on the shared socket.
+        UdpReader reader = new(_socket);
+        UdpWriter writer = new(_socket);
+        ReceivedRpcCall receivedCall = new(_program, _versions, reader, writer, _receivedCallDispatcher);
+
         while (!_stopReceiving)
         {
             try
             {
-                EndPoint remoteEndPoint = await _reader!.BeginReadingAsync(cancellationToken).ConfigureAwait(false);
+                EndPoint remoteEndPoint = await reader.BeginReadingAsync(cancellationToken).ConfigureAwait(false);
 
-                Writer.BeginWriting();
-                await _receivedCall!.HandleCallAsync(new RpcEndPoint(remoteEndPoint, Protocol.Udp), cancellationToken).ConfigureAwait(false);
-                Reader.EndReading();
-                await Writer.EndWritingAsync(remoteEndPoint, cancellationToken).ConfigureAwait(false);
+                writer.BeginWriting();
+                await receivedCall.HandleCallAsync(new RpcEndPoint(remoteEndPoint, Protocol.Udp), cancellationToken).ConfigureAwait(false);
+                reader.EndReading();
+                await writer.EndWritingAsync(remoteEndPoint, cancellationToken).ConfigureAwait(false);
             }
             catch (RpcException e)
             {
