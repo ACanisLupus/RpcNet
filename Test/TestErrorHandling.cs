@@ -7,80 +7,76 @@ using NUnit.Framework;
 using RpcNet;
 using TestService;
 
-internal sealed class TestErrorHandling
+[TestFixture]
+[TestFixtureSource(typeof(Utilities), nameof(Utilities.GetProtocolAndAddressCases))]
+internal sealed class TestErrorHandling(Protocol protocol, IPAddress ipAddress)
 {
-    private readonly IPAddress _ipAddress = IPAddress.Loopback;
+    [Test]
+    public async ValueTask NonExistingProcedure()
+    {
+        CancellationToken ct = TestContext.CurrentContext.CancellationToken;
+        await using TestServer testServer = await StartServerAsync(ct);
 
-    private TestServer? _testServer;
+        int port = Utilities.GetPort(testServer, protocol);
 
-    private TestServer TestServer => _testServer ?? throw new InvalidOperationException("Test server is not initialized.");
+        using TestService2Client client = await TestService2Client.ConnectAsync(protocol, ipAddress, port, cancellationToken: ct);
 
-    [SetUp]
-    public void SetUp()
+        byte[] value = new byte[100];
+
+        // ReSharper disable once AccessToDisposedClosure
+        RpcException? e = Assert.ThrowsAsync<RpcException>(async () => await client.NonExistingProcedure_1Async(value, ct));
+        Assert.That(e?.Message, Is.EqualTo("Call was unsuccessful: ProcedureUnavailable."));
+
+        // Make sure the communication works after an error
+        Assert.That(await client.Echo_1Async(42, ct), Is.EqualTo(42));
+    }
+
+    [Test]
+    public async ValueTask NonExistingVersion()
+    {
+        CancellationToken ct = TestContext.CurrentContext.CancellationToken;
+        await using TestServer testServer = await StartServerAsync(ct);
+
+        int port = Utilities.GetPort(testServer, protocol);
+
+        using TestService2Client client = await TestService2Client.ConnectAsync(protocol, ipAddress, port, cancellationToken: ct);
+
+        byte[] value = new byte[100];
+
+        // ReSharper disable once AccessToDisposedClosure
+        RpcException? e = Assert.ThrowsAsync<RpcException>(async () => await client.NonExistingProcedure_3Async(value, ct));
+        Assert.That(e?.Message, Is.EqualTo("Call was unsuccessful: ProgramMismatch."));
+
+        // Make sure the communication works after an error
+        Assert.That(await client.Echo_1Async(42, ct), Is.EqualTo(42));
+    }
+
+    [Test]
+    public async ValueTask ServerThrowsException()
+    {
+        CancellationToken ct = TestContext.CurrentContext.CancellationToken;
+        await using TestServer testServer = await StartServerAsync(ct);
+
+        int port = Utilities.GetPort(testServer, protocol);
+
+        using TestService2Client client = await TestService2Client.ConnectAsync(protocol, ipAddress, port, cancellationToken: ct);
+
+        RpcException? e = Assert.ThrowsAsync<RpcException>(async () => await client.ThrowsException_1Async(ct));
+        Assert.That(e?.Message, Is.EqualTo("Call was unsuccessful: SystemError."));
+
+        // Make sure the communication works after an error
+        Assert.That(await client.Echo_1Async(42, ct), Is.EqualTo(42));
+    }
+
+    private async ValueTask<TestServer> StartServerAsync(CancellationToken cancellationToken)
     {
         ServerSettings serverSettings = new()
         {
             PortMapperPort = 0
         };
 
-        _testServer = new TestServer(Protocol.Tcp | Protocol.Udp, _ipAddress, 0, serverSettings);
-        _testServer.Start();
-    }
-
-    [TearDown]
-    public void TearDown() => _testServer?.Dispose();
-
-    [Test]
-    [TestCase(Protocol.Tcp)]
-    [TestCase(Protocol.Udp)]
-    public void NonExistingProcedure(Protocol protocol)
-    {
-        int port = protocol == Protocol.Tcp ? TestServer.TcpPort : TestServer.UdpPort;
-
-        using TestService2Client client = new(protocol, _ipAddress, port);
-
-        // For TCP, the argument is bigger than the internal buffer size, so that the handling of buffer overflows is checked as well
-        byte[] value = protocol == Protocol.Tcp ? new byte[128000] : new byte[100];
-
-        RpcException? e = Assert.Throws<RpcException>(() => client.NonExistingProcedure_1(value));
-        Assert.That(e?.Message, Is.EqualTo("Call was unsuccessful: ProcedureUnavailable."));
-
-        // Make sure the communication works after an error
-        Assert.That(client.Echo_1(42), Is.EqualTo(42));
-    }
-
-    [Test]
-    [TestCase(Protocol.Tcp)]
-    [TestCase(Protocol.Udp)]
-    public void NonExistingVersion(Protocol protocol)
-    {
-        int port = protocol == Protocol.Tcp ? TestServer.TcpPort : TestServer.UdpPort;
-
-        using TestService2Client client = new(protocol, _ipAddress, port);
-
-        // For TCP, the argument is bigger than the internal buffer size, so that the handling of buffer overflows is checked as well
-        byte[] value = protocol == Protocol.Tcp ? new byte[128000] : new byte[100];
-
-        RpcException? e = Assert.Throws<RpcException>(() => client.NonExistingProcedure_3(value));
-        Assert.That(e?.Message, Is.EqualTo("Call was unsuccessful: ProgramMismatch."));
-
-        // Make sure the communication works after an error
-        Assert.That(client.Echo_1(42), Is.EqualTo(42));
-    }
-
-    [Test]
-    [TestCase(Protocol.Tcp)]
-    [TestCase(Protocol.Udp)]
-    public void ServerThrowsException(Protocol protocol)
-    {
-        int port = protocol == Protocol.Tcp ? TestServer.TcpPort : TestServer.UdpPort;
-
-        using TestService2Client client = new(protocol, _ipAddress, port);
-
-        RpcException? e = Assert.Throws<RpcException>(client.ThrowsException_1);
-        Assert.That(e?.Message, Is.EqualTo("Call was unsuccessful: SystemError."));
-
-        // Make sure the communication works after an error
-        Assert.That(client.Echo_1(42), Is.EqualTo(42));
+        TestServer testServer = new(protocol, ipAddress, 0, serverSettings);
+        await testServer.StartAsync(cancellationToken);
+        return testServer;
     }
 }

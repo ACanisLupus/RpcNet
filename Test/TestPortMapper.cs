@@ -8,49 +8,60 @@ using RpcNet;
 using RpcNet.PortMapper;
 
 [TestFixture]
-internal sealed class TestPortMapper
+[TestFixtureSource(typeof(Utilities), nameof(Utilities.GetProtocolAndAddressCases))]
+internal sealed class TestPortMapper(Protocol protocol, IPAddress ipAddress)
 {
-    private readonly IPAddress _ipAddress = IPAddress.Loopback;
-
     private int _portMapperPort;
     private PortMapperServer? _server;
 
     [SetUp]
-    public void SetUp()
+    public async ValueTask SetUpAsync()
     {
+        CancellationToken ct = TestContext.CurrentContext.CancellationToken;
+
         _portMapperPort = 0;
-        _server = new PortMapperServer(Protocol.Tcp | Protocol.Udp, _ipAddress, _portMapperPort);
-        _server.Start();
-        _portMapperPort = _server.TcpPort;
+        _server = new PortMapperServer(protocol, ipAddress, _portMapperPort);
+        await _server.StartAsync(ct);
+        _portMapperPort = Utilities.GetPort(_server, protocol);
     }
 
     [TearDown]
-    public void TearDown() => _server?.Dispose();
+    public async ValueTask TearDownAsync()
+    {
+        if (_server != null)
+        {
+            await _server.DisposeAsync();
+        }
+    }
 
     [Test]
     [TestCase(4711, 4712, ProtocolKind.Tcp, 4713)]
     [TestCase(4714, 4715, ProtocolKind.Udp, 4716)]
     [TestCase(4717, 4718, ProtocolKind.Tcp, 4719)]
     [TestCase(4720, 4721, ProtocolKind.Udp, 4721)]
-    public void TestSetAndGet(int port, int program, ProtocolKind protocol, int version)
+    public async ValueTask TestSetAndGet(int port, int program, ProtocolKind protocolKind, int version)
     {
-        using PortMapperClient client = new(Protocol.Tcp, _ipAddress, _portMapperPort);
-        _ = client.Set_2(
+        CancellationToken ct = TestContext.CurrentContext.CancellationToken;
+
+        using PortMapperClient client = await PortMapperClient.ConnectAsync(protocol, ipAddress, _portMapperPort, cancellationToken: ct);
+        _ = await client.Set_2Async(
             new Mapping2
             {
                 Port = port,
                 ProgramNumber = program,
-                Protocol = protocol,
+                Protocol = protocolKind,
                 VersionNumber = version
-            });
+            },
+            ct);
 
-        int receivedPort = client.GetPort_2(
+        int receivedPort = await client.GetPort_2Async(
             new Mapping2
             {
-                Protocol = protocol,
+                Protocol = protocolKind,
                 ProgramNumber = program,
                 VersionNumber = version
-            });
+            },
+            ct);
 
         Assert.That(receivedPort, Is.EqualTo(port));
     }
@@ -58,23 +69,27 @@ internal sealed class TestPortMapper
     [Test]
     [TestCase(1, 2, 3, 2, 42)]
     [TestCase(1, 2, 3, 42, 3)]
-    public void TestSetAndWrongGet(int port, int program, int version, int program2, int version2)
+    public async ValueTask TestSetAndWrongGet(int port, int program, int version, int program2, int version2)
     {
-        using PortMapperClient client = new(Protocol.Tcp, _ipAddress, _portMapperPort);
-        _ = client.Set_2(
+        CancellationToken ct = TestContext.CurrentContext.CancellationToken;
+
+        using PortMapperClient client = await PortMapperClient.ConnectAsync(protocol, ipAddress, _portMapperPort, cancellationToken: ct);
+        _ = await client.Set_2Async(
             new Mapping2
             {
                 Port = port,
                 ProgramNumber = program,
                 VersionNumber = version
-            });
+            },
+            ct);
 
-        int receivedPort = client.GetPort_2(
+        int receivedPort = await client.GetPort_2Async(
             new Mapping2
             {
                 ProgramNumber = program2,
                 VersionNumber = version2
-            });
+            },
+            ct);
 
         Assert.That(receivedPort, Is.EqualTo(0));
     }

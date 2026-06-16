@@ -3,6 +3,7 @@
 namespace Test;
 
 using System.Net;
+using System.Threading.Channels;
 using NUnit.Framework;
 using RpcNet;
 using RpcNet.Internal;
@@ -12,52 +13,52 @@ using TestService;
 internal sealed class TestUdpClientServer
 {
     [Test]
-    public void SendAndReceiveData()
+    [TestCaseSource(typeof(Utilities), nameof(Utilities.GetIpAddresses))]
+    public async ValueTask SendAndReceiveData(IPAddress ipAddress)
     {
-        IPAddress ipAddress = IPAddress.Loopback;
+        CancellationToken ct = TestContext.CurrentContext.CancellationToken;
 
         const int Program = 12;
         const int Version = 13;
         const int Procedure = 14;
 
-        Channel<ReceivedRpcCall> receivedCallChannel = new();
+        Channel<ReceivedRpcCall> receivedCallChannel = Channel.CreateUnbounded<ReceivedRpcCall>();
 
         ServerSettings serverSettings = new()
         {
             PortMapperPort = 0 // Don't register at port mapper
         };
 
-        using RpcUdpServer server = new(
+        await using RpcUdpServer server = new(
             ipAddress,
             0,
             Program,
             [Version],
             Dispatcher,
             serverSettings);
-        int port = server.Start();
+        int port = await server.StartAsync(ct);
 
-        using RpcUdpClient client = new(ipAddress, port, Program, Version, ClientSettings.Default);
+        using RpcUdpClient client = await RpcUdpClient.ConnectAsync(ipAddress, port, Program, Version, ClientSettings.Default, ct);
         SimpleStruct argument = new()
         {
             Value = 42
         };
         SimpleStruct result = new();
 
-        client.Call(Procedure, Version, argument, result);
+        await client.CallAsync(Procedure, Version, argument, result, ct);
 
-        Assert.That(receivedCallChannel.TryReceive(TimeSpan.FromSeconds(10), out ReceivedRpcCall? receivedCall));
-        Assert.That(receivedCall, Is.Not.Null);
-        Assert.That(receivedCall!.Procedure, Is.EqualTo(Procedure));
+        ReceivedRpcCall receivedCall = await receivedCallChannel.Reader.ReadAsync(ct);
+        Assert.That(receivedCall.Procedure, Is.EqualTo(Procedure));
         Assert.That(receivedCall.Version, Is.EqualTo(Version));
         Assert.That(receivedCall.RpcEndPoint, Is.Not.Null);
 
         Assert.That(argument.Value, Is.EqualTo(result.Value));
         return;
 
-        void Dispatcher(ReceivedRpcCall call)
+        async ValueTask Dispatcher(ReceivedRpcCall call, CancellationToken cancellationToken)
         {
             // To assert it on the main thread
-            receivedCallChannel.Send(call);
+            await receivedCallChannel.Writer.WriteAsync(call, cancellationToken);
 
             SimpleStruct pingStruct = new();
             call.RetrieveCall(pingStruct);

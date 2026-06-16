@@ -5,74 +5,55 @@ namespace RpcNet.Internal;
 using System.Net;
 using System.Net.Sockets;
 
-// Public for tests
-public sealed class TcpWriter : INetworkWriter
+internal sealed class TcpWriter(Socket socket) : INetworkWriter
 {
+    private const int LastFragmentFlag = unchecked((int)0x80000000);
     private const int TcpHeaderLength = 4;
 
-    private readonly byte[] _buffer;
-    private readonly Socket _socket;
+    private readonly MemoryStream _buffer = new();
 
-    private int _writeIndex;
+    public TimeSpan Timeout { get; set; }
 
-    public TcpWriter(Socket socket) : this(socket, 65536)
+    public void BeginWriting()
     {
+        _buffer.SetLength(TcpHeaderLength);
+        _buffer.Position = TcpHeaderLength;
     }
 
-    public TcpWriter(Socket socket, int bufferSize)
+    public async ValueTask EndWritingAsync(EndPoint remoteEndPoint, CancellationToken cancellationToken)
     {
-        if ((bufferSize < (TcpHeaderLength + sizeof(int))) || ((bufferSize % 4) != 0))
-        {
-            throw new ArgumentOutOfRangeException(nameof(bufferSize));
-        }
+        int length = (int)_buffer.Length - TcpHeaderLength;
+        int header = length | LastFragmentFlag;
 
-        _socket = socket;
-        _buffer = new byte[bufferSize];
-    }
+        Utilities.WriteBytesBigEndian(_buffer.GetBuffer().AsSpan(), header);
 
-    public void BeginWriting() => _writeIndex = TcpHeaderLength;
-    public void EndWriting(EndPoint remoteEndPoint) => FlushPacket(true);
-
-    public Span<byte> Reserve(int length)
-    {
-        int maxLength = _buffer.Length - _writeIndex;
-
-        // Integers (4 bytes) and padding bytes (> 1 and < 4 bytes) must not be sent fragmented
-        if ((maxLength < length) && (maxLength < sizeof(int)))
-        {
-            FlushPacket(false);
-            maxLength = _buffer.Length - _writeIndex;
-        }
-
-        int reservedLength = Math.Min(length, maxLength);
-
-        Span<byte> span = _buffer.AsSpan(_writeIndex, reservedLength);
-        _writeIndex += reservedLength;
-        return span;
-    }
-
-    private void FlushPacket(bool lastPacket)
-    {
-        int length = _writeIndex - TcpHeaderLength;
-
-        // Last fragment sets first bit to 1
-        int lengthToDecode = lastPacket ? length | unchecked((int)0x80000000) : length;
-
-        Utilities.WriteBytesBigEndian(_buffer.AsSpan(), lengthToDecode);
-
-        SocketError socketError;
         try
         {
-            _ = _socket.Send(_buffer, 0, length + TcpHeaderLength, SocketFlags.None, out socketError);
+            _ = await Utilities.ExecuteWithTimeoutAsync(
+                    Timeout,
+                    token => socket.SendAsync(_buffer.GetBuffer().AsMemory(0, (int)_buffer.Length), SocketFlags.None, token),
+                    cancellationToken)
+                .ConfigureAwait(false);
         }
         catch (SocketException e)
         {
-            throw new RpcException($"Could not send data to {_socket.RemoteEndPoint}. Socket error code: {e.SocketErrorCode}.");
+            throw new RpcException($"Could not send data to {socket.RemoteEndPoint}. Socket error code: {e.SocketErrorCode}.");
         }
 
-        if (socketError == SocketError.Success)
+        BeginWriting();
+    }
+
+    public Span<byte> Reserve(int length)
+    {
+        int startPosition = (int)_buffer.Position;
+        long newLength = startPosition + length;
+
+        if (newLength > _buffer.Length)
         {
-            BeginWriting();
+            _buffer.SetLength(newLength);
         }
+
+        _buffer.Position = newLength;
+        return _buffer.GetBuffer().AsSpan(startPosition, length);
     }
 }

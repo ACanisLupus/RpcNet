@@ -86,33 +86,36 @@ internal static class Program
 
         for (int i = 0; i < args.Length; i++)
         {
-            if (args[i] == "-n")
+            switch (args[i])
             {
-                i++;
-                if (!CheckNextArgument(i, "-n"))
-                {
-                    return false;
-                }
+                case "-n":
+                    {
+                        i++;
+                        if (!CheckNextArgument(i, "-n"))
+                        {
+                            return false;
+                        }
 
-                arguments.Namespace = args[i];
-            }
-            else if (args[i] == "-o")
-            {
-                i++;
-                if (!CheckNextArgument(i, "-o"))
-                {
-                    return false;
-                }
+                        arguments.Namespace = args[i];
+                        break;
+                    }
+                case "-o":
+                    {
+                        i++;
+                        if (!CheckNextArgument(i, "-o"))
+                        {
+                            return false;
+                        }
 
-                arguments.OutputFilePath = args[i];
-            }
-            else if (args[i] == "-p")
-            {
-                arguments.Public = true;
-            }
-            else
-            {
-                arguments.InputFilePath = args[i];
+                        arguments.OutputFilePath = args[i];
+                        break;
+                    }
+                case "-p":
+                    arguments.Public = true;
+                    break;
+                default:
+                    arguments.InputFilePath = args[i];
+                    break;
             }
         }
 

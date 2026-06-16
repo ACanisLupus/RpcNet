@@ -30,83 +30,44 @@ internal static class Utilities
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CalculateXdrPadding(int length) => (4 - (length & 3)) & 3;
 
-    public static IPAddress GetAlternateIpAddress(IPAddress ipAddress)
+    public static IPAddress GetAlternateIpAddress(IPAddress ipAddress) =>
+        ipAddress.AddressFamily switch
+        {
+            AddressFamily.InterNetworkV6 => IPAddress.IsLoopback(ipAddress) ? IPAddress.Loopback : ipAddress.MapToIPv4(),
+            AddressFamily.InterNetwork => IPAddress.IsLoopback(ipAddress) ? IPAddress.IPv6Loopback : ipAddress.MapToIPv6(),
+            _ => throw new InvalidOperationException($"The following address family is unsupported: {ipAddress.AddressFamily}.")
+        };
+
+    public static IPAddress GetLoopbackAddress(AddressFamily addressFamily) =>
+        addressFamily switch
+        {
+            AddressFamily.InterNetworkV6 => IPAddress.IPv6Loopback,
+            AddressFamily.InterNetwork => IPAddress.Loopback,
+            _ => throw new InvalidOperationException($"The following address family is unsupported: {addressFamily}.")
+        };
+
+    public static async ValueTask<TResult> ExecuteWithTimeoutAsync<TResult>(
+        TimeSpan timeout,
+        Func<CancellationToken, ValueTask<TResult>> operation,
+        CancellationToken cancellationToken)
     {
-        if (ipAddress.AddressFamily == AddressFamily.InterNetworkV6)
+        // Socket.ReceiveTimeout/SendTimeout only affect synchronous socket calls and are ignored by the
+        // asynchronous socket APIs used throughout RpcNet. Enforce the timeout with a linked cancellation
+        // token instead. A non-positive timeout (e.g. Timeout.InfiniteTimeSpan) means "wait indefinitely".
+        if (timeout <= TimeSpan.Zero)
         {
-            // Try again with IPv4
-            return IPAddress.IsLoopback(ipAddress) ? IPAddress.Loopback : ipAddress.MapToIPv4();
+            return await operation(cancellationToken).ConfigureAwait(false);
         }
 
-        if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
-        {
-            // Try again with IPv6
-            return IPAddress.IsLoopback(ipAddress) ? IPAddress.IPv6Loopback : ipAddress.MapToIPv6();
-        }
-
-        throw new InvalidOperationException($"The following address family is unsupported: {ipAddress.AddressFamily}.");
-    }
-
-    public static IPAddress GetLoopbackAddress(AddressFamily addressFamily)
-    {
-        if (addressFamily == AddressFamily.InterNetworkV6)
-        {
-            return IPAddress.IPv6Loopback;
-        }
-
-        if (addressFamily == AddressFamily.InterNetwork)
-        {
-            return IPAddress.Loopback;
-        }
-
-        throw new InvalidOperationException($"The following address family is unsupported: {addressFamily}.");
-    }
-
-    public static TimeSpan GetReceiveTimeout(Socket socket)
-    {
+        using CancellationTokenSource timeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeoutSource.CancelAfter(timeout);
         try
         {
-            return TimeSpan.FromMilliseconds(socket.ReceiveTimeout);
+            return await operation(timeoutSource.Token).ConfigureAwait(false);
         }
-        catch (SocketException e)
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
-            throw new RpcException($"Could not get receive timeout. Socket error code: {e.SocketErrorCode}.");
-        }
-    }
-
-    public static void SetReceiveTimeout(Socket socket, TimeSpan timeout)
-    {
-        try
-        {
-            socket.ReceiveTimeout = (int)timeout.TotalMilliseconds;
-        }
-        catch (SocketException e)
-        {
-            throw new RpcException($"Could not set receive timeout to {timeout}. Socket error code: {e.SocketErrorCode}.");
-        }
-    }
-
-    public static TimeSpan GetSendTimeout(Socket socket)
-    {
-        try
-        {
-            return TimeSpan.FromMilliseconds(socket.SendTimeout);
-        }
-        catch (SocketException e)
-        {
-            throw new RpcException($"Could not get send timeout. Socket error code: {e.SocketErrorCode}.");
-        }
-    }
-
-    public static void SetSendTimeout(Socket socket, TimeSpan timeout)
-    {
-        try
-        {
-            socket.SendTimeout = (int)timeout.TotalMilliseconds;
-        }
-        catch (SocketException e)
-        {
-            throw new RpcException($"Could not set send timeout to {timeout}. Socket error code: {e.SocketErrorCode}.");
+            throw new RpcException($"The operation did not complete within the configured timeout of {timeout}.");
         }
     }
 

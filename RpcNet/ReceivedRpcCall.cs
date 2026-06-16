@@ -10,7 +10,7 @@ public sealed class ReceivedRpcCall
     private readonly uint _highVersion;
     private readonly uint _lowVersion;
     private readonly int _program;
-    private readonly Action<ReceivedRpcCall> _receivedCallDispatcher;
+    private readonly Func<ReceivedRpcCall, CancellationToken, ValueTask> _receivedCallDispatcher;
     private readonly IXdrReader _xdrReader;
     private readonly IXdrWriter _xdrWriter;
 
@@ -21,7 +21,7 @@ public sealed class ReceivedRpcCall
         int[] versions,
         INetworkReader networkReader,
         INetworkWriter networkWriter,
-        Action<ReceivedRpcCall> receivedCallDispatcher)
+        Func<ReceivedRpcCall, CancellationToken, ValueTask> receivedCallDispatcher)
     {
         _program = program;
         _receivedCallDispatcher = receivedCallDispatcher;
@@ -65,7 +65,7 @@ public sealed class ReceivedRpcCall
         reply.WriteTo(_xdrWriter);
     }
 
-    internal void HandleCall(RpcEndPoint rpcEndPoint)
+    internal async ValueTask HandleCallAsync(RpcEndPoint rpcEndPoint, CancellationToken cancellationToken)
     {
         RpcMessage rpcMessage = new(_xdrReader);
         _xid = rpcMessage.Xid;
@@ -92,7 +92,7 @@ public sealed class ReceivedRpcCall
         Procedure = rpcMessage.Body.CallBody.Procedure;
         RpcEndPoint = rpcEndPoint;
 
-        _receivedCallDispatcher(this);
+        await _receivedCallDispatcher(this, cancellationToken).ConfigureAwait(false);
     }
 
     private RpcMessage GenerateReply(ReplyBody replyBody) => new()

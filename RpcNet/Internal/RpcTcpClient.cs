@@ -6,72 +6,93 @@ using System.Net;
 using System.Net.Sockets;
 using RpcNet.PortMapper;
 
-// Public for tests
-public sealed class RpcTcpClient : INetworkClient
+internal sealed class RpcTcpClient : INetworkClient
 {
     private readonly RpcCall _call;
+    private readonly TcpReader _reader;
     private readonly Socket _socket;
-    private readonly ClientSettings _clientSettings;
-    private readonly EndPoint _remoteEndPoint;
+    private readonly TcpWriter _writer;
 
-    public RpcTcpClient(IPAddress ipAddress, int port, int program, int version, ClientSettings clientSettings)
+    private RpcTcpClient(Socket socket, IPAddress ipAddress, int port, int program)
     {
-        _clientSettings = clientSettings;
+        _socket = socket;
 
-        if (port == 0)
-        {
-            port = program == PortMapperConstants.PortMapperProgram
-                ? PortMapperConstants.PortMapperPort
-                : PortMapperUtilities.GetPort(ProtocolKind.Tcp, ipAddress, _clientSettings.PortMapperPort, program, version, clientSettings);
-        }
-
-        try
-        {
-            _remoteEndPoint = new IPEndPoint(ipAddress, port);
-            _socket = EstablishConnection();
-        }
-        catch (RpcException)
-        {
-            _remoteEndPoint = new IPEndPoint(Utilities.GetAlternateIpAddress(ipAddress), port);
-            _socket = EstablishConnection();
-        }
-
-        TcpReader tcpReader = new(_socket);
-        TcpWriter tcpWriter = new(_socket);
-        _call = new RpcCall(program, _remoteEndPoint, tcpReader, tcpWriter);
+        IPEndPoint remoteEndPoint = new(ipAddress, port);
+        _reader = new TcpReader(_socket);
+        _writer = new TcpWriter(_socket);
+        _call = new RpcCall(program, remoteEndPoint, _reader, _writer);
     }
 
     public TimeSpan ReceiveTimeout
     {
-        get => Utilities.GetReceiveTimeout(_socket);
-        set => Utilities.SetReceiveTimeout(_socket, value);
+        get => _reader.Timeout;
+        set => _reader.Timeout = value;
     }
 
     public TimeSpan SendTimeout
     {
-        get => Utilities.GetSendTimeout(_socket);
-        set => Utilities.SetSendTimeout(_socket, value);
+        get => _writer.Timeout;
+        set => _writer.Timeout = value;
     }
 
-    public void Call(int procedure, int version, IXdrDataType argument, IXdrDataType result) => _call.SendCall(procedure, version, argument, result);
+    public static async ValueTask<RpcTcpClient> ConnectAsync(
+        IPAddress ipAddress,
+        int port,
+        int program,
+        int version,
+        ClientSettings clientSettings,
+        CancellationToken cancellationToken)
+    {
+        if (port == 0)
+        {
+            port = program == PortMapperConstants.PortMapperProgram
+                ? PortMapperConstants.PortMapperPort
+                : await PortMapperUtilities.GetPortAsync(
+                        ProtocolKind.Tcp,
+                        ipAddress,
+                        clientSettings.PortMapperPort,
+                        program,
+                        version,
+                        clientSettings,
+                        cancellationToken)
+                    .ConfigureAwait(false);
+        }
+
+        Socket socket = new(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp)
+        {
+            NoDelay = true
+        };
+
+        try
+        {
+            await EstablishConnectionAsync(socket, ipAddress, port, cancellationToken).ConfigureAwait(false);
+        }
+        catch (RpcException)
+        {
+            await EstablishConnectionAsync(socket, Utilities.GetAlternateIpAddress(ipAddress), port, cancellationToken).ConfigureAwait(false);
+        }
+
+        return new RpcTcpClient(socket, ipAddress, port, program)
+        {
+            ReceiveTimeout = clientSettings.ReceiveTimeout,
+            SendTimeout = clientSettings.SendTimeout
+        };
+    }
+
+    public ValueTask CallAsync(int procedure, int version, IXdrDataType argument, IXdrDataType result, CancellationToken cancellationToken) =>
+        _call.SendCallAsync(procedure, version, argument, result, cancellationToken);
+
     public void Dispose() => _socket.Dispose();
 
-    private Socket EstablishConnection()
+    private static async ValueTask EstablishConnectionAsync(Socket socket, IPAddress ipAddress, int port, CancellationToken cancellationToken)
     {
         try
         {
-            Socket socket = new(_remoteEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-
-            Utilities.SetReceiveTimeout(socket, _clientSettings.ReceiveTimeout);
-            Utilities.SetSendTimeout(socket, _clientSettings.SendTimeout);
-
-            socket.Connect(_remoteEndPoint);
-
-            return socket;
+            await socket.ConnectAsync(ipAddress, port, cancellationToken).ConfigureAwait(false);
         }
         catch (SocketException e)
         {
-            throw new RpcException($"Could not connect to {_remoteEndPoint}. Socket error code: {e.SocketErrorCode}.");
+            throw new RpcException($"Could not connect to {ipAddress}:{port}. Socket error code: {e.SocketErrorCode}.");
         }
     }
 }

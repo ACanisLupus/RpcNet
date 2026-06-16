@@ -6,8 +6,10 @@ using TestService;
 
 const int Port = 2223;
 
-using TestServer testServer = new(IPAddress.Any, Port);
-testServer.Start();
+CancellationToken ct = CancellationToken.None;
+
+await using TestServer testServer = new(IPAddress.Any, Port);
+await testServer.StartAsync(ct).ConfigureAwait(false);
 
 long lastValue = -1;
 
@@ -19,7 +21,7 @@ while (true)
         lastValue = TestServer.Counter;
     }
 
-    Thread.Sleep(1000);
+    await Task.Delay(1000).ConfigureAwait(false);
 }
 
 internal class TestServer(IPAddress ipAddress, int port) : TestServiceServerStub(
@@ -33,15 +35,14 @@ internal class TestServer(IPAddress ipAddress, int port) : TestServiceServerStub
 {
     public static long Counter;
 
-    public override void ThrowsException_1(RpcEndPoint rpcEndPoint)
-    {
-    }
+    public override ValueTask ThrowsException_1Async(RpcEndPoint rpcEndPoint, CancellationToken cancellationToken) => ValueTask.CompletedTask;
 
-    public override int Echo_1(RpcEndPoint rpcEndPoint, int value)
+    public override ValueTask<int> Echo_1Async(RpcEndPoint rpcEndPoint, int value, CancellationToken cancellationToken)
     {
         _ = Interlocked.Increment(ref Counter);
-        return value;
+        return new ValueTask<int>(value);
     }
 
-    public override SimpleStruct SimpleStructSimpleStruct_2(RpcEndPoint rpcEndPoint, SimpleStruct value) => value;
+    public override ValueTask<SimpleStruct> SimpleStructSimpleStruct_2Async(RpcEndPoint rpcEndPoint, SimpleStruct value, CancellationToken cancellationToken) =>
+        new(value);
 }

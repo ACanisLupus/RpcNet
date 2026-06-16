@@ -6,31 +6,34 @@ using Antlr4.Runtime;
 
 internal static class Utilities
 {
-    public static string ToLowerFirstLetter(this string str)
-    {
-        if (string.IsNullOrWhiteSpace(str))
-        {
-            return str;
-        }
-
-        return str[..1].ToLower() + str[1..];
-    }
-
-    public static string ToUpperFirstLetter(this string str)
-    {
-        if (string.IsNullOrWhiteSpace(str))
-        {
-            return str;
-        }
-
-        return str[..1].ToUpper() + str[1..];
-    }
-
     public static void Check(this ParserRuleContext parserRuleContext)
     {
         if (parserRuleContext.exception is not null)
         {
             throw parserRuleContext.exception;
+        }
+    }
+
+    extension(string str)
+    {
+        public string ToLowerFirstLetter()
+        {
+            if (string.IsNullOrWhiteSpace(str))
+            {
+                return str;
+            }
+
+            return str[..1].ToLower() + str[1..];
+        }
+
+        public string ToUpperFirstLetter()
+        {
+            if (string.IsNullOrWhiteSpace(str))
+            {
+                return str;
+            }
+
+            return str[..1].ToUpper() + str[1..];
         }
     }
 }

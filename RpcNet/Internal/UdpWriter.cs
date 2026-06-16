@@ -5,36 +5,27 @@ namespace RpcNet.Internal;
 using System.Net;
 using System.Net.Sockets;
 
-// Public for tests
-public sealed class UdpWriter : INetworkWriter
+internal sealed class UdpWriter(Socket socket) : INetworkWriter
 {
-    private readonly byte[] _buffer;
-    private readonly Socket _socket;
+    private readonly MemoryStream _buffer = new();
 
-    private int _writeIndex;
+    public TimeSpan Timeout { get; set; }
 
-    public UdpWriter(Socket socket) : this(socket, 65536)
+    public void BeginWriting()
     {
+        _buffer.SetLength(0);
+        _buffer.Position = 0;
     }
 
-    public UdpWriter(Socket socket, int bufferSize)
-    {
-        if ((bufferSize < sizeof(int)) || ((bufferSize % 4) != 0))
-        {
-            throw new ArgumentOutOfRangeException(nameof(bufferSize));
-        }
-
-        _socket = socket;
-        _buffer = new byte[bufferSize];
-    }
-
-    public void BeginWriting() => _writeIndex = 0;
-
-    public void EndWriting(EndPoint remoteEndPoint)
+    public async ValueTask EndWritingAsync(EndPoint remoteEndPoint, CancellationToken cancellationToken)
     {
         try
         {
-            _ = _socket.SendTo(_buffer, _writeIndex, SocketFlags.None, remoteEndPoint);
+            _ = await Utilities.ExecuteWithTimeoutAsync(
+                    Timeout,
+                    token => socket.SendToAsync(_buffer.GetBuffer().AsMemory(0, (int)_buffer.Length), SocketFlags.None, remoteEndPoint, token),
+                    cancellationToken)
+                .ConfigureAwait(false);
         }
         catch (SocketException e)
         {
@@ -44,13 +35,15 @@ public sealed class UdpWriter : INetworkWriter
 
     public Span<byte> Reserve(int length)
     {
-        if ((_writeIndex + length) > _buffer.Length)
+        int startPosition = (int)_buffer.Position;
+        long newLength = startPosition + length;
+
+        if (newLength > _buffer.Length)
         {
-            throw new RpcException("UDP buffer overflow.");
+            _buffer.SetLength(newLength);
         }
 
-        Span<byte> span = _buffer.AsSpan(_writeIndex, length);
-        _writeIndex += length;
-        return span;
+        _buffer.Position = newLength;
+        return _buffer.GetBuffer().AsSpan(startPosition, length);
     }
 }

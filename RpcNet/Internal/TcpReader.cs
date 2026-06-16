@@ -5,199 +5,112 @@ namespace RpcNet.Internal;
 using System.Net;
 using System.Net.Sockets;
 
-// Public for tests
-public sealed class TcpReader : INetworkReader
+internal sealed class TcpReader(Socket socket) : INetworkReader
 {
+    private const int FragmentLengthMask = 0x7fffffff;
+    private const int LastFragmentFlag = unchecked((int)0x80000000);
+    private const int NetworkBufferSize = 65536;
     private const int TcpHeaderLength = 4;
 
-    private readonly byte[] _buffer;
-    private readonly Socket _socket;
+    private readonly MemoryStream _buffer = new();
+    private readonly byte[] _headerBuffer = new byte[TcpHeaderLength];
+    private readonly byte[] _networkBuffer = new byte[NetworkBufferSize];
 
-    private int _bodyIndex;
-    private int _headerIndex;
-    private bool _lastPacket;
-    private PacketState _packetState = PacketState.Header;
-    private int _readIndex;
-    private int _writeIndex;
+    private int _networkReadPos;
+    private int _networkWritePos;
 
-    public TcpReader(Socket socket) : this(socket, 65536)
+    public TimeSpan Timeout { get; set; }
+
+    public async ValueTask<EndPoint> BeginReadingAsync(CancellationToken cancellationToken)
     {
-    }
+        _buffer.SetLength(0);
+        _buffer.Position = 0;
 
-    public TcpReader(Socket socket, int bufferSize)
-    {
-        if ((bufferSize < (TcpHeaderLength + sizeof(int))) || ((bufferSize % 4) != 0))
+        bool lastFragment = false;
+        while (!lastFragment)
         {
-            throw new ArgumentOutOfRangeException(nameof(bufferSize));
-        }
+            await ConsumeExactAsync(_headerBuffer, cancellationToken).ConfigureAwait(false);
+            int headerValue = Utilities.ToInt32BigEndian(_headerBuffer);
+            lastFragment = (headerValue & LastFragmentFlag) != 0;
+            int fragmentLength = headerValue & FragmentLengthMask;
 
-        _socket = socket;
-        _buffer = new byte[bufferSize];
-    }
-
-    public EndPoint BeginReading()
-    {
-        _readIndex = 0;
-        _writeIndex = 0;
-        _lastPacket = false;
-        _headerIndex = 0;
-        _bodyIndex = 0;
-        _packetState = PacketState.Header;
-
-        FillBuffer();
-        return _socket.RemoteEndPoint!;
-    }
-
-    public void EndReading()
-    {
-        // Just read to the end. Obviously, this is an unknown procedure
-        while ((_packetState != PacketState.Complete) || (_readIndex != _writeIndex))
-        {
-            int length = Math.Max(_writeIndex - _readIndex, 1);
-            _ = Read(length);
-        }
-    }
-
-    public ReadOnlySpan<byte> Read(int length)
-    {
-        FillBuffer();
-
-        int endIndex = Math.Min(_headerIndex, _buffer.Length);
-        endIndex = Math.Min(endIndex, _writeIndex);
-        int availableBytes = endIndex - _readIndex;
-        int bytesToRead = Math.Min(availableBytes, length);
-
-        Span<byte> span = _buffer.AsSpan(_readIndex, bytesToRead);
-        _readIndex += bytesToRead;
-        return span;
-    }
-
-    // On the first iteration, this function will read as many data from the network as available
-    // On the following iterations, it depends on the yet received data:
-    // - Not enough bytes for header? Read from network again
-    // - Packet is not complete and there is space left in the buffer? Read from network again
-    // - Packet is not complete and no space available? Return and wait for XDR read
-    // - Packet is complete and XDR read is not complete? Return and wait for XDR read
-    // - Packet and XDR read is complete? Read next header. Or finish if previous packet was the last packet
-    private void FillBuffer()
-    {
-        bool readFromNetwork = false;
-        while (true)
-        {
-            if (_packetState == PacketState.Complete)
-            {
-                return;
-            }
-
-            if (_packetState == PacketState.Header)
-            {
-                ReadHeader(ref readFromNetwork);
-            }
-
-            if (_packetState == PacketState.Body)
-            {
-                if (ReadBody(ref readFromNetwork))
-                {
-                    return;
-                }
-            }
-
-            if (readFromNetwork)
-            {
-                ReadFromNetwork();
-            }
-
-            ShiftData();
-        }
-    }
-
-    private void ShiftData()
-    {
-        if ((_readIndex == _writeIndex) && (_writeIndex > 0))
-        {
-            _bodyIndex -= _writeIndex;
-            _headerIndex -= _writeIndex;
-            _writeIndex = 0;
-            _readIndex = 0;
-        }
-    }
-
-    private bool ReadBody(ref bool readFromNetwork)
-    {
-        if ((_writeIndex == _headerIndex) && _lastPacket)
-        {
-            _packetState = PacketState.Complete;
-            return true;
-        }
-
-        if (_readIndex < _headerIndex)
-        {
-            if ((_writeIndex < _headerIndex) && (_writeIndex < _buffer.Length))
-            {
-                readFromNetwork = true;
-            }
-            else if (_readIndex < _buffer.Length)
-            {
-                return true;
-            }
-        }
-        else
-        {
-            _packetState = PacketState.Header;
-        }
-
-        return false;
-    }
-
-    private void ReadFromNetwork()
-    {
-        try
-        {
-            int receivedLength = _socket.Receive(_buffer.AsSpan(_writeIndex, _buffer.Length - _writeIndex));
-            if (receivedLength == 0)
-            {
-                throw new RpcException($"{_socket.RemoteEndPoint} disconnected.");
-            }
-
-            _writeIndex += receivedLength;
-        }
-        catch (SocketException e)
-        {
-            throw new RpcException($"Could not read from {_socket.RemoteEndPoint}. Socket error code: {e.SocketErrorCode}.");
-        }
-    }
-
-    private void ReadHeader(ref bool readFromNetwork)
-    {
-        if (_writeIndex >= (_headerIndex + TcpHeaderLength))
-        {
-            int packetLength = Utilities.ToInt32BigEndian(_buffer.AsSpan(_headerIndex, TcpHeaderLength));
-            if (packetLength < 0)
-            {
-                _lastPacket = true;
-                packetLength &= 0x0fffffff;
-            }
-
-            if (((packetLength % 4) != 0) || (packetLength == 0))
+            if (((fragmentLength % 4) != 0) || (fragmentLength == 0))
             {
                 throw new RpcException("This is not an XDR stream.");
             }
 
-            _packetState = PacketState.Body;
-            _bodyIndex = _headerIndex + TcpHeaderLength;
-            _headerIndex = _bodyIndex + packetLength;
-            _readIndex = _bodyIndex;
+            long offset = _buffer.Length;
+            _buffer.SetLength(offset + fragmentLength);
+            await ConsumeExactAsync(_buffer.GetBuffer(), (int)offset, fragmentLength, cancellationToken).ConfigureAwait(false);
         }
-        else
+
+        _buffer.Position = 0;
+        return socket.RemoteEndPoint!;
+    }
+
+    public void EndReading() => _buffer.Position = _buffer.Length;
+
+    public ReadOnlySpan<byte> Read(int length)
+    {
+        int available = (int)(_buffer.Length - _buffer.Position);
+        if (length > available)
         {
-            readFromNetwork = true;
+            throw new RpcException("TCP buffer underflow.");
+        }
+
+        ReadOnlySpan<byte> span = _buffer.GetBuffer().AsSpan((int)_buffer.Position, length);
+        _buffer.Position += length;
+        return span;
+    }
+
+    private async ValueTask ConsumeExactAsync(byte[] target, CancellationToken cancellationToken) =>
+        await ConsumeExactAsync(target, 0, target.Length, cancellationToken).ConfigureAwait(false);
+
+    private async ValueTask ConsumeExactAsync(byte[] target, int offset, int count, CancellationToken cancellationToken)
+    {
+        int consumed = 0;
+        while (consumed < count)
+        {
+            int buffered = _networkWritePos - _networkReadPos;
+            if (buffered == 0)
+            {
+                await FillNetworkBufferAsync(cancellationToken).ConfigureAwait(false);
+                continue;
+            }
+
+            int toCopy = Math.Min(count - consumed, buffered);
+            Array.Copy(_networkBuffer, _networkReadPos, target, offset + consumed, toCopy);
+            _networkReadPos += toCopy;
+            consumed += toCopy;
         }
     }
 
-    private enum PacketState
+    private async ValueTask FillNetworkBufferAsync(CancellationToken cancellationToken)
     {
-        Header,
-        Body,
-        Complete
+        // This is only called once the buffered data has been fully consumed, so the network buffer
+        // can always be refilled from the beginning.
+        _networkReadPos = 0;
+        _networkWritePos = 0;
+
+        int n;
+        try
+        {
+            n = await Utilities.ExecuteWithTimeoutAsync(
+                    Timeout,
+                    token => socket.ReceiveAsync(_networkBuffer.AsMemory(), SocketFlags.None, token),
+                    cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (SocketException e)
+        {
+            throw new RpcException($"Could not read from {socket.RemoteEndPoint}. Socket error code: {e.SocketErrorCode}.");
+        }
+
+        if (n == 0)
+        {
+            throw new RpcException($"{socket.RemoteEndPoint} disconnected.");
+        }
+
+        _networkWritePos += n;
     }
 }

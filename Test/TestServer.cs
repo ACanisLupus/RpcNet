@@ -9,7 +9,9 @@ using TestService;
 internal sealed class TestServer(Protocol protocol, IPAddress ipAddress, int port, ServerSettings serverSettings)
     : TestServiceServerStub(protocol, ipAddress, port, serverSettings)
 {
-    public override void ThrowsException_1(RpcEndPoint rpcEndPoint) => throw new NotSupportedException();
-    public override int Echo_1(RpcEndPoint rpcEndPoint, int value) => value;
-    public override SimpleStruct SimpleStructSimpleStruct_2(RpcEndPoint rpcEndPoint, SimpleStruct value) => value;
+    public override ValueTask ThrowsException_1Async(RpcEndPoint rpcEndPoint, CancellationToken cancellationToken) => throw new NotSupportedException();
+    public override ValueTask<int> Echo_1Async(RpcEndPoint rpcEndPoint, int value, CancellationToken cancellationToken) => new(value);
+
+    public override ValueTask<SimpleStruct> SimpleStructSimpleStruct_2Async(RpcEndPoint rpcEndPoint, SimpleStruct value, CancellationToken cancellationToken) =>
+        new(value);
 }

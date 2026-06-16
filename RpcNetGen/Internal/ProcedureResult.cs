@@ -6,6 +6,7 @@ internal class ProcedureResult
 {
     private readonly DataType _dataType;
     private readonly string _procedureName;
+
     private string _structName;
     private Struct _tempParsedStructForClient;
     private Struct _tempParsedStructForServer;
@@ -26,8 +27,10 @@ internal class ProcedureResult
         }
     }
 
-    public string Declaration => _dataType.Declaration;
     public static string VariableName => "result";
+
+    public string Declaration => _dataType.Declaration;
+    public bool IsVoid => _dataType.Kind == DataTypeKind.Void;
 
     public void Prepare(Content content)
     {
@@ -82,17 +85,18 @@ internal class ProcedureResult
 
     public void DumpClientReturn(XdrFileWriter writer, int indent)
     {
-        if (_dataType.Kind == DataTypeKind.CustomType)
+        // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
+        switch (_dataType.Kind)
         {
-            writer.WriteLine(indent, $"return {VariableName};");
-        }
-        else if (_dataType.Kind == DataTypeKind.Void)
-        {
-            // Nothing to do
-        }
-        else
-        {
-            writer.WriteLine(indent, $"return {VariableName}.Value;");
+            case DataTypeKind.CustomType:
+                writer.WriteLine(indent, $"return {VariableName};");
+                break;
+            case DataTypeKind.Void:
+                // Nothing to do
+                break;
+            default:
+                writer.WriteLine(indent, $"return {VariableName}.Value;");
+                break;
         }
     }
 
@@ -110,16 +114,11 @@ internal class ProcedureResult
 
     public string GetServerResult()
     {
-        if (_dataType.Kind == DataTypeKind.CustomType)
+        return _dataType.Kind switch
         {
-            return $"{_structName} {VariableName} = ";
-        }
-
-        if (_dataType.Kind == DataTypeKind.Void)
-        {
-            return "";
-        }
-
-        return $"{VariableName}.Value = ";
+            DataTypeKind.CustomType => $"{_structName} {VariableName} = ",
+            DataTypeKind.Void => "",
+            _ => $"{VariableName}.Value = "
+        };
     }
 }

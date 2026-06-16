@@ -5,12 +5,14 @@ using RpcNet;
 using RpcNet.PortMapper;
 using Test;
 
+CancellationToken ct = CancellationToken.None;
+
 if ((args.Length != 1) || !IPEndPoint.TryParse(args[0], out IPEndPoint? ipEndPoint))
 {
     ipEndPoint = new IPEndPoint(IPAddress.IPv6Any, 111);
 }
 
-using PortMapperServer portMapperServer = new(
+await using PortMapperServer portMapperServer = new(
     Protocol.Tcp | Protocol.Udp,
     ipEndPoint.Address,
     ipEndPoint.Port,
@@ -18,6 +20,6 @@ using PortMapperServer portMapperServer = new(
     {
         Logger = new TestLogger("Port Mapper")
     });
-portMapperServer.Start();
+await portMapperServer.StartAsync(ct).ConfigureAwait(false);
 
-Thread.Sleep(-1);
+await Task.Delay(-1).ConfigureAwait(false);

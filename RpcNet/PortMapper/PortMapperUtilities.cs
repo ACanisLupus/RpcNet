@@ -8,86 +8,125 @@ using RpcNet.Internal;
 
 public static class PortMapperUtilities
 {
-    public static int GetPort(
+    public static async ValueTask<int> GetPortAsync(
         ProtocolKind protocol,
         IPAddress ipAddress,
         int portMapperPort,
         int program,
         int version,
-        ClientSettings? clientSettings)
+        ClientSettings? clientSettings,
+        CancellationToken cancellationToken)
     {
         try
         {
-            return GetPortInternal(protocol, ipAddress, portMapperPort, program, version, clientSettings);
+            return await GetPortInternalAsync(protocol, ipAddress, portMapperPort, program, version, clientSettings, cancellationToken).ConfigureAwait(false);
         }
         catch
         {
-            return GetPortInternal(protocol, Utilities.GetAlternateIpAddress(ipAddress), portMapperPort, program, version, clientSettings);
+            return await GetPortInternalAsync(
+                    protocol,
+                    Utilities.GetAlternateIpAddress(ipAddress),
+                    portMapperPort,
+                    program,
+                    version,
+                    clientSettings,
+                    cancellationToken)
+                .ConfigureAwait(false);
         }
     }
 
-    private static int GetPortInternal(
-        ProtocolKind protocol,
-        IPAddress ipAddress,
-        int portMapperPort,
-        int program,
-        int version,
-        ClientSettings? clientSettings)
-    {
-        using PortMapperClient portMapperClient = new(Protocol.Tcp, ipAddress, portMapperPort, clientSettings);
-        return portMapperClient.GetPort_2(
-            new Mapping2
-            {
-                ProgramNumber = program,
-                Protocol = protocol,
-                VersionNumber = version
-            });
-    }
-
-    public static void UnsetAndSetPort(
+    public static async ValueTask UnsetAndSetPortAsync(
         AddressFamily addressFamily,
         ProtocolKind protocol,
         int portMapperPort,
         int portToSet,
         int program,
         int version,
-        ClientSettings? clientSettings)
+        ClientSettings? clientSettings,
+        CancellationToken cancellationToken)
     {
         IPAddress ipAddress = Utilities.GetLoopbackAddress(addressFamily);
         try
         {
-            UnsetAndSetPortInternal(ipAddress, protocol, portMapperPort, portToSet, program, version, clientSettings);
+            await UnsetAndSetPortInternalAsync(ipAddress, protocol, portMapperPort, portToSet, program, version, clientSettings, cancellationToken)
+                .ConfigureAwait(false);
         }
         catch
         {
-            UnsetAndSetPortInternal(Utilities.GetAlternateIpAddress(ipAddress), protocol, portMapperPort, portToSet, program, version, clientSettings);
+            await UnsetAndSetPortInternalAsync(
+                    Utilities.GetAlternateIpAddress(ipAddress),
+                    protocol,
+                    portMapperPort,
+                    portToSet,
+                    program,
+                    version,
+                    clientSettings,
+                    cancellationToken)
+                .ConfigureAwait(false);
         }
     }
 
-    private static void UnsetAndSetPortInternal(
+    private static async ValueTask<int> GetPortInternalAsync(
+        ProtocolKind protocol,
+        IPAddress ipAddress,
+        int portMapperPort,
+        int program,
+        int version,
+        ClientSettings? clientSettings,
+        CancellationToken cancellationToken)
+    {
+        using PortMapperClient portMapperClient =
+            await PortMapperClient.ConnectAsync(GetPortMapperProtocol(protocol), ipAddress, portMapperPort, clientSettings, cancellationToken)
+                .ConfigureAwait(false);
+        return await portMapperClient.GetPort_2Async(
+                new Mapping2
+                {
+                    ProgramNumber = program,
+                    Protocol = protocol,
+                    VersionNumber = version
+                },
+                cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    private static async ValueTask UnsetAndSetPortInternalAsync(
         IPAddress ipAddress,
         ProtocolKind protocol,
         int portMapperPort,
         int portToSet,
         int program,
         int version,
-        ClientSettings? clientSettings)
+        ClientSettings? clientSettings,
+        CancellationToken cancellationToken)
     {
-        using PortMapperClient portMapperClient = new(Protocol.Tcp, ipAddress, portMapperPort, clientSettings);
-        _ = portMapperClient.Unset_2(
-            new Mapping2
-            {
-                ProgramNumber = program,
-                Protocol = protocol,
-                VersionNumber = version
-            });
-        _ = portMapperClient.Set_2(
-            new Mapping2
-            {
-                Port = portToSet,
-                ProgramNumber = program,
-                Protocol = protocol,
-                VersionNumber = version
-            });
+        using PortMapperClient portMapperClient =
+            await PortMapperClient.ConnectAsync(GetPortMapperProtocol(protocol), ipAddress, portMapperPort, clientSettings, cancellationToken)
+                .ConfigureAwait(false);
+        _ = await portMapperClient.Unset_2Async(
+                new Mapping2
+                {
+                    ProgramNumber = program,
+                    Protocol = protocol,
+                    VersionNumber = version
+                },
+                cancellationToken)
+            .ConfigureAwait(false);
+        _ = await portMapperClient.Set_2Async(
+                new Mapping2
+                {
+                    Port = portToSet,
+                    ProgramNumber = program,
+                    Protocol = protocol,
+                    VersionNumber = version
+                },
+                cancellationToken)
+            .ConfigureAwait(false);
     }
+
+    private static Protocol GetPortMapperProtocol(ProtocolKind protocol) => protocol switch
+    {
+        ProtocolKind.Tcp => Protocol.Tcp,
+        ProtocolKind.Udp => Protocol.Udp,
+        _ => throw new ArgumentOutOfRangeException(nameof(protocol))
+    };
 }

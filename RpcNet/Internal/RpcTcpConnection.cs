@@ -5,8 +5,7 @@ namespace RpcNet.Internal;
 using System.Net;
 using System.Net.Sockets;
 
-// Public for tests
-public sealed class RpcTcpConnection : IDisposable
+internal sealed class RpcTcpConnection : IDisposable
 {
     private readonly ILogger? _logger;
     private readonly TcpReader _reader;
@@ -16,7 +15,12 @@ public sealed class RpcTcpConnection : IDisposable
     private readonly Socket _socket;
     private readonly TcpWriter _writer;
 
-    public RpcTcpConnection(Socket socket, int program, int[] versions, Action<ReceivedRpcCall> receivedCallDispatcher, ILogger? logger = null)
+    public RpcTcpConnection(
+        Socket socket,
+        int program,
+        int[] versions,
+        Func<ReceivedRpcCall, CancellationToken, ValueTask> receivedCallDispatcher,
+        ILogger? logger = null)
     {
         _socket = socket;
         if (socket.RemoteEndPoint is not IPEndPoint remoteIpEndPoint)
@@ -37,11 +41,11 @@ public sealed class RpcTcpConnection : IDisposable
 
     public void Dispose() => _socket.Dispose();
 
-    public bool Handle()
+    public async ValueTask<bool> HandleAsync(CancellationToken cancellationToken)
     {
         try
         {
-            _ = _reader.BeginReading();
+            _ = await _reader.BeginReadingAsync(cancellationToken).ConfigureAwait(false);
         }
         catch (RpcException e)
         {
@@ -50,12 +54,12 @@ public sealed class RpcTcpConnection : IDisposable
         }
 
         _writer.BeginWriting();
-        _receivedCall.HandleCall(_rpcEndPoint);
+        await _receivedCall.HandleCallAsync(_rpcEndPoint, cancellationToken).ConfigureAwait(false);
         _reader.EndReading();
 
         try
         {
-            _writer.EndWriting(_remoteEndPoint);
+            await _writer.EndWritingAsync(_remoteEndPoint, cancellationToken).ConfigureAwait(false);
         }
         catch (RpcException e)
         {

@@ -10,25 +10,36 @@ const int CountCalls = 10000;
 const int Port = 2223;
 IPAddress ipAddress = IPAddress.Loopback;
 
-if (args.Length == 0)
+switch (args.Length)
 {
-    Console.WriteLine($"usage: {Environment.ProcessPath} <TCP|UDP>");
-    return 1;
+    case 0:
+        Console.WriteLine($"usage: {Environment.ProcessPath} <TCP|UDP>");
+        return 1;
+    case 1:
+        {
+            if (!Enum.TryParse(args[0], true, out Protocol protocol))
+            {
+                Console.WriteLine($"Invalid protocol: {args[0]}");
+                return 1;
+            }
+
+            StartActualClients(protocol);
+            return 0;
+        }
+    default:
+        {
+            if (!Enum.TryParse(args[0], true, out Protocol protocol))
+            {
+                Console.WriteLine($"Invalid protocol: {args[0]}");
+                return 1;
+            }
+
+            await CallServer(ipAddress, protocol).ConfigureAwait(false);
+            return 0;
+        }
 }
 
-if (args.Length == 1)
-{
-    string protocol = args[0];
-    StartActualClients(protocol);
-    return 0;
-}
-else
-{
-    string protocol = args[0];
-    return CallServer(ipAddress, protocol);
-}
-
-static void StartActualClients(string protocol)
+static void StartActualClients(Protocol protocol)
 {
     Stopwatch stopwatch = Stopwatch.StartNew();
 
@@ -42,7 +53,7 @@ static void StartActualClients(string protocol)
                 CreateNoWindow = true,
                 UseShellExecute = false,
                 FileName = Environment.ProcessPath!,
-                Arguments = protocol + " " + i
+                Arguments = $"{protocol} {i}"
             }
         };
         _ = process.Start();
@@ -52,42 +63,26 @@ static void StartActualClients(string protocol)
     for (int i = 0; i < CountProcesses; i++)
     {
         processes[i].WaitForExit();
+        if (processes[i].ExitCode != 0)
+        {
+            Console.WriteLine($"Process {i} exited with code {processes[i].ExitCode}");
+        }
     }
 
     stopwatch.Stop();
     Console.WriteLine($"Running {CountProcesses} clients calling {CountCalls} times took {stopwatch.Elapsed}.");
 }
 
-static int CallServer(IPAddress ipAddress, string protocol)
+static async ValueTask CallServer(IPAddress ipAddress, Protocol protocol)
 {
-    if (protocol.Equals("TCP", StringComparison.OrdinalIgnoreCase))
-    {
-        return CallTcpServer(ipAddress);
-    }
+    using TestServiceClient testTcpClient = await TestServiceClient.ConnectAsync(protocol, ipAddress, Port).ConfigureAwait(false);
 
-    return CallUdpServer(ipAddress);
-}
-
-static int CallTcpServer(IPAddress ipAddress)
-{
-    int result = 0;
-    using TestServiceClient testTcpClient = new(Protocol.Tcp, ipAddress, Port);
     for (int i = 0; i < CountCalls; i++)
     {
-        result += testTcpClient.Echo_1(i);
+        int result = await testTcpClient.Echo_1Async(i).ConfigureAwait(false);
+        if (result != i)
+        {
+            throw new InvalidOperationException($"Unexpected result: {result}");
+        }
     }
-
-    return result;
-}
-
-static int CallUdpServer(IPAddress ipAddress)
-{
-    int result = 0;
-    using TestServiceClient testUdpClient = new(Protocol.Udp, ipAddress, Port);
-    for (int i = 0; i < CountCalls; i++)
-    {
-        result += testUdpClient.Echo_1(i);
-    }
-
-    return result;
 }

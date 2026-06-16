@@ -103,44 +103,49 @@ internal class Declaration
 
     public void DumpItem(XdrFileWriter writer, int indent)
     {
-        if (DataType.Kind == DataTypeKind.Void)
+        // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
+        switch (DataType.Kind)
         {
-            // Nothing to do
-        }
-        else if (DataType.Kind == DataTypeKind.Opaque)
-        {
-            if (!string.IsNullOrWhiteSpace(Length))
-            {
+            case DataTypeKind.Void:
+                // Nothing to do
+                break;
+            case DataTypeKind.Opaque when !string.IsNullOrWhiteSpace(Length):
                 writer.WriteLine(indent, $"public byte[] {NameAsProperty} {{ get; }} = new byte[{Length}];");
-            }
-            else
-            {
+                break;
+            case DataTypeKind.Opaque:
                 writer.WriteLine(indent, $"public byte[] {NameAsProperty} {{ get; set; }} = [];");
-            }
-        }
-        else if (IsVector)
-        {
-            writer.WriteLine(indent, $"public List<{DataType.Declaration}> {NameAsProperty} {{ get; set; }} = new List<{DataType.Declaration}>({VariableLength});");
-        }
-        else if (IsArray)
-        {
-            writer.WriteLine(indent, $"public {DataType.Declaration}[] {NameAsProperty} {{ get; }} = new {DataType.Declaration}[{Length}];");
-        }
-        else if (IsPointer)
-        {
-            writer.WriteLine(indent, $"public {DataType.Declaration}? {NameAsProperty} {{ get; set; }}");
-        }
-        else if (DataType.Kind is DataTypeKind.CustomType or DataTypeKind.Unknown)
-        {
-            writer.WriteLine(indent, $"public {DataType.Declaration} {NameAsProperty} {{ get; set; }} = new();");
-        }
-        else if (DataType.Declaration == "string")
-        {
-            writer.WriteLine(indent, $"public {DataType.Declaration} {NameAsProperty} {{ get; set; }} = \"\";");
-        }
-        else
-        {
-            writer.WriteLine(indent, $"public {DataType.Declaration} {NameAsProperty} {{ get; set; }}");
+                break;
+            default:
+                {
+                    if (IsVector)
+                    {
+                        writer.WriteLine(
+                            indent,
+                            $"public List<{DataType.Declaration}> {NameAsProperty} {{ get; set; }} = new List<{DataType.Declaration}>({VariableLength});");
+                    }
+                    else if (IsArray)
+                    {
+                        writer.WriteLine(indent, $"public {DataType.Declaration}[] {NameAsProperty} {{ get; }} = new {DataType.Declaration}[{Length}];");
+                    }
+                    else if (IsPointer)
+                    {
+                        writer.WriteLine(indent, $"public {DataType.Declaration}? {NameAsProperty} {{ get; set; }}");
+                    }
+                    else if (DataType.Kind is DataTypeKind.CustomType or DataTypeKind.Unknown)
+                    {
+                        writer.WriteLine(indent, $"public {DataType.Declaration} {NameAsProperty} {{ get; set; }} = new();");
+                    }
+                    else if (DataType.Declaration == "string")
+                    {
+                        writer.WriteLine(indent, $"public {DataType.Declaration} {NameAsProperty} {{ get; set; }} = \"\";");
+                    }
+                    else
+                    {
+                        writer.WriteLine(indent, $"public {DataType.Declaration} {NameAsProperty} {{ get; set; }}");
+                    }
+
+                    break;
+                }
         }
     }
 
@@ -243,78 +248,82 @@ internal class Declaration
     {
         string name = GetNameForReadAndWrite();
 
-        if (DataType.Kind == DataTypeKind.Void)
+        // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
+        switch (DataType.Kind)
         {
-            return;
-        }
-
-        if (DataType.Kind == DataTypeKind.Opaque)
-        {
-            if (!string.IsNullOrWhiteSpace(Length))
-            {
+            case DataTypeKind.Void:
+                return;
+            case DataTypeKind.Opaque when !string.IsNullOrWhiteSpace(Length):
                 writer.WriteLine(indent, $"reader.ReadFixedLengthOpaque({name});");
-            }
-            else if (!string.IsNullOrWhiteSpace(VariableLength))
-            {
+                break;
+            case DataTypeKind.Opaque when !string.IsNullOrWhiteSpace(VariableLength):
                 writer.WriteLine(indent, $"{name} = reader.ReadOpaque();");
                 writer.WriteLine(indent, $"if ({name}.Length > {VariableLength})");
                 writer.WriteLine(indent, "{");
-                writer.WriteLine(indent + 1, $"throw new InvalidOperationException($\"{name} must not not have more than {VariableLength} elements but has {{{name}.Length}}.\");");
+                writer.WriteLine(
+                    indent + 1,
+                    $"throw new InvalidOperationException($\"{name} must not not have more than {VariableLength} elements but has {{{name}.Length}}.\");");
                 writer.WriteLine(indent, "}");
-            }
-            else
-            {
+                break;
+            case DataTypeKind.Opaque:
                 writer.WriteLine(indent, $"{name} = reader.ReadOpaque();");
-            }
-        }
-        else if (IsArray)
-        {
-            writer.WriteLine(indent, "{");
-            writer.WriteLine(indent + 1, $"for (int _idx = 0; _idx < {name}.Length; _idx++)");
-            writer.WriteLine(indent + 1, "{");
-            WriteReadStatement(writer, indent + 2, $"{name}[_idx]");
-            writer.WriteLine(indent + 1, "}");
-            writer.WriteLine(indent, "}");
-        }
-        else if (IsVector)
-        {
-            writer.WriteLine(indent, "{");
-            writer.WriteLine(indent + 1, "int _size = reader.ReadInt32();");
-            if (!string.IsNullOrWhiteSpace(VariableLength))
-            {
-                writer.WriteLine(indent + 1, $"if (_size > {VariableLength})");
-                writer.WriteLine(indent + 1, "{");
-                writer.WriteLine(indent + 2, $"throw new InvalidOperationException($\"{name} must not not have more than {VariableLength} elements but has {{_size}}.\");");
-                writer.WriteLine(indent + 1, "}");
-            }
+                break;
+            default:
+                {
+                    if (IsArray)
+                    {
+                        writer.WriteLine(indent, "{");
+                        writer.WriteLine(indent + 1, $"for (int _idx = 0; _idx < {name}.Length; _idx++)");
+                        writer.WriteLine(indent + 1, "{");
+                        WriteReadStatement(writer, indent + 2, $"{name}[_idx]");
+                        writer.WriteLine(indent + 1, "}");
+                        writer.WriteLine(indent, "}");
+                    }
+                    else if (IsVector)
+                    {
+                        writer.WriteLine(indent, "{");
+                        writer.WriteLine(indent + 1, "int _size = reader.ReadInt32();");
+                        if (!string.IsNullOrWhiteSpace(VariableLength))
+                        {
+                            writer.WriteLine(indent + 1, $"if (_size > {VariableLength})");
+                            writer.WriteLine(indent + 1, "{");
+                            writer.WriteLine(
+                                indent + 2,
+                                $"throw new InvalidOperationException($\"{name} must not not have more than {VariableLength} elements but has {{_size}}.\");");
+                            writer.WriteLine(indent + 1, "}");
+                        }
 
-            writer.WriteLine(indent + 1, $"{name}.Clear();");
-            if (!string.IsNullOrWhiteSpace(VariableLength))
-            {
-                writer.WriteLine(indent + 1, $"{name}.Capacity = {VariableLength};");
-            }
+                        writer.WriteLine(indent + 1, $"{name}.Clear();");
+                        if (!string.IsNullOrWhiteSpace(VariableLength))
+                        {
+                            writer.WriteLine(indent + 1, $"{name}.Capacity = {VariableLength};");
+                        }
 
-            writer.WriteLine(indent + 1, "for (int _idx = 0; _idx < _size; _idx++)");
-            writer.WriteLine(indent + 1, "{");
-            writer.WriteLine(indent + 2, $"{name}.Add({GetReadExpression()});");
-            writer.WriteLine(indent + 1, "}");
-            writer.WriteLine(indent, "}");
-        }
-        else if (IsPointer)
-        {
-            if (IsLinkedListDeclaration)
-            {
-                writer.WriteLine(indent, $"current.Next = reader.ReadBool() ? new {DataType.Name}() : null;");
-                writer.WriteLine(indent, "current = current.Next;");
-            }
-            else
-            {
-                writer.WriteLine(indent, $"{name} = reader.ReadBool() ? new {DataType.Name}(reader) : null;");
-            }
-        }
-        else
-        {
-            WriteReadStatement(writer, indent, name);
+                        writer.WriteLine(indent + 1, "for (int _idx = 0; _idx < _size; _idx++)");
+                        writer.WriteLine(indent + 1, "{");
+                        writer.WriteLine(indent + 2, $"{name}.Add({GetReadExpression()});");
+                        writer.WriteLine(indent + 1, "}");
+                        writer.WriteLine(indent, "}");
+                    }
+                    else if (IsPointer)
+                    {
+                        if (IsLinkedListDeclaration)
+                        {
+                            writer.WriteLine(indent, $"current.Next = reader.ReadBool() ? new {DataType.Name}() : null;");
+                            writer.WriteLine(indent, "current = current.Next;");
+                        }
+                        else
+                        {
+                            writer.WriteLine(indent, $"{name} = reader.ReadBool() ? new {DataType.Name}(reader) : null;");
+                        }
+                    }
+                    else
+                    {
+                        WriteReadStatement(writer, indent, name);
+                    }
+
+                    break;
+                }
         }
     }
 
