@@ -15,7 +15,8 @@ internal sealed class TestTcpClientServer(IPAddress ipAddress)
 {
     [Test]
     [CancelAfter(1)]
-    public void ServerIsNotRunning()
+    [Platform(Include = "Win")]
+    public void ServerIsNotRunningOnWindows()
     {
         CancellationToken ct = TestContext.CurrentContext.CancellationToken;
 
@@ -23,6 +24,18 @@ internal sealed class TestTcpClientServer(IPAddress ipAddress)
         const int Version = 13;
 
         Assert.CatchAsync<OperationCanceledException>(async () => await RpcTcpClient.ConnectAsync(ipAddress, 1, Program, Version, ClientSettings.Default, ct));
+    }
+
+    [Test]
+    [Platform(Include = "Linux")]
+    public void ServerIsNotRunningOnLinux()
+    {
+        CancellationToken ct = TestContext.CurrentContext.CancellationToken;
+
+        const int Program = 12;
+        const int Version = 13;
+
+        Assert.CatchAsync<NotSupportedException>(async () => await RpcTcpClient.ConnectAsync(ipAddress, 1, Program, Version, ClientSettings.Default, ct));
     }
 
     [Test]
